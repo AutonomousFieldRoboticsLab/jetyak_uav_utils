@@ -195,8 +195,8 @@ class WaypointFollow():
 		self.wps = []
 
 		wp_radius = 5
-		end_radius_m = 50
-		turns = 3
+		end_radius_m = 10
+		turns = 4
 		altitude = 10
 
 		#dont modify

@@ -175,7 +175,7 @@ void Behaviors::returnBehavior()
 			vBoat = bsc_common::util::rotation_matrix(-state.drone_q.z) * vBoat; // boat velocity in drone frame
 
 			Eigen::Matrix<double, 12, 1> set;
-			set << 0, 0, 0,			 //position setpoint (xyz)
+			set << 0, 0, u_c,			 //position setpoint (xyz)
 					0, 0, 0,				 //velocity setpoint (xyz)
 					0, 0, offset(3), //Angle setpoint (rpy)
 					0, 0, 0;				 //angular velocity setpoint (rpy)

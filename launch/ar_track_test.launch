@@ -2,7 +2,7 @@
 
 	<arg name="marker_size" default="5.5" />
 	<arg name="max_new_marker_error" default="0.05" />
-	<arg name="max_track_error" default="0.5" />
+	<arg name="max_track_error" default="0.25" />
 	<arg name="cam_image_topic" value="/jetyak_uav_vision/dji_camera/image_raw" />
 	<arg name="cam_info_topic" value="/jetyak_uav_vision/dji_camera/camera_info" />
 	<arg name="output_frame" value="/dji_camera" />

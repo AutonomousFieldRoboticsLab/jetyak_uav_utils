@@ -108,8 +108,9 @@ class FilterNode():
 
 		# Covariance Matrix for Drone GPS measurements
 		self.RgpsD = np.matrix(np.zeros((3, 3)))
-		self.RgpsD[0:2, 0:2] = np.asmatrix(1.0e-1 * np.eye(2))
-		self.RgpsD[2, 2] = 1.0e-5
+		self.RgpsD[0:3, 0:3] = np.asmatrix(1.0e-3 * np.eye(3))
+		#self.RgpsD[0:2, 0:2] = np.asmatrix(1.0e-1 * np.eye(2))
+		#self.RgpsD[2, 2] = 1.0e-5
 
 		# Transition Matrix for Jetyak GPS measurements
 		self.HgpsJ = np.matrix(np.zeros((3, n)))
@@ -215,7 +216,7 @@ class FilterNode():
 								 [msg.pose.orientation.y],
 								 [msg.pose.orientation.z],
 								 [msg.pose.orientation.w]]))
-		tagPoint.setTime(msg.header.stamp.to_secs())
+		tagPoint.setTime(msg.header.stamp.to_sec())
 		if self.tagFilter(tagPoint):
 			self.fusionF.process(tagPoint, self.Htag, self.Rtag)
 			self.lastTag = tagPoint
