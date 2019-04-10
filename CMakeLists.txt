@@ -36,9 +36,6 @@ add_service_files(DIRECTORY srv
 	Int.srv
   GetString.srv
   SetString.srv
-  TakeoffParams.srv
-  LandParams.srv
-  ReturnParams.srv
 	SetWaypoints.srv
 )
 

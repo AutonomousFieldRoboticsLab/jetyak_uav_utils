@@ -1,18 +1,41 @@
-#include "jetyak_uav_utils/behaviors.h"
-/** @file behaviors_main.cpp
- *
- * Implements structors and main functions:
- * 	Behaviors
- * 	~Behaviors
- * 	doBehaviorAction
- * 	main
+/**
+MIT License
+
+Copyright (c) 2018 Brennan Cain and Michail Kalaitzakis (Unmanned Systems and Robotics Lab, University of South Carolina, USA)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/**
+ * This file implements the main functions of the behaviors node (Constructor, Destructor, control switch, and main)
+ * 
+ * Author: Brennan Cain
  */
+
+#include "jetyak_uav_utils/behaviors.h"
+
 Behaviors::Behaviors(ros::NodeHandle &nh_param)
 {
 	nh = nh_param;
 
 	// initialize mode
-	currentMode_ = JETYAK_UAV::HOVER;
+	currentMode_ = JETYAK_UAV_UTILS::HOVER;
 
 	assignSubscribers();
 	assignPublishers();
@@ -24,7 +47,7 @@ Behaviors::Behaviors(ros::NodeHandle &nh_param)
 	leave_.input.axes.push_back(0);
 	leave_.input.axes.push_back(0);
 	leave_.input.axes.push_back(0);
-	leave_.input.axes.push_back(JETYAK_UAV::WORLD_FRAME | JETYAK_UAV::VELOCITY_CMD);
+	leave_.input.axes.push_back(JETYAK_UAV_UTILS::WORLD_FRAME | JETYAK_UAV_UTILS::VELOCITY_CMD);
 
 	// initialize the tag
 	tagPose_.pose.orientation.x = 0;
@@ -56,55 +79,55 @@ void Behaviors::doBehaviorAction()
 
 	switch (currentMode_)
 	{
-		case JETYAK_UAV::TAKEOFF:
+	case JETYAK_UAV_UTILS::TAKEOFF:
+	{
+		takeoffBehavior();
+		break;
+	}
+	case JETYAK_UAV_UTILS::FOLLOW:
+	{
+		followBehavior();
+		break;
+	}
+	case JETYAK_UAV_UTILS::LEAVE:
+	{
+		leaveBehavior();
+		break;
+	}
+	case JETYAK_UAV_UTILS::RETURN:
+	{
+		returnBehavior();
+		break;
+	}
+	case JETYAK_UAV_UTILS::LAND:
+	{
+		landBehavior();
+		break;
+	}
+	case JETYAK_UAV_UTILS::RIDE:
+	{
+		rideBehavior();
+		break;
+	}
+	case JETYAK_UAV_UTILS::HOVER:
+	{
+		hoverBehavior();
+		break;
+	}
+	default:
+	{
+		if (propellorsRunning)
 		{
-			takeoffBehavior();
-			break;
+			ROS_ERROR("Mode out of bounds: %i. Now hovering.", (char)currentMode_);
+			this->currentMode_ = JETYAK_UAV_UTILS::HOVER;
 		}
-		case JETYAK_UAV::FOLLOW:
+		else
 		{
-			followBehavior();
-			break;
+			ROS_ERROR("Mode out of bounds: %i. Now riding.", (char)currentMode_);
+			this->currentMode_ = JETYAK_UAV_UTILS::RIDE;
 		}
-		case JETYAK_UAV::LEAVE:
-		{
-			leaveBehavior();
-			break;
-		}
-		case JETYAK_UAV::RETURN:
-		{
-			returnBehavior();
-			break;
-		}
-		case JETYAK_UAV::LAND:
-		{
-			landBehavior();
-			break;
-		}
-		case JETYAK_UAV::RIDE:
-		{
-			rideBehavior();
-			break;
-		}
-		case JETYAK_UAV::HOVER:
-		{
-			hoverBehavior();
-			break;
-		}
-		default:
-		{
-			if (propellorsRunning)
-			{
-				ROS_ERROR("Mode out of bounds: %i. Now hovering.", (char)currentMode_);
-				this->currentMode_ = JETYAK_UAV::HOVER;
-			}
-			else
-			{
-				ROS_ERROR("Mode out of bounds: %i. Now riding.", (char)currentMode_);
-				this->currentMode_ = JETYAK_UAV::RIDE;
-			}
-			break;
-		}
+		break;
+	}
 	}
 
 	// Publish the current behavior mode

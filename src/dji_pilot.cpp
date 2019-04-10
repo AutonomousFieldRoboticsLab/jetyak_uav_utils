@@ -1,3 +1,33 @@
+/**
+MIT License
+
+Copyright (c) 2018 Brennan Cain and Michail Kalaitzakis (Unmanned Systems and Robotics Lab, University of South Carolina, USA)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/**
+ * This file implements the dji interface of the dji_pilot node
+ * 
+ * Author: Michail Kalaitzakis, Brennan Cain
+ */
+
 #include "jetyak_uav_utils/dji_pilot.h"
 
 #include <cmath>
@@ -136,11 +166,11 @@ void dji_pilot::rcCallback(const sensor_msgs::Joy::ConstPtr &msg)
 		{
 			// Clear any previous RC commands
 			rcCommand.axes.clear();
-			rcCommand.axes.push_back(msg->axes[1] * rcVelocityMultiplier);		// Roll
-			rcCommand.axes.push_back(-msg->axes[0] * rcVelocityMultiplier);	    // Pitch
-			rcCommand.axes.push_back(msg->axes[3] * rcVelocityMultiplier);		// Altitude
-			rcCommand.axes.push_back(-msg->axes[2]);	                        // Yaw
-			rcCommand.axes.push_back(commandFlag);		                        // Command Flag
+			rcCommand.axes.push_back(msg->axes[1] * rcVelocityMultiplier);	// Roll
+			rcCommand.axes.push_back(-msg->axes[0] * rcVelocityMultiplier); // Pitch
+			rcCommand.axes.push_back(msg->axes[3] * rcVelocityMultiplier);	// Altitude
+			rcCommand.axes.push_back(-msg->axes[2]);												// Yaw
+			rcCommand.axes.push_back(commandFlag);													// Command Flag
 
 			bypassPilot = true;
 		}
@@ -166,7 +196,7 @@ bool dji_pilot::landServCallback(std_srvs::Trigger::Request &req, std_srvs::Trig
 	if (autopilotOn)
 	{
 		dji_sdk::DroneTaskControl srv;
-		srv.request.task = 6;	// landing
+		srv.request.task = 6; // landing
 		taskServ.call(srv);
 		res.success = srv.response.result;
 		return true;
@@ -180,7 +210,7 @@ bool dji_pilot::takeoffServCallback(std_srvs::Trigger::Request &req, std_srvs::T
 	if (autopilotOn)
 	{
 		dji_sdk::DroneTaskControl srv;
-		srv.request.task = 4;	// takeoff
+		srv.request.task = 4; // takeoff
 		taskServ.call(srv);
 		res.success = srv.response.result;
 		return true;
@@ -231,7 +261,7 @@ bool dji_pilot::requestControl(int requestFlag)
 
 sensor_msgs::Joy dji_pilot::adaptiveClipping(sensor_msgs::Joy msg)
 {
-	uint8_t flag = buildFlag((JETYAK_UAV::Flag)msg.axes[4]);
+	uint8_t flag = buildFlag((JETYAK_UAV_UTILS::Flag)msg.axes[4]);
 
 	// Create command buffer
 	sensor_msgs::Joy cmdBuffer;
@@ -317,21 +347,21 @@ void dji_pilot::publishCommand()
 	}
 }
 
-uint8_t dji_pilot::buildFlag(JETYAK_UAV::Flag flag)
+uint8_t dji_pilot::buildFlag(JETYAK_UAV_UTILS::Flag flag)
 {
 	uint8_t base = 0;
 
-	if ((flag & JETYAK_UAV::POSITION_CMD) == JETYAK_UAV::POSITION_CMD)
+	if ((flag & JETYAK_UAV_UTILS::POSITION_CMD) == JETYAK_UAV_UTILS::POSITION_CMD)
 		base |= DJISDK::HORIZONTAL_POSITION | DJISDK::VERTICAL_POSITION;
 	else
 		base |= DJISDK::HORIZONTAL_VELOCITY | DJISDK::VERTICAL_VELOCITY;
 
-	if ((flag & JETYAK_UAV::BODY_FRAME) == JETYAK_UAV::BODY_FRAME)
+	if ((flag & JETYAK_UAV_UTILS::BODY_FRAME) == JETYAK_UAV_UTILS::BODY_FRAME)
 		base |= DJISDK::HORIZONTAL_BODY | DJISDK::STABLE_DISABLE;
 	else
 		base |= DJISDK::HORIZONTAL_GROUND | DJISDK::STABLE_ENABLE;
 
-	if ((flag & JETYAK_UAV::YAW_ANGLE) == JETYAK_UAV::YAW_ANGLE)
+	if ((flag & JETYAK_UAV_UTILS::YAW_ANGLE) == JETYAK_UAV_UTILS::YAW_ANGLE)
 		base |= DJISDK::YAW_ANGLE;
 	else
 		base |= DJISDK::YAW_RATE;

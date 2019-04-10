@@ -1,7 +1,0 @@
-float64 heightThresh
-float64 radiusThresh
-float64 angleThresh
-float64 velThresh
----
-
-bool success

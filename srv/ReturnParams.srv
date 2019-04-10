@@ -1,9 +1,0 @@
-float64 gotoHeight
-float64 finalHeight
-float64 downRadius
-float64 settleRadius
-float64 tagTime
-float64 tagLossThresh
----
-
-bool success

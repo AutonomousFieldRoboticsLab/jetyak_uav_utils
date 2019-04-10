@@ -1,3 +1,32 @@
+#!/usr/bin/python
+"""
+MIT License
+
+Copyright(c) 2018 Brennan Cain and Michail Kalaitzakis(Unmanned Systems and Robotics Lab, University of South Carolina, USA)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files(the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+Provides GPS location for each vehicle using the other vehicle and relative transforms.
+Author: Brennan Cain
+
+"""
 import rospy
 from tf.transformations import *
 from std_msgs.msg import UInt8, Float64
@@ -109,9 +138,9 @@ class Coloc():
 
 			a  = [(d2[0]-d1[0])*2/(self.boat_last3[2][2]-self.boat_last3[0][2]),
 				(d2[1]-d1[1])*2/(self.boat_last3[2][2]-self.boat_last3[0][2])]
-		print("ASV: %.8f, %.8f"%(toDeg(lat1),toDeg(lon1)))
-		print("UAV: %.8f, %.8f"%(toDeg(lat2),toDeg(lon2)))
-		print("Acc: %.8f"%sqrt(pow(a[0],2)+pow(a[1],2)))
+		#print("ASV: %.8f, %.8f"%(toDeg(lat1),toDeg(lon1)))
+		#print("UAV: %.8f, %.8f"%(toDeg(lat2),toDeg(lon2)))
+		#print("Acc: %.8f"%sqrt(pow(a[0],2)+pow(a[1],2)))
 		nsf = NavSatFix()
 		nsf.header.stamp = rospy.get_rostime()
 		nsf.latitude = toDeg(lat2)

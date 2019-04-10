@@ -1,3 +1,32 @@
+/**
+MIT License
+
+Copyright (c) 2018 Brennan Cain and Michail Kalaitzakis (Unmanned Systems and Robotics Lab, University of South Carolina, USA)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/**
+ * This node provides a robust interface to the DJI hardware, allowing abstraction for higher level controllers.
+ * 
+ * Author: Michail Kalaitzakis, Brennan Cain
+ */
 #ifndef DJI_PILOT_H
 #define DJI_PILOT_H
 
@@ -19,7 +48,7 @@
 #include <dji_sdk/SDKControlAuthority.h>
 #include <dji_sdk/dji_sdk.h>
 
-#include "jetyak_uav_utils/jetyak_uav.h"
+#include "jetyak_uav_utils/jetyak_uav_utils.h"
 
 class dji_pilot
 {
@@ -123,13 +152,13 @@ protected:
 
 private:
 	/** buildFlag
-	 * Builds a DJI_SDK flag using the simpler JETYAK_UAV flag
+	 * Builds a DJI_SDK flag using the simpler JETYAK_UAV_UTILS flag
 	 *
 	 * @param flag Enumerated integer defined in jetyak_uav.h
 	 *
 	 * @return DJI_SDK flag
 	 */
-	uint8_t buildFlag(JETYAK_UAV::Flag flag);
+	uint8_t buildFlag(JETYAK_UAV_UTILS::Flag flag);
 };
 
 #endif

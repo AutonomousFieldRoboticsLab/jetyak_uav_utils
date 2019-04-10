@@ -1,15 +1,34 @@
-#include "jetyak_uav_utils/behaviors.h"
-/** @file behaviors_behaviors.cpp
- *
- * Implements behaviors:
- * 	takeoffBehavior
- * 	followBehavior
- * 	returnBehavior
- * 	landBehavior
- * 	rideBehavior
- * 	hoverBehavior
+/**
+MIT License
+
+Copyright (c) 2018 Brennan Cain and Michail Kalaitzakis (Unmanned Systems and Robotics Lab, University of South Carolina, USA)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/**
+ * This file implements the behaviors of the behaviors node
+ * 
+ * Author: Brennan Cain
  */
 
+#include "jetyak_uav_utils/behaviors.h"
 void Behaviors::takeoffBehavior()
 {
 	/*
@@ -26,7 +45,7 @@ void Behaviors::takeoffBehavior()
 		{
 			ROS_INFO("Propellors running, switching to follow");
 			propellorsRunning = true;
-			this->currentMode_ = JETYAK_UAV::FOLLOW;
+			this->currentMode_ = JETYAK_UAV_UTILS::FOLLOW;
 			this->behaviorChanged_ = true;
 		}
 		else
@@ -39,17 +58,17 @@ void Behaviors::takeoffBehavior()
 void Behaviors::followBehavior()
 {
 	if (behaviorChanged_)
-	{	// if just changed
+	{ // if just changed
 		follow_.lastSpotted = simpleTag_.t;
 		resetPID();
 		setPID(follow_.kp, follow_.ki, follow_.kd);
 		behaviorChanged_ = false;
 	}
 	else
-	{	// DO the loop
+	{ // DO the loop
 
 		if (follow_.lastSpotted != simpleTag_.t)
-		{	// if time changed
+		{ // if time changed
 			follow_.lastSpotted = simpleTag_.t;
 
 			// line up with pad
@@ -61,18 +80,18 @@ void Behaviors::followBehavior()
 			double c_vx = vGain * (uavBodyVel_.x + tagVel_.x);
 			double c_vy = vGain * (uavBodyVel_.y + tagVel_.y);
 
-			ROS_WARN("UAV: %.2f \t+ TAG: %.2f \t= COR: %.2f",uavBodyVel_.x,tagVel_.x,c_vx);
+			ROS_WARN("UAV: %.2f \t+ TAG: %.2f \t= COR: %.2f", uavBodyVel_.x, tagVel_.x, c_vx);
 
 			sensor_msgs::Joy cmd;
 			cmd.axes.push_back(-xpid_->get_signal() + c_vx);
 			cmd.axes.push_back(-ypid_->get_signal() + c_vy);
 			cmd.axes.push_back(-zpid_->get_signal());
 			cmd.axes.push_back(-wpid_->get_signal());
-			cmd.axes.push_back(JETYAK_UAV::VELOCITY_CMD | JETYAK_UAV::BODY_FRAME | JETYAK_UAV::YAW_RATE);
+			cmd.axes.push_back(JETYAK_UAV_UTILS::VELOCITY_CMD | JETYAK_UAV_UTILS::BODY_FRAME | JETYAK_UAV_UTILS::YAW_RATE);
 			cmdPub_.publish(cmd);
 		}
 		else
-		{	// if time is same
+		{ // if time is same
 
 			if (ros::Time::now().toSec() - follow_.lastSpotted > 1)
 			{
@@ -82,7 +101,7 @@ void Behaviors::followBehavior()
 				cmd.axes.push_back(0);
 				cmd.axes.push_back(0);
 				cmd.axes.push_back(0);
-				cmd.axes.push_back(JETYAK_UAV::BODY_FRAME | JETYAK_UAV::VELOCITY_CMD | JETYAK_UAV::YAW_RATE);
+				cmd.axes.push_back(JETYAK_UAV_UTILS::BODY_FRAME | JETYAK_UAV_UTILS::VELOCITY_CMD | JETYAK_UAV_UTILS::YAW_RATE);
 				cmdPub_.publish(cmd);
 				return;
 			}
@@ -123,18 +142,18 @@ void Behaviors::returnBehavior()
 			resetPID();
 			bsc_common::pose4d_t zero;
 			zero.x = zero.y = zero.z = zero.w = 0;
-			setPID(follow_.kp, zero, zero);	// set i to zeroes
+			setPID(follow_.kp, zero, zero); // set i to zeroes
 		}
 		return_.stage = return_.SETTLE;
 		if ((pow(follow_.goal_pose.x - simpleTag_.x, 2) + pow(follow_.goal_pose.y - simpleTag_.y, 2)) <
 				return_.settleRadiusSquared)
 		{
 			ROS_WARN("Settled, now following");
-			currentMode_ = JETYAK_UAV::FOLLOW;
+			currentMode_ = JETYAK_UAV_UTILS::FOLLOW;
 			behaviorChanged_ = true;
 		}
 		else
-		{	// line up with pad
+		{ // line up with pad
 			ROS_WARN("Settling down, z-error: %1.2f", follow_.goal_pose.z - simpleTag_.z);
 
 			xpid_->update(follow_.goal_pose.x - simpleTag_.x, simpleTag_.t);
@@ -151,7 +170,7 @@ void Behaviors::returnBehavior()
 			cmd.axes.push_back(0);
 			// cmd.axes.push_back(-zpid_->get_signal());
 			cmd.axes.push_back(-wpid_->get_signal());
-			cmd.axes.push_back(JETYAK_UAV::VELOCITY_CMD | JETYAK_UAV::BODY_FRAME | JETYAK_UAV::YAW_RATE);
+			cmd.axes.push_back(JETYAK_UAV_UTILS::VELOCITY_CMD | JETYAK_UAV_UTILS::BODY_FRAME | JETYAK_UAV_UTILS::YAW_RATE);
 			cmdPub_.publish(cmd);
 		}
 	}
@@ -199,7 +218,7 @@ void Behaviors::returnBehavior()
 			cmd.axes.push_back(0);
 			cmd.axes.push_back(z_correction);
 			cmd.axes.push_back(0);
-			cmd.axes.push_back(JETYAK_UAV::WORLD_FRAME | JETYAK_UAV::VELOCITY_CMD | JETYAK_UAV::YAW_RATE);
+			cmd.axes.push_back(JETYAK_UAV_UTILS::WORLD_FRAME | JETYAK_UAV_UTILS::VELOCITY_CMD | JETYAK_UAV_UTILS::YAW_RATE);
 			cmdPub_.publish(cmd);
 		}
 		std_srvs::Trigger downSrvTmp;
@@ -233,7 +252,7 @@ void Behaviors::returnBehavior()
 			cmd.axes.push_back(n_c);
 			cmd.axes.push_back(u_c);
 			cmd.axes.push_back(0);
-			cmd.axes.push_back(JETYAK_UAV::WORLD_FRAME | JETYAK_UAV::VELOCITY_CMD | JETYAK_UAV::YAW_RATE);
+			cmd.axes.push_back(JETYAK_UAV_UTILS::WORLD_FRAME | JETYAK_UAV_UTILS::VELOCITY_CMD | JETYAK_UAV_UTILS::YAW_RATE);
 			cmdPub_.publish(cmd);
 		}
 		std_srvs::Trigger downSrvTmp;
@@ -259,13 +278,13 @@ void Behaviors::returnBehavior()
 		cmd.axes.push_back(n_c);
 		cmd.axes.push_back(u_c);
 		cmd.axes.push_back(simpleTag_.w);
-		cmd.axes.push_back(JETYAK_UAV::WORLD_FRAME | JETYAK_UAV::VELOCITY_CMD | JETYAK_UAV::YAW_RATE);
+		cmd.axes.push_back(JETYAK_UAV_UTILS::WORLD_FRAME | JETYAK_UAV_UTILS::VELOCITY_CMD | JETYAK_UAV_UTILS::YAW_RATE);
 		cmdPub_.publish(cmd);
 	}
 	else
 	{
 		ROS_ERROR("BAD CONDITIONALS, DEFAULTING TO HOVER");
-		currentMode_ = JETYAK_UAV::HOVER;
+		currentMode_ = JETYAK_UAV_UTILS::HOVER;
 	}
 };
 
@@ -278,10 +297,10 @@ void Behaviors::landBehavior()
 		behaviorChanged_ = false;
 	}
 	else
-	{	// DO the loop
+	{ // DO the loop
 
 		if (land_.lastSpotted != simpleTag_.t)
-		{	// if time changed
+		{ // if time changed
 
 			// If pose is within a cylinder of radius .1 and height .1
 			bool inX = (land_.lowX < simpleTag_.x) and (simpleTag_.x < land_.highX);
@@ -297,7 +316,7 @@ void Behaviors::landBehavior()
 				landSrv_.call(srv);
 				if (srv.response.success)
 				{
-					currentMode_ = JETYAK_UAV::RIDE;
+					currentMode_ = JETYAK_UAV_UTILS::RIDE;
 					return;
 				}
 			}
@@ -305,24 +324,24 @@ void Behaviors::landBehavior()
 			land_.lastSpotted = simpleTag_.t;
 		}
 		else
-		{	// if time is same
+		{ // if time is same
 
 			if (ros::Time::now().toSec() - land_.lastSpotted > 3)
 			{
 				ROS_WARN("Tag lost %1.2f seconds, switching to return.", ros::Time::now().toSec() - land_.lastSpotted);
-				this->currentMode_ = JETYAK_UAV::RETURN;
+				this->currentMode_ = JETYAK_UAV_UTILS::RETURN;
 				this->behaviorChanged_ = true;
 				return;
 			}
 			else if (ros::Time::now().toSec() - land_.lastSpotted > .5)
-			{	// if time has been same for over 3 tick
+			{ // if time has been same for over 3 tick
 				ROS_WARN("No tag update: %f", ros::Time::now().toSec() - land_.lastSpotted);
 				sensor_msgs::Joy cmd;
 				cmd.axes.push_back(0);
 				cmd.axes.push_back(0);
 				cmd.axes.push_back(0);
 				cmd.axes.push_back(0);
-				cmd.axes.push_back(JETYAK_UAV::BODY_FRAME | JETYAK_UAV::VELOCITY_CMD | JETYAK_UAV::YAW_RATE);
+				cmd.axes.push_back(JETYAK_UAV_UTILS::BODY_FRAME | JETYAK_UAV_UTILS::VELOCITY_CMD | JETYAK_UAV_UTILS::YAW_RATE);
 				cmdPub_.publish(cmd);
 				return;
 			}
@@ -342,7 +361,7 @@ void Behaviors::landBehavior()
 		cmd.axes.push_back(-ypid_->get_signal() + c_vy);
 		cmd.axes.push_back(-zpid_->get_signal());
 		cmd.axes.push_back(-wpid_->get_signal());
-		cmd.axes.push_back(JETYAK_UAV::VELOCITY_CMD | JETYAK_UAV::BODY_FRAME | JETYAK_UAV::YAW_RATE);
+		cmd.axes.push_back(JETYAK_UAV_UTILS::VELOCITY_CMD | JETYAK_UAV_UTILS::BODY_FRAME | JETYAK_UAV_UTILS::YAW_RATE);
 		cmdPub_.publish(cmd);
 	}
 }
@@ -372,6 +391,6 @@ void Behaviors::hoverBehavior()
 	cmd.axes.push_back(0);
 	cmd.axes.push_back(0);
 	cmd.axes.push_back(0);
-	cmd.axes.push_back(JETYAK_UAV::BODY_FRAME | JETYAK_UAV::VELOCITY_CMD | JETYAK_UAV::YAW_RATE);
+	cmd.axes.push_back(JETYAK_UAV_UTILS::BODY_FRAME | JETYAK_UAV_UTILS::VELOCITY_CMD | JETYAK_UAV_UTILS::YAW_RATE);
 	cmdPub_.publish(cmd);
 };

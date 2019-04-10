@@ -1,16 +1,34 @@
-#include "jetyak_uav_utils/behaviors.h"
-/** @file behaviors_common.cpp
- *
- * Implements:
- * 	createPID
- * 	resetPID
- * 	setPID
- * 	importParams
- * 	assignPublishers
- * 	assignServiceClients
- * 	assignServiceServers
- * 	assignSubscribers
+/**
+MIT License
+
+Copyright (c) 2018 Brennan Cain and Michail Kalaitzakis (Unmanned Systems and Robotics Lab, University of South Carolina, USA)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/**
+ * This file implements general functions of the behaviors node.
+ * 
+ * Author: Brennan Cain
  */
+
+#include "jetyak_uav_utils/behaviors.h"
 
 void Behaviors::createPID(bsc_common::pose4d_t &kp, bsc_common::pose4d_t &ki, bsc_common::pose4d_t &kd)
 {
@@ -144,7 +162,7 @@ void Behaviors::uploadParams(std::string ns_param)
 	// If it ends in / or is only a ~, it is good to use
 	if (ns_param.length() == 0 or ns_param.back() == '/' or ns_param.compare("~") == 0)
 		ns = ns_param;
-	else	// if it needs a / seperator, add it
+	else // if it needs a / seperator, add it
 		ns = ns_param + "/";
 
 	/**********************
@@ -238,15 +256,12 @@ void Behaviors::assignServiceServers()
 	setLandPIDService_ = nh.advertiseService("setLandPID", &Behaviors::setLandPIDCallback, this);
 	setFollowPosition_ = nh.advertiseService("setFollowPosition", &Behaviors::setFollowPositionCallback, this);
 	setLandPosition_ = nh.advertiseService("setLandPosition", &Behaviors::setLandPositionCallback, this);
-	setTakeoffParams_ = nh.advertiseService("setTakeoffParams", &Behaviors::setTakeoffParamsCallback, this);
-	setReturnParams_ = nh.advertiseService("setReturnParams", &Behaviors::setReturnParamsCallback, this);
-	setLandParams_ = nh.advertiseService("setLandParams", &Behaviors::setLandParamsCallback, this);
 }
 
 void Behaviors::assignSubscribers()
 {
 	tagPoseSub_ = nh.subscribe("/jetyak_uav_vision/filtered_tag", 1, &Behaviors::tagPoseCallback, this);
-tagVelSub_= nh.subscribe("/jetyak_uav_vision/tag_velocity", 1, &Behaviors::tagVelCallback, this);
+	tagVelSub_ = nh.subscribe("/jetyak_uav_vision/tag_velocity", 1, &Behaviors::tagVelCallback, this);
 	uavHeightSub_ = nh.subscribe("/dji_sdk/height_above_takeoff", 1, &Behaviors::uavHeightCallback, this);
 	uavGPSSub_ = nh.subscribe("/dji_sdk/gps_position", 1, &Behaviors::uavGPSCallback, this);
 	boatGPSSub_ = nh.subscribe("/jetyak2/global_position/global", 1, &Behaviors::boatGPSCallback, this);
@@ -262,5 +277,5 @@ double Behaviors::scaleConstant(double C, double e)
 	 * double THRESHOLD = .1;
 	 * return error < THRESHOLD : 0 ? c;											 // piecewise
 	 */
-	return abs(bsc_common::util::fastSigmoid(e)) * C;	// scale with fast sigmoid
+	return abs(bsc_common::util::fastSigmoid(e)) * C; // scale with fast sigmoid
 }

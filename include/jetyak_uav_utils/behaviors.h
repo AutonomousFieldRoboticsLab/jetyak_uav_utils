@@ -1,9 +1,36 @@
-/** Base behavioral controller for the uav
+/**
+MIT License
+
+Copyright (c) 2018 Brennan Cain and Michail Kalaitzakis (Unmanned Systems and Robotics Lab, University of South Carolina, USA)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/**
+ * Base behavioral controller for the uav
  * Manages the high level methods of the system.
  * Sends commands to the UAV
  * implements a joystick ovveride
  * implements a safety controller for if the drone is too close to an object
  * Listens to topic to determine when to switch modes
+ * 
+ * Author: Brennan Cain, Michail Kalaitzakis
  */
 
 #ifndef JETYAK_UAV_UTILS_BEHAVIORS_H_
@@ -33,15 +60,12 @@
 // Jetyak UAV Includes
 #include "jetyak_uav_utils/FourAxes.h"
 #include "jetyak_uav_utils/GetString.h"
-#include "jetyak_uav_utils/LandParams.h"
-#include "jetyak_uav_utils/ReturnParams.h"
 #include "jetyak_uav_utils/SetString.h"
-#include "jetyak_uav_utils/TakeoffParams.h"
-#include "jetyak_uav_utils/jetyak_uav.h"
+#include "jetyak_uav_utils/jetyak_uav_utils.h"
 
 // Lib includes
 #include "../lib/bsc_common/include/pid.h"
-#include "../lib/bsc_common/include/pose4d.h"
+#include "../lib/bsc_common/include/types.h"
 #include "../lib/bsc_common/include/util.h"
 
 class Behaviors
@@ -55,16 +79,16 @@ private:
 	ros::Publisher cmdPub_, modePub_;
 	ros::ServiceClient propSrv_, takeoffSrv_, landSrv_, lookdownSrv_, resetKalmanSrv_, enableGimbalSrv_;
 	ros::ServiceServer setModeService_, getModeService_, setBoatNSService_, setFollowPIDService_, setLandPIDService_,
-			setFollowPosition_, setLandPosition_, setTakeoffParams_, setReturnParams_, setLandParams_;
+			setFollowPosition_, setLandPosition_;
 	ros::NodeHandle nh;
 
 	/**********************
 	 * INSTANCE VARIABLES
 	 **********************/
 	int integral_size = 0;
-	bsc_common::PID *xpid_, *ypid_, *zpid_, *wpid_;	// pid controllers
+	bsc_common::PID *xpid_, *ypid_, *zpid_, *wpid_; // pid controllers
 	bool behaviorChanged_ = false;
-	JETYAK_UAV::Mode currentMode_;
+	JETYAK_UAV_UTILS::Mode currentMode_;
 	bool propellorsRunning = false;
 	double resetFilterTimeThresh;
 
@@ -78,10 +102,10 @@ private:
 	double uavHeight_ = 0;
 	double vGain;
 
-	bsc_common::pose4d_t simpleTag_ = { 0, 0, 0, 0, 0 };
-	bsc_common::vel3d_t tagVel_ = { 0, 0, 0, 0 };				// body
-	bsc_common::vel3d_t uavWorldVel_ = { 0, 0, 0, 0 };	// world
-	bsc_common::vel3d_t uavBodyVel_ = { 0, 0, 0, 0 };		// world
+	bsc_common::pose4d_t simpleTag_ = {0, 0, 0, 0, 0};
+	bsc_common::vel3d_t tagVel_ = {0, 0, 0, 0};			 // body
+	bsc_common::vel3d_t uavWorldVel_ = {0, 0, 0, 0}; // world
+	bsc_common::vel3d_t uavBodyVel_ = {0, 0, 0, 0};	// world
 
 	/*********************************************
 	 * BEHAVIOR SPECIFIC VARIABLES AND CONSTANTS
@@ -97,7 +121,7 @@ private:
 	struct
 	{
 		bsc_common::pose4d_t kp, kd, ki;
-		bsc_common::pose4d_t goal_pose;	// landing goal
+		bsc_common::pose4d_t goal_pose; // landing goal
 		double lastSpotted;
 		double heightGoal;
 		double heightThresh;
@@ -110,7 +134,7 @@ private:
 	struct
 	{
 		bsc_common::pose4d_t kp, kd, ki;
-		bsc_common::pose4d_t goal_pose;	// follow goal
+		bsc_common::pose4d_t goal_pose; // follow goal
 		double lastSpotted;
 		double deadzone_radius;
 	} follow_;
@@ -199,32 +223,6 @@ private:
 	 */
 	bool setLandPositionCallback(jetyak_uav_utils::FourAxes::Request &req, jetyak_uav_utils::FourAxes::Response &res);
 
-	/** setTakeoffParamsCallback
-	 * Change the constants for takeoff mode
-	 *
-	 * @param req param file
-	 * @param res boolean indicating a success or failure
-	 */
-	bool setTakeoffParamsCallback(jetyak_uav_utils::TakeoffParams::Request &req,
-																jetyak_uav_utils::TakeoffParams::Response &res);
-
-	/** setLandParamsCallback
-	 * Change the constants for land mode
-	 *
-	 * @param req param file
-	 * @param res boolean indicating a success or failure
-	 */
-	bool setLandParamsCallback(jetyak_uav_utils::LandParams::Request &req, jetyak_uav_utils::LandParams::Response &res);
-
-	/** setReturnParamsCallback
-	 * Change the constants for return mode
-	 *
-	 * @param req param file
-	 * @param res boolean indicating a success or failure
-	 */
-	bool setReturnParamsCallback(jetyak_uav_utils::ReturnParams::Request &req,
-															 jetyak_uav_utils::ReturnParams::Response &res);
-
 	/****************************
 	 * SUBSCRIPTION CALLBACKS
 	 *****************************/
@@ -290,7 +288,9 @@ private:
 	 */
 	void boatIMUCallback(const sensor_msgs::Imu::ConstPtr &msg);
 
-	/** listens for external commands
+	/** extCallback
+	 * listens for external commands, pass through when in LEAVE mode.
+	 * 
 	 * @param msg gets a command using the rpty flag setup
 	 */
 	void extCmdCallback(const sensor_msgs::Joy::ConstPtr &msg);
@@ -308,7 +308,7 @@ private:
 	void followBehavior();
 
 	/** leaveBehavior
-	 * Pass through commands from an external controller to dji_pilot
+	 * Pass through commands from an external controller to pilot
 	 */
 	void leaveBehavior();
 

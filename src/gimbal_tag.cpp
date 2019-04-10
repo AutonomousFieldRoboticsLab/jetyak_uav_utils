@@ -1,3 +1,33 @@
+/**
+MIT License
+
+Copyright (c) 2018 Brennan Cain and Michail Kalaitzakis (Unmanned Systems and Robotics Lab, University of South Carolina, USA)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/**
+ * This file implements the gimbal_tag node
+ * 
+ * Author: Michail Kalaitzakis
+ */
+
 #include "jetyak_uav_utils/gimbal_tag.h"
 
 #include "tf/transform_datatypes.h"
@@ -78,9 +108,9 @@ void gimbal_tag::tagCallback(const ar_track_alvar_msgs::AlvarMarkers &msg)
 	{
 		// pass the ar_pose as a vector3 for the dji_gimbal
 		geometry_msgs::Vector3 arVec3;
-		arVec3.x=msg.markers[0].pose.pose.position.x;
-		arVec3.y=msg.markers[0].pose.pose.position.y;
-		arVec3.z=msg.markers[0].pose.pose.position.z;
+		arVec3.x = msg.markers[0].pose.pose.position.x;
+		arVec3.y = msg.markers[0].pose.pose.position.y;
+		arVec3.z = msg.markers[0].pose.pose.position.z;
 		tagPosePub.publish(arVec3);
 
 		// Update Tag quaternion
