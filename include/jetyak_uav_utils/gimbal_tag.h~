@@ -37,7 +37,7 @@ private:
 	ros::Subscriber vehicleAttiSub;
 
 	// Publishers
-	ros::Publisher tagBodyPosePub, tagPosePub;
+	ros::Publisher tagBodyPosePub;
 
 	// Functions
 	/** changeTagAxes

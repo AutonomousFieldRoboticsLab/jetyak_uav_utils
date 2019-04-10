@@ -129,7 +129,7 @@ void Behaviors::uavVelCallback(const geometry_msgs::Vector3Stamped::ConstPtr &ms
 		uavBodyVel_.y = bVel.getY();
 		uavBodyVel_.z = bVel.getZ();
 		uavBodyVel_.t = uavWorldVel_.t;
-		//ROS_WARN("BV\t x: %.2f, y: %.2f, z: %.2f", uavBodyVel_.x, uavBodyVel_.y, uavBodyVel_.z);
+		ROS_WARN("BV\t x: %.2f, y: %.2f, z: %.2f", uavBodyVel_.x, uavBodyVel_.y, uavBodyVel_.z);
 	}
 }
 

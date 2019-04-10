@@ -61,7 +61,8 @@ void Behaviors::followBehavior()
 			double c_vx = vGain * (uavBodyVel_.x + tagVel_.x);
 			double c_vy = vGain * (uavBodyVel_.y + tagVel_.y);
 
-			ROS_WARN("UAV: %.2f \t+ TAG: %.2f \t= COR: %.2f",uavBodyVel_.x,tagVel_.x,c_vx);
+			ROS_WARN("Tag Vel: x: %.2f,\t y: %.2f",c_vx,c_vy);
+			ROS_WARN("UAV Vel: x: %.2f,\t y: %.2f",uavBodyVel_.x,uavBodyVel_.y);
 
 			sensor_msgs::Joy cmd;
 			cmd.axes.push_back(-xpid_->get_signal() + c_vx);

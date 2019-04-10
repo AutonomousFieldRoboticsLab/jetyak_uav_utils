@@ -11,7 +11,7 @@ gimbal_tag::gimbal_tag(ros::NodeHandle &nh)
 	vehicleAttiSub = nh.subscribe("/dji_sdk/attitude", 10, &gimbal_tag::attitudeCallback, this);
 
 	// Set up publisher
-	tagPosePub = nh.advertise<geometry_msgs::Vector3>("ar_pose_v3", 10);
+	tagPosePub = nh.advertise<geometry_msgs::Vector3>("ar_marker_v3", 10);
 	tagBodyPosePub = nh.advertise<geometry_msgs::PoseStamped>("tag_pose", 10);
 
 	tagFound = false;

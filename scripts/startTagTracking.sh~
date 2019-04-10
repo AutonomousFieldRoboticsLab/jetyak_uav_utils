@@ -1,0 +1,11 @@
+#!/bin/bash
+
+<!-- Start AR tag search -->	
+marker_size="`rosparam get /jetyak_uav_vision/marker_size`" 
+max_new_marker_error="`rosparam get /jetyak_uav_vision/max_new_marker_error`" 
+max_track_error="`rosparam get /jetyak_uav_vision/max_track_error`" 
+cam_image_topic="`rosparam get /jetyak_uav_vision/cam_image_topic`"  
+cam_info_topic="`rosparam get /jetyak_uav_vision/cam_info_topic`"  
+output_frame="`rosparam get /jetyak_uav_vision/output_frame`" 
+bundle_files="`rosparam get /jetyak_uav_vision/bundle_files`" 
+echo $marker_size

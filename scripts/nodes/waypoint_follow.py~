@@ -50,6 +50,7 @@ def angle_dist(a1,a2):
 
 class WaypointFollow():	
 	def __init__(self,):
+		self.deb_f = open("dump.cvs","w+")
 		self.hover_alt=10
 		self.flag = 0b100  # ,yaw angle, world frame, and velocity commands
 		self.wps = []

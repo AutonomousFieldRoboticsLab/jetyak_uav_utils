@@ -1,0 +1,31 @@
+# dji_gimbal config
+track_tag: true
+camera_info_topic: /jetyak_uav_vision/dji_camera/camera_info
+track_point_topic: /jetyak_uav_vision/ar_marker_v3
+
+yaw_axis: 0
+pitch_axis: 4
+roll_axis: 3
+reset_angle_btn: 0
+face_down_btn: 2
+toggle_track_btn: 3
+
+Kp: .002
+Kd: 0.0005
+
+# dji_camera config
+camera_info_url: package://dji_gimbal_cam/cfg/zenmuse_z3.yaml
+camera_name: zenmuseZ3
+camera_frame_id: dji_camera
+
+is_mono: true
+transfer: false
+
+# ar_track_alvar config
+marker_size: 13
+max_new_marker_error: 0.05
+max_track_error: 0.2
+cam_image_topic: /jetyak_uav_vision/dji_camera/image_raw
+cam_info_topic: /jetyak_uav_vision/dji_camera/camera_info
+output_frame: /dji_camera
+bundle_files: package://jetyak_uav_utils/res/jetyak2bundle.xml
