@@ -107,7 +107,6 @@ void Behaviors::followBehavior()
 			}
 		}
 	}
-	resetPID();
 }
 
 void Behaviors::leaveBehavior()

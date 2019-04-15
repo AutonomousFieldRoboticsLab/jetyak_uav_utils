@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "behaviors");
 	ros::NodeHandle nh;
 	Behaviors behaviors_o(nh);
-	ros::Rate rate(30);
+	ros::Rate rate(25);
 
 	while (ros::ok())
 	{
