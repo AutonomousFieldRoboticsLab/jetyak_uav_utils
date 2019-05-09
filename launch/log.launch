@@ -1,0 +1,45 @@
+<launch>
+	<!-- Start recording the flight log data -->
+	<node pkg="rosbag" type="record" name="flight_log_bagfile" output="screen"
+		  args="record -o /media/ubuntu/Manifold/FlightLog/flightData 
+
+/jetyak_uav_vision/ar_pose_marker
+/jetyak_uav_vision/filtered_tag
+/jetyak_uav_vision/tag_pose
+/jetyak_uav_vision/tag_velocity
+/jetyak_uav_vision/visualization_marker
+
+/jetyak_uav_utils/behavior_cmd
+/jetyak_uav_utils/behavior_mode
+/jetyak_uav_utils/extCommand
+
+/jetyak2/global_position/compass_hdg
+/jetyak2/global_position/global
+/jetyak2/global_position/local
+/jetyak2/global_position/raw/fix
+/jetyak2/global_position/raw/gps_vel
+/jetyak2/global_position/rel_alt
+/jetyak2/imu/atm_pressure
+/jetyak2/imu/data
+/jetyak2/imu/data_raw
+/jetyak2/rc/in
+
+/dji_sdk/attitude 
+/dji_sdk/battery_state 
+/dji_sdk/flight_control_setpoint_generic 
+/dji_sdk/flight_status 
+/dji_sdk/gimbal_angle 
+/dji_sdk/gimbal_angle_cmd 
+/dji_sdk/gimbal_speed_cmd 
+/dji_sdk/gps_health 
+/dji_sdk/gps_position 
+/dji_sdk/height_above_takeoff
+/dji_sdk/imu 
+/dji_sdk/rc 
+/dji_sdk/velocity
+
+
+"
+	/>
+
+</launch>

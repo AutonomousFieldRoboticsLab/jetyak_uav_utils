@@ -1,0 +1,24 @@
+<launch>
+	
+	<!-- Mavros -->
+	<include file="$(find jetyak_uav_utils)/launch/jetyak_mavros.launch"/>
+
+	<!-- Behaviors Utils -->
+	<group ns="jetyak_uav_utils">
+
+		<node name="uav_controller" pkg="jetyak_uav_utils" type="dji_pilot_node" output="screen" >
+			<rosparam command="load" file="$(find jetyak_uav_utils)/cfg/dji_pilot_M.yaml" />
+		</node>
+		
+		<node name="uav_behaviors" pkg="jetyak_uav_utils" type="behaviors_node" output="screen">
+			<rosparam command="load" file="$(find jetyak_uav_utils)/cfg/behaviors_M.yaml" />
+		</node>
+
+		<node name="rc_interpreter" pkg="jetyak_uav_utils" type="rc_interpreter.py" output="screen"/>
+
+	</group>
+
+	<!-- Capturing the flight data -->
+	<include file="$(find jetyak_uav_utils)/launch/log.launch"/>
+
+</launch>

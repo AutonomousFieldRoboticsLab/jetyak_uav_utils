@@ -1,4 +1,0 @@
-<launch>
-  <include file="$(find jetyak_uav_utils)/launch/visionAndSDKM.launch"/>
-  <include file="$(find jetyak_uav_utils)/launch/m100_controller.launch"/>
-</launch>

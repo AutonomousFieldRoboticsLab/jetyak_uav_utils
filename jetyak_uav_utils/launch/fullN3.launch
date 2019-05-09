@@ -1,4 +1,0 @@
-<launch>
-  <include file="$(find jetyak_uav_utils)/launch/visionAndSDKN3.launch"/>
-  <include file="$(find jetyak_uav_utils)/launch/n3_controller.launch"/>
-</launch>

@@ -1,3 +1,5 @@
+
+/**
 MIT License
 
 Copyright (c) 2018 Brennan Cain and Michail Kalaitzakis (Unmanned Systems and Robotics Lab, University of South Carolina, USA)
@@ -19,3 +21,45 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+*/
+
+/**
+ * This header provides enumerations for this package.
+ * 
+ * Author: Brennan Cain
+ */
+#ifndef JETYAK_UAV_UTILS_H_
+#define JETYAK_UAV_UTILS_H_
+
+#include <string>
+
+namespace JETYAK_UAV_UTILS
+{
+// Flag constants. Use these flags internally
+enum Flag : uint8_t
+{
+	YAW_ANGLE = 0b100,
+	YAW_RATE = 0b000,
+	BODY_FRAME = 0b010,
+	WORLD_FRAME = 0b000,
+	VELOCITY_CMD = 0b000,
+	POSITION_CMD = 0b001
+};
+
+// Enumerate the modes
+enum Mode : char
+{
+	TAKEOFF,
+	FOLLOW,
+	LEAVE,
+	RETURN,
+	LAND,
+	RIDE,
+	HOVER
+};
+
+// Save the names for human readable display
+static std::string nameFromMode[] = {"TAKEOFF", "FOLLOW", "LEAVE", "RETURN", "LAND", "RIDE", "HOVER"};
+}; // namespace JETYAK_UAV_UTILS
+
+#endif // JETYAK_FLAG_H_
