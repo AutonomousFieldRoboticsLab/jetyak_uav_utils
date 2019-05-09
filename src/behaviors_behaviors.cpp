@@ -77,14 +77,11 @@ void Behaviors::followBehavior()
 			zpid_->update(follow_.goal_pose.z - simpleTag_.z, simpleTag_.t);
 			wpid_->update(follow_.goal_pose.w - simpleTag_.w, simpleTag_.t);
 
-			double c_vx = vGain * (uavBodyVel_.x + tagVel_.x);
-			double c_vy = vGain * (uavBodyVel_.y + tagVel_.y);
 
-			ROS_WARN("UAV: %.2f \t+ TAG: %.2f \t= COR: %.2f", uavBodyVel_.x, tagVel_.x, c_vx);
 
 			sensor_msgs::Joy cmd;
-			cmd.axes.push_back(-xpid_->get_signal() + c_vx);
-			cmd.axes.push_back(-ypid_->get_signal() + c_vy);
+			cmd.axes.push_back(-xpid_->get_signal());
+			cmd.axes.push_back(-ypid_->get_signal());
 			cmd.axes.push_back(-zpid_->get_signal());
 			cmd.axes.push_back(-wpid_->get_signal());
 			cmd.axes.push_back(JETYAK_UAV_UTILS::VELOCITY_CMD | JETYAK_UAV_UTILS::BODY_FRAME | JETYAK_UAV_UTILS::YAW_RATE);
@@ -160,12 +157,9 @@ void Behaviors::returnBehavior()
 			zpid_->update(follow_.goal_pose.z - simpleTag_.z, simpleTag_.t);
 			wpid_->update(follow_.goal_pose.w - simpleTag_.w, simpleTag_.t);
 
-			double c_vx = vGain * (uavBodyVel_.x + tagVel_.x);
-			double c_vy = vGain * (uavBodyVel_.y + tagVel_.y);
-
 			sensor_msgs::Joy cmd;
-			cmd.axes.push_back(-xpid_->get_signal() + c_vx);
-			cmd.axes.push_back(-ypid_->get_signal() + c_vy);
+			cmd.axes.push_back(-xpid_->get_signal());
+			cmd.axes.push_back(-ypid_->get_signal());
 			cmd.axes.push_back(0);
 			// cmd.axes.push_back(-zpid_->get_signal());
 			cmd.axes.push_back(-wpid_->get_signal());
@@ -352,12 +346,9 @@ void Behaviors::landBehavior()
 		zpid_->update(land_.goal_pose.z - simpleTag_.z, simpleTag_.t);
 		wpid_->update(land_.goal_pose.w - simpleTag_.w, simpleTag_.t);
 
-		double c_vx = vGain * (uavBodyVel_.x + tagVel_.x);
-		double c_vy = vGain * (uavBodyVel_.y + tagVel_.y);
-
 		sensor_msgs::Joy cmd;
-		cmd.axes.push_back(-xpid_->get_signal() + c_vx);
-		cmd.axes.push_back(-ypid_->get_signal() + c_vy);
+		cmd.axes.push_back(-xpid_->get_signal());
+		cmd.axes.push_back(-ypid_->get_signal());
 		cmd.axes.push_back(-zpid_->get_signal());
 		cmd.axes.push_back(-wpid_->get_signal());
 		cmd.axes.push_back(JETYAK_UAV_UTILS::VELOCITY_CMD | JETYAK_UAV_UTILS::BODY_FRAME | JETYAK_UAV_UTILS::YAW_RATE);
