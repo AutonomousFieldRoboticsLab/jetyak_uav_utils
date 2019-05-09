@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Jetyak UAV Utilities
 
 ***Aiming to provide an interface for the interaction of UAVs and ASVs***
@@ -79,3 +80,7 @@ We want continue the development of this project in a modular and robust way. Ou
 We ask that you maintain these layers of abstraction when developing your system and contribute your interfaces here as well. If you would like to create more advanced behaviors, feel free to create them using either the behaviors node or as an external behavior (see scripts/nodes/waypoint_following.py).
 
 Please follow good coding practices and submit your code by issuing a pull request.
+=======
+# jetyak_uav
+This package is being developed by the Autonomous Field Robotics Lab as an interface between a GPS-enabled ground vehicle and a multicopter. 
+>>>>>>> master

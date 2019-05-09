@@ -27,6 +27,7 @@ SOFTWARE.
  * 
  * Author: Michail Kalaitzakis, Brennan Cain
  */
+
 #ifndef DJI_PILOT_H
 #define DJI_PILOT_H
 
