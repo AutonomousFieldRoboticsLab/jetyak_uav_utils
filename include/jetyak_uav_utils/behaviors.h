@@ -58,13 +58,14 @@ SOFTWARE.
 #include "std_srvs/SetBool.h"
 
 // Jetyak UAV Includes
+#include "jetyak_uav_utils/ObservedState.h"
 #include "jetyak_uav_utils/FourAxes.h"
 #include "jetyak_uav_utils/GetString.h"
 #include "jetyak_uav_utils/SetString.h"
 #include "jetyak_uav_utils/jetyak_uav_utils.h"
 
 // Lib includes
-#include "../lib/bsc_common/include/pid.h"
+#include "../lib/bsc_common/include/lqr.h"
 #include "../lib/bsc_common/include/types.h"
 #include "../lib/bsc_common/include/util.h"
 
@@ -74,7 +75,7 @@ private:
 	/*********************************************
 	 * ROS PUBLISHERS, SUBSCRIBERS, AND SERVICES
 	 *********************************************/
-	ros::Subscriber tagPoseSub_, tagVelSub_, boatGPSSub_, boatIMUSub_, uavGPSSub_, uavAttSub_, uavHeightSub_, uavVelSub,
+	ros::Subscriber stateSub_, boatGPSSub_, boatIMUSub_, uavGPSSub_, uavAttSub_, uavHeightSub_, uavVelSub,
 			extCmdSub_;
 	ros::Publisher cmdPub_, modePub_;
 	ros::ServiceClient propSrv_, takeoffSrv_, landSrv_, lookdownSrv_, resetKalmanSrv_, enableGimbalSrv_;
@@ -86,7 +87,8 @@ private:
 	 * INSTANCE VARIABLES
 	 **********************/
 	int integral_size = 0;
-	bsc_common::PID *xpid_, *ypid_, *zpid_, *wpid_; // pid controllers
+	bsc_common::LQR *lqr_; // pid controllers
+	std::string k_matrix_path;
 	bool behaviorChanged_ = false;
 	JETYAK_UAV_UTILS::Mode currentMode_;
 	bool propellorsRunning = false;
@@ -98,12 +100,10 @@ private:
 	sensor_msgs::NavSatFix uavGPS_, boatGPS_;
 	geometry_msgs::QuaternionStamped uavAttitude_;
 	sensor_msgs::Imu uavImu_, boatImu_;
-	geometry_msgs::PoseStamped tagPose_ = geometry_msgs::PoseStamped();
 	double uavHeight_ = 0;
 	double vGain;
 
-	bsc_common::pose4d_t simpleTag_ = {0, 0, 0, 0, 0};
-	bsc_common::vel3d_t tagVel_ = {0, 0, 0, 0};			 // body
+	jetyak_uav_utils::ObservedState state;
 	bsc_common::vel3d_t uavWorldVel_ = {0, 0, 0, 0}; // world
 	bsc_common::vel3d_t uavBodyVel_ = {0, 0, 0, 0};	// world
 
@@ -227,17 +227,10 @@ private:
 	 * SUBSCRIPTION CALLBACKS
 	 *****************************/
 
-	/** tagPoseCallback
-	 *
-	 * @param msg gets the pose of the tag relative to the UAV
+	/** stateCallback
+	 * *
 	 */
-	void tagPoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg);
-
-	/** tagVelCallback
-	 *
-	 * @param msg gets the velocity of the tag relative to the UAV
-	 */
-	void tagVelCallback(const geometry_msgs::Vector3Stamped::ConstPtr &msg);
+	void stateCallback(const jetyak_uav_utils::ObservedState::ConstPtr &msg);
 
 	/** uavGPSCallback
 	 * Listens for updates from the UAVs GPS
@@ -335,19 +328,6 @@ private:
 	/*****************
 	 * Common Methods
 	 *****************/
-	/** resetPID
-	 * Reset all PID controllers
-	 */
-	void resetPID();
-
-	/** setPID
-	 * Set constants for the controllers
-	 *
-	 * @param kp bsc_common::pose4d_t containing P constants
-	 * @param ki bsc_common::pose4d_t containing I constants
-	 * @param kd bsc_common::pose4d_t containing D constants
-	 */
-	void setPID(bsc_common::pose4d_t &kp, bsc_common::pose4d_t &ki, bsc_common::pose4d_t &kd);
 
 	/** downloadParams
 	 * Download params from the namespaces's ros param server
@@ -363,26 +343,9 @@ private:
 	 */
 	void uploadParams(std::string ns = "");
 
-	/** scaleConstant
-	 * Scales the constant by some function with relation to the error
-	 *
-	 * @param C constant to scale
-	 * @param e error as function input
-	 *
-	 * @return the scaled constant
-	 */
-	double scaleConstant(double C, double x);
 	/***********************
 	 * Constructor Methods
 	 **********************/
-	/** createPID
-	 * Initialize and set constants for the controllers
-	 *
-	 * @param kp bsc_common::pose4d_t containing P constants
-	 * @param ki bsc_common::pose4d_t containing I constants
-	 * @param kd bsc_common::pose4d_t containing D constants
-	 */
-	void createPID(bsc_common::pose4d_t &kp, bsc_common::pose4d_t &ki, bsc_common::pose4d_t &kd);
 
 	/** assignPublishers
 	 * Initialize the ROS Publishers

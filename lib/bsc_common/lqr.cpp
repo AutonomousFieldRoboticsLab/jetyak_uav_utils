@@ -24,7 +24,7 @@ SOFTWARE.
 */
 
 /**
- * This file implements a PID controller
+ * This file implements a LQR controller
  * 
  * Author: Brennan Cain
  */
@@ -100,7 +100,7 @@ void LQR::updateVel(double x, double y, double z)
 	xh(4, 0) = y;
 	xh(5, 0) = z;
 }
-void LQR::updateAndPos(double r, double p, double y)
+void LQR::updateAngPos(double r, double p, double y)
 {
 	xh(6, 0) = r;
 	xh(7, 0) = p;
@@ -112,14 +112,16 @@ void LQR::updateAngVel(double r, double p, double y)
 	xh(10, 0) = p;
 	xh(11, 0) = y;
 }
-void LQR::getCommand(double cmd[], double x, double y, double z,
-										 double xd, double yd, double zd,
-										 double r, double p, double yaw,
-										 double rd, double pd, double yawd)
+Eigen::Matrix<double, 4, 1> LQR::getCommand(double x, double y, double z,
+																						double xd, double yd, double zd,
+																						double r, double p, double yaw,
+																						double rd, double pd, double yawd)
 {
 	xs << x, y, z, xd, yd, zd, r, p, yaw, rd, pd, yawd;
-	u = K * (xs - xh);
-	for (int i = 0; i < 4; i++)
-		cmd[i] = K(i, 0);
+	return K * (xs - xh);
+}
+Eigen::Matrix<double, 4, 1> LQR::getCommand(double x, double y, double z, double yaw)
+{
+	return getCommand(x, y, z, 0, 0, 0, 0, 0, yaw, 0, 0, 0);
 }
 } // namespace bsc_common

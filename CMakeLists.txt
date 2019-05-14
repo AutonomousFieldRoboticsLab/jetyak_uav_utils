@@ -28,6 +28,7 @@ find_package(DJIOSDK REQUIRED)
 add_message_files(DIRECTORY msg
   FILES
   Waypoint.msg
+  ObservedState.msg
 	WaypointArray.msg
 )
 add_service_files(DIRECTORY srv
@@ -78,7 +79,7 @@ add_executable(behaviors_node
   src/behaviors_callbacks.cpp
 	src/behaviors_common.cpp
   src/behaviors_main.cpp
-  lib/bsc_common/pid.cpp
+  lib/bsc_common/lqr.cpp
   lib/bsc_common/util.cpp
 )
 

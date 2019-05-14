@@ -47,16 +47,9 @@ Behaviors::Behaviors(ros::NodeHandle &nh_param)
 	leave_.input.axes.push_back(0);
 	leave_.input.axes.push_back(0);
 	leave_.input.axes.push_back(0);
-	leave_.input.axes.push_back(JETYAK_UAV_UTILS::WORLD_FRAME | JETYAK_UAV_UTILS::VELOCITY_CMD);
+	leave_.input.axes.push_back(JETYAK_UAV_UTILS::WORLD_RATE);
 
-	// initialize the tag
-	tagPose_.pose.orientation.x = 0;
-	tagPose_.pose.orientation.y = 0;
-	tagPose_.pose.orientation.z = 0;
-	tagPose_.pose.orientation.w = 1;
-
-	// Initialize the PID controllers
-	createPID(follow_.kp, follow_.ki, follow_.kd);
+	lqr_ = new bsc_common::LQR(k_matrix_path);
 }
 
 Behaviors::~Behaviors()
@@ -65,18 +58,6 @@ Behaviors::~Behaviors()
 
 void Behaviors::doBehaviorAction()
 {
-	// simpleTag_.x = tagPose_.pose.position.x;
-	// simpleTag_.y = tagPose_.pose.position.y;
-
-	simpleTag_.z = tagPose_.pose.position.z;
-
-	simpleTag_.w = bsc_common::util::yaw_from_quat(tagPose_.pose.orientation);
-
-	bsc_common::util::rotate_vector(tagPose_.pose.position.x, tagPose_.pose.position.y, -simpleTag_.w, simpleTag_.x,
-																	simpleTag_.y);
-
-	simpleTag_.t = tagPose_.header.stamp.toSec();
-
 	switch (currentMode_)
 	{
 	case JETYAK_UAV_UTILS::TAKEOFF:

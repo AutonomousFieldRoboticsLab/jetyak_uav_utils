@@ -75,13 +75,14 @@ public:
 
 	void updatePos(double x, double y, double z);
 	void updateVel(double x, double y, double z);
-	void updateAndPos(double r, double p, double y);
+	void updateAngPos(double r, double p, double y);
 	void updateAngVel(double r, double p, double y);
 
-	void getCommand(double cmd[], double x, double y, double z,
-									double xd = 0, double yd = 0, double zd = 0,
-									double r = 0, double p = 0, double yaw = 0,
-									double rd = 0, double pd = 0, double yawd = 0);
+	Eigen::Matrix<double, 4, 1> getCommand(double x, double y, double z,
+																				 double xd, double yd, double zd,
+																				 double r, double p, double yaw,
+																				 double rd, double pd, double yawd);
+	Eigen::Matrix<double, 4, 1> getCommand(double x, double y, double z, double yaw);
 };
 } // namespace bsc_common
 #endif

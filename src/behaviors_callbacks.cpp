@@ -29,40 +29,19 @@ SOFTWARE.
  */
 
 #include "jetyak_uav_utils/behaviors.h"
-
-void Behaviors::tagPoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
+void Behaviors::stateCallback(const jetyak_uav_utils::ObservedState::ConstPtr &msg)
 {
-	if (msg->header.stamp.toSec() - tagPose_.header.stamp.toSec() > resetFilterTimeThresh)
-	{
-		ROS_WARN("Tag detected after %1.2f, resetting filter", msg->header.stamp.toSec() - tagPose_.header.stamp.toSec());
-		std_srvs::Trigger srv;
-		resetKalmanSrv_.call(srv);
-		if (srv.response.success)
-		{
-			tagPose_.pose = msg->pose;
-			tagPose_.header = msg->header;
-			ROS_WARN("Filter reset and tag updated");
-		}
-		else
-		{
-			ROS_WARN("Reset failed with message: %s", srv.response.message.c_str());
-		}
-	}
-	else
-	{
-		tagPose_.pose = msg->pose;
-		tagPose_.header = msg->header;
-	}
-}
+	this->state.header = msg->header;
+	this->state.position = msg->position;
+	this->state.velocity = msg->velocity;
+	this->state.attitude = msg->attitude;
+	this->state.angular_velocity = msg->angular_velocity;
 
-void Behaviors::tagVelCallback(const geometry_msgs::Vector3Stamped::ConstPtr &msg)
-{
-	tagVel_.t = msg->header.stamp.toSec();
-	tagVel_.x = msg->vector.x;
-	tagVel_.y = msg->vector.y;
-	tagVel_.z = msg->vector.z;
+	lqr_->updatePos(msg->position[0], msg->position[1], msg->position[2]);
+	lqr_->updateVel(msg->velocity[0], msg->velocity[1], msg->velocity[2]);
+	lqr_->updateAngPos(msg->attitude[0], msg->attitude[1], msg->attitude[2]);
+	lqr_->updateAngVel(msg->angular_velocity[0], msg->angular_velocity[1], msg->angular_velocity[2]);
 }
-
 void Behaviors::uavGPSCallback(const sensor_msgs::NavSatFix::ConstPtr &msg)
 {
 	if (msg->status.status >= 0)

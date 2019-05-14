@@ -30,30 +30,6 @@ SOFTWARE.
 
 #include "jetyak_uav_utils/behaviors.h"
 
-void Behaviors::createPID(bsc_common::pose4d_t &kp, bsc_common::pose4d_t &ki, bsc_common::pose4d_t &kd)
-{
-	xpid_ = new bsc_common::PID(follow_.kp.x, follow_.ki.x, follow_.kd.x, integral_size);
-	ypid_ = new bsc_common::PID(follow_.kp.y, follow_.ki.y, follow_.kd.y, integral_size);
-	zpid_ = new bsc_common::PID(follow_.kp.z, follow_.ki.z, follow_.kd.z, integral_size);
-	wpid_ = new bsc_common::PID(follow_.kp.w, follow_.ki.w, follow_.kd.w, integral_size);
-}
-
-void Behaviors::resetPID()
-{
-	xpid_->reset();
-	ypid_->reset();
-	zpid_->reset();
-	wpid_->reset();
-}
-
-void Behaviors::setPID(bsc_common::pose4d_t &kp, bsc_common::pose4d_t &ki, bsc_common::pose4d_t &kd)
-{
-	xpid_->updateParams(kp.x, ki.x, kd.x);
-	ypid_->updateParams(kp.y, ki.y, kd.y);
-	zpid_->updateParams(kp.z, ki.z, kd.z);
-	wpid_->updateParams(kp.w, ki.w, kd.w);
-}
-
 void Behaviors::downloadParams(std::string ns_param)
 {
 	/** getP
@@ -77,26 +53,11 @@ void Behaviors::downloadParams(std::string ns_param)
 	if (!ros::param::get(ns + "integral_size", integral_size))
 		ROS_WARN("FAILED: %s", "integral_size");
 
+	if (!ros::param::get(ns + "k_matrix_path", k_matrix_path))
+		ROS_WARN("FAILED: %s", "k_matrix_path");
+
 	getP(ns, "reset_kalman_threshold", resetFilterTimeThresh);
 	getP(ns, "vGain", vGain);
-
-	/**********************
-	 * LANDING PARAMETERS *
-	 *********************/
-	getP(ns, "land_x_kp", land_.kp.x);
-	getP(ns, "land_y_kp", land_.kp.y);
-	getP(ns, "land_z_kp", land_.kp.z);
-	getP(ns, "land_w_kp", land_.kp.w);
-
-	getP(ns, "land_x_kd", land_.kd.x);
-	getP(ns, "land_y_kd", land_.kd.y);
-	getP(ns, "land_z_kd", land_.kd.z);
-	getP(ns, "land_w_kd", land_.kd.w);
-
-	getP(ns, "land_x_ki", land_.ki.x);
-	getP(ns, "land_y_ki", land_.ki.y);
-	getP(ns, "land_z_ki", land_.ki.z);
-	getP(ns, "land_w_ki", land_.ki.w);
 
 	getP(ns, "land_x", land_.goal_pose.x);
 	getP(ns, "land_y", land_.goal_pose.y);
@@ -123,21 +84,6 @@ void Behaviors::downloadParams(std::string ns_param)
 	/*********************
 	 * FOLLOW PARAMETERS *
 	 ********************/
-	getP(ns, "follow_x_kp", follow_.kp.x);
-	getP(ns, "follow_y_kp", follow_.kp.y);
-	getP(ns, "follow_z_kp", follow_.kp.z);
-	getP(ns, "follow_w_kp", follow_.kp.w);
-
-	getP(ns, "follow_x_kd", follow_.kd.x);
-	getP(ns, "follow_y_kd", follow_.kd.y);
-	getP(ns, "follow_z_kd", follow_.kd.z);
-	getP(ns, "follow_w_kd", follow_.kd.w);
-
-	getP(ns, "follow_x_ki", follow_.ki.x);
-	getP(ns, "follow_y_ki", follow_.ki.y);
-	getP(ns, "follow_z_ki", follow_.ki.z);
-	getP(ns, "follow_w_ki", follow_.ki.w);
-
 	getP(ns, "follow_x", follow_.goal_pose.x);
 	getP(ns, "follow_y", follow_.goal_pose.y);
 	getP(ns, "follow_z", follow_.goal_pose.z);
@@ -168,21 +114,6 @@ void Behaviors::uploadParams(std::string ns_param)
 	/**********************
 	 * LANDING PARAMETERS *
 	 *********************/
-	ros::param::set(ns + "land_x_kp", land_.kp.x);
-	ros::param::set(ns + "land_y_kp", land_.kp.y);
-	ros::param::set(ns + "land_z_kp", land_.kp.z);
-	ros::param::set(ns + "land_w_kp", land_.kp.w);
-
-	ros::param::set(ns + "land_x_kd", land_.kd.x);
-	ros::param::set(ns + "land_y_kd", land_.kd.y);
-	ros::param::set(ns + "land_z_kd", land_.kd.z);
-	ros::param::set(ns + "land_w_kd", land_.kd.w);
-
-	ros::param::set(ns + "land_x_ki", land_.ki.x);
-	ros::param::set(ns + "land_y_ki", land_.ki.y);
-	ros::param::set(ns + "land_z_ki", land_.ki.z);
-	ros::param::set(ns + "land_w_ki", land_.ki.w);
-
 	ros::param::set(ns + "land_x", land_.goal_pose.x);
 	ros::param::set(ns + "land_y", land_.goal_pose.y);
 	ros::param::set(ns + "land_z", land_.goal_pose.z);
@@ -197,21 +128,6 @@ void Behaviors::uploadParams(std::string ns_param)
 	/**********************
 	 * FOLLOW PARAMETERS *
 	 *********************/
-	ros::param::set(ns + "follow_x_kp", follow_.kp.x);
-	ros::param::set(ns + "follow_y_kp", follow_.kp.y);
-	ros::param::set(ns + "follow_z_kp", follow_.kp.z);
-	ros::param::set(ns + "follow_w_kp", follow_.kp.w);
-
-	ros::param::set(ns + "follow_x_kd", follow_.kd.x);
-	ros::param::set(ns + "follow_y_kd", follow_.kd.y);
-	ros::param::set(ns + "follow_z_kd", follow_.kd.z);
-	ros::param::set(ns + "follow_w_kd", follow_.kd.w);
-
-	ros::param::set(ns + "follow_x_ki", follow_.ki.x);
-	ros::param::set(ns + "follow_y_ki", follow_.ki.y);
-	ros::param::set(ns + "follow_z_ki", follow_.ki.z);
-	ros::param::set(ns + "follow_w_ki", follow_.ki.w);
-
 	ros::param::set(ns + "follow_x", follow_.goal_pose.x);
 	ros::param::set(ns + "follow_y", follow_.goal_pose.y);
 	ros::param::set(ns + "follow_z", follow_.goal_pose.z);
@@ -252,16 +168,13 @@ void Behaviors::assignServiceServers()
 	setModeService_ = nh.advertiseService("setMode", &Behaviors::setModeCallback, this);
 	getModeService_ = nh.advertiseService("getMode", &Behaviors::getModeCallback, this);
 	setBoatNSService_ = nh.advertiseService("setBoatNS", &Behaviors::setBoatNSCallback, this);
-	setFollowPIDService_ = nh.advertiseService("setFollowPID", &Behaviors::setFollowPIDCallback, this);
-	setLandPIDService_ = nh.advertiseService("setLandPID", &Behaviors::setLandPIDCallback, this);
 	setFollowPosition_ = nh.advertiseService("setFollowPosition", &Behaviors::setFollowPositionCallback, this);
 	setLandPosition_ = nh.advertiseService("setLandPosition", &Behaviors::setLandPositionCallback, this);
 }
 
 void Behaviors::assignSubscribers()
 {
-	tagPoseSub_ = nh.subscribe("/jetyak_uav_vision/filtered_tag", 1, &Behaviors::tagPoseCallback, this);
-	tagVelSub_ = nh.subscribe("/jetyak_uav_vision/tag_velocity", 1, &Behaviors::tagVelCallback, this);
+	stateSub_ = nh.subscribe("/jetyak_uav_vision/state", 1, &Behaviors::stateCallback, this);
 	uavHeightSub_ = nh.subscribe("/dji_sdk/height_above_takeoff", 1, &Behaviors::uavHeightCallback, this);
 	uavGPSSub_ = nh.subscribe("/dji_sdk/gps_position", 1, &Behaviors::uavGPSCallback, this);
 	boatGPSSub_ = nh.subscribe("/jetyak2/global_position/global", 1, &Behaviors::boatGPSCallback, this);
@@ -269,13 +182,4 @@ void Behaviors::assignSubscribers()
 	boatIMUSub_ = nh.subscribe("/jetyak2/imu/data", 1, &Behaviors::boatIMUCallback, this);
 	uavVelSub = nh.subscribe("/dji_sdk/velocity", 1, &Behaviors::uavVelCallback, this);
 	extCmdSub_ = nh.subscribe("extCommand", 1, &Behaviors::extCmdCallback, this);
-}
-
-double Behaviors::scaleConstant(double C, double e)
-{
-	/*
-	 * double THRESHOLD = .1;
-	 * return error < THRESHOLD : 0 ? c;											 // piecewise
-	 */
-	return abs(bsc_common::util::fastSigmoid(e)) * C; // scale with fast sigmoid
 }
