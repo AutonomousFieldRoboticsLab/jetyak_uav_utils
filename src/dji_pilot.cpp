@@ -69,10 +69,10 @@ dji_pilot::dji_pilot(ros::NodeHandle &nh)
 
 	// Initialize default command flag
 	commandFlag = (DJISDK::VERTICAL_VELOCITY |
-				   DJISDK::HORIZONTAL_VELOCITY |
-				   DJISDK::YAW_RATE |
-				   DJISDK::HORIZONTAL_BODY |
-				   DJISDK::STABLE_ENABLE);
+		       DJISDK::HORIZONTAL_ANGLE |
+		       DJISDK::YAW_RATE |
+		       DJISDK::HORIZONTAL_BODY |
+		       DJISDK::STABLE_DISABLE);
 	
 	// Initialize joy command
 	extCommand.axes.clear();
@@ -171,11 +171,11 @@ void dji_pilot::rcCallback(const sensor_msgs::Joy::ConstPtr &msg)
 		{
 			// Clear any previous RC commands
 			rcCommand.axes.clear();
-			rcCommand.axes.push_back(msg->axes[1] * rcVelocityMultiplier);	// Roll
-			rcCommand.axes.push_back(-msg->axes[0] * rcVelocityMultiplier); // Pitch
-			rcCommand.axes.push_back(msg->axes[3] * rcVelocityMultiplier);	// Altitude
-			rcCommand.axes.push_back(-msg->axes[2]);												// Yaw
-			rcCommand.axes.push_back(commandFlag);													// Command Flag
+			rcCommand.axes.push_back(msg->axes[0] * rcVelocityMultiplier);	// Roll
+			rcCommand.axes.push_back(msg->axes[1] * rcVelocityMultiplier); // Pitch
+			rcCommand.axes.push_back(msg->axes[3] * 3);	// Altitude
+			rcCommand.axes.push_back(-msg->axes[2]);			// Yaw
+			rcCommand.axes.push_back(commandFlag);				// Command Flag
 
 			bypassPilot = true;
 		}
@@ -274,7 +274,7 @@ sensor_msgs::Joy dji_pilot::adaptiveClipping(sensor_msgs::Joy msg)
 
 	for (int i = 0; i < 4; ++i)
 		cmdBuffer.axes.push_back(0);
-	cmdBuffer.axes.push_back(flag);
+	cmdBuffer.axes.push_back(commandFlag);
 
 	// Coordinate frame
 	double hVelcmdMax, vVelcmdMax;

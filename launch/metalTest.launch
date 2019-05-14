@@ -1,0 +1,31 @@
+<launch>
+	
+	<!-- Start the DJI SDK -->
+	<include file="$(find dji_sdk)/launch/sdkM.launch"/>
+
+	<!-- Vision node -->
+	<group ns="jetyak_uav_vision">
+
+		<!-- Load vision and gimbal parameters -->
+		<rosparam command="load" file="$(find jetyak_uav_utils)/cfg/gimbal_cam.yaml"/>
+
+		<!-- Start the camera and gimbal controller -->
+		<include file="$(find dji_gimbal_cam)/launch/default.launch"/>
+		<node name="gimbal_tag" pkg="jetyak_uav_utils" type="gimbal_tag_node" output="screen" />
+
+		<!-- Start tag tracking -->
+		<arg name="marker_size" value="51.8" />
+		<arg name="max_new_marker_error" value=".05" />
+		<arg name="max_track_error" value="0.2" />
+		<arg name="cam_image_topic" value="/jetyak_uav_vision/dji_camera/image_raw"  />
+		<arg name="cam_info_topic" value="/jetyak_uav_vision/dji_camera/camera_info"  />
+		<arg name="output_frame" value="/dji_camera" />
+		<arg name="bundle_files" value="$(find jetyak_uav_utils)/cfg/metalBundle.xml" />
+
+		<node name="ar_track_alvar" pkg="ar_track_alvar" type="findMarkerBundlesNoKinect" respawn="false" output="screen" 
+			  args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) $(arg bundle_files)"
+		/>
+		<node name="filter" pkg="jetyak_uav_utils" type="filter_node.py" output="screen"/>
+	</group>
+
+</launch>
