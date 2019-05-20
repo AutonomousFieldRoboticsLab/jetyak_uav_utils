@@ -38,7 +38,8 @@ from std_srvs.srv import Trigger,TriggerResponse
 from sensor_msgs.msg import Joy
 from sensor_msgs.msg import NavSatFix
 from geometry_msgs.msg import QuaternionStamped
-from math import atan2,cos,sin,pi,sqrt
+from math import atan2, cos, sin, pi, sqrt
+import numpy as np
 
 def lat_lon_to_m(lat1,lon1,lat2,lon2):
 	R = 6378137
@@ -77,6 +78,16 @@ def angle_dist(a1,a2):
 		diff+=2*pi
 	return diff
 
+def gen_waypoint(lat,lon,alt,heading,radius,loiter):
+	wp = Waypoint()
+	wp.lat = lat
+	wp.lon = lon
+	wp.alt = alt
+	wp.heading = heading
+
+	wp.radius = radius
+	wp.loiter_time = loiter
+	return wp
 
 
 class WaypointFollow():	
@@ -161,27 +172,19 @@ class WaypointFollow():
 		path = []
 		for i in range(len(left)):
 			if(i % 2 == 0):
-				path.append(left.pop(0))
+				wps.append(gen_waypoints(left.pop(0)[0], left.pop(0)[1], left.pop(0)[2], left.pop(0)[3],.1,.5))
+				
 				for j in range(intermediate):
-					path.append(mid[j].pop(0))
-				path.append(right.pop(0))
+					wps.append(gen_waypoints(mid[j].pop(0)[0], mid[j].pop(0)[1], mid[j].pop(0)[2], mid[j].pop(0)[3], 1, 0))
+				wps.append(gen_waypoints(right.pop(0)[0], right.pop(0)[1], right.pop(0)[2], right.pop(0)[3], .1, .5))
+
 			else:
-				path.append(right.pop(0))
+				wps.append(gen_waypoints(left.pop(0)[0], left.pop(0)[1], left.pop(0)[2], left.pop(0)[3], .1, .5))
+
 				for j in range(intermediate)[::-1]:
-					path.append(mid[j].pop(0))
-				path.append(left.pop(0))
+					wps.append(gen_waypoints(mid[j].pop(0)[0], mid[j].pop(0)[1], mid[j].pop(0)[2], mid[j].pop(0)[3], 1, 0))
+				wps.append(gen_waypoints(right.pop(0)[0], right.pop(0)[1], right.pop(0)[2], right.pop(0)[3], .1, .5))
 
-		for p in path:
-			wp = Waypoint()
-			wp.lat = p[0]
-			wp.lon = p[1]
-			wp.alt = p[2]
-			wp.heading=p[3]
-
-
-			wp.radius = .1
-			wp.loiter_time = 0
-			self.wps.append(wp)
 			
 	def wps_callback(self, req):
 		del self.wps[:]
@@ -230,7 +233,7 @@ class WaypointFollow():
 		if not self.in_waypoint:
 			self.in_waypoint = self.check_if_in_wp()
 			
-		#If we are still in a waypoint
+		#If we are in a waypoint
 		if self.in_waypoint:
 			#If this is our first time noticing we are in a waypoint
 			if self.time_entered_wp == 0:
@@ -244,32 +247,43 @@ class WaypointFollow():
 				if(len(self.wps)==0):
 					cmd = Joy()
 					cmd.axes = [0,0, 0, 0, 0b010]
-					#cmd.axes=[east,0,height_diff,0,self.flag]
 					self.cmd_pub.publish(cmd)
 					print("Mission Complete")
 				else:
 					print("Moving to next objective: %i left"%len(self.wps))
 				return
 		
-		east = lat_lon_to_m(0, self.wps[0].lon, 0, self.lon)
-		if(self.wps[0].lon<self.lon):
-			east = -east
-		north = lat_lon_to_m(self.wps[0].lat, 0, self.lat, 0)
-		if(self.wps[0].lat<self.lat):
-			north = -north
-		#print("N: %1.5f, E: %1.5f"%(north,east))
-		self.hover_alt = self.wps[0].alt
+		# Algorithm 1 from DOI: 10.1109/ICRA.2018.8460885
 
-		height_diff=self.wps[0].alt-self.height
+		i = 0
+		y = 10
+		while (y >= 1):
+			i = i + 1
 
-		mag= sqrt(east**2+north**2)
-		if(mag>self.max_speed):
-			east = (east/mag)*self.max_speed
-			north= (north/mag)*self.max_speed
+			pdi = np.array([self.wps[i].lon, self.wps[i].lat,
+                            self.wps[i].alt, self.wps[i-1].heading])
 
+			pd0 = np.array([self.wps[i-1].lon, self.wps[i-1].lat,
+                            self.wps[i-1].alt, self.wps[i-1].heading])
+
+			d = pdi - pd0
+			
+			p = np.array([self.lon, self.lat, self.alt])
+			
+			y= np.dot((p-pd0),d)/(np.abs(d)**2.0)
+
+		xd1 = np.array([self.wps[i-1].lon, self.wps[i-1].lon, self.wps[i-1].alt, self.wps[i-1].heading])
+		xdi = np.array([self.wps[i].lon, self.wps[i].lon, self.wps[i].alt, self.wps[i].heading])
+		
+		xd = xd1 + y * (xdi - xd1)
+
+		mag = xd[0] ** 2 + xd[1] ** 2
+		if (mag > self.max_speed):
+			xd[0] = xd[0] / mag
+			xd[1] = xd[1] / mag
+		
 		cmd = Joy()
-		cmd.axes = [east, north, height_diff, self.wps[0].heading, self.flag]
-		#cmd.axes=[east,0,height_diff,0,self.flag]
+		cmd.axes = [xd[0], xd[1], xd[2], xd[3], self.flag]
 		self.cmd_pub.publish(cmd)
 
 
