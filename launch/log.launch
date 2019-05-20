@@ -9,6 +9,10 @@
 /jetyak_uav_vision/tag_velocity
 /jetyak_uav_vision/visualization_marker
 
+/jetyak_uav_utils/behavior_cmd
+/jetyak_uav_utils/behavior_mode
+/jetyak_uav_utils/extCommand
+
 /jetyak2/global_position/compass_hdg
 /jetyak2/global_position/global
 /jetyak2/global_position/local

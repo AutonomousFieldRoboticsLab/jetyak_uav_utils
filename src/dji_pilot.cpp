@@ -67,14 +67,19 @@ dji_pilot::dji_pilot(ros::NodeHandle &nh)
 	// Initialize RC
 	setupRCCallback();
 
+	// Initialize default command flag
+	commandFlag = (DJISDK::VERTICAL_VELOCITY |
+				   DJISDK::HORIZONTAL_VELOCITY |
+				   DJISDK::YAW_RATE |
+				   DJISDK::HORIZONTAL_BODY |
+				   DJISDK::STABLE_ENABLE);
+	
 	// Initialize joy command
 	extCommand.axes.clear();
-	for (int i = 0; i < 5; ++i)
+	for (int i = 0; i < 4; ++i)
 		extCommand.axes.push_back(0);
-
-	// Initialize default command flag
-	commandFlag = (DJISDK::VERTICAL_VELOCITY | DJISDK::HORIZONTAL_VELOCITY | DJISDK::YAW_RATE | DJISDK::HORIZONTAL_BODY |
-								 DJISDK::STABLE_ENABLE);
+	
+	extCommand.axes.push_back(commandFlag);
 }
 
 dji_pilot::~dji_pilot()

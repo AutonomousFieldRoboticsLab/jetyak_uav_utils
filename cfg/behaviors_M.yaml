@@ -3,7 +3,6 @@
 #
 integral_size: 200
 reset_kalman_threshold: 3.0
-vGain: 1.0
 
 #
 # Takeoff
@@ -14,7 +13,7 @@ takeoff_threshold: .25
 #
 # Follow Parameters
 #
-follow_x: 1
+follow_x: 2.5
 follow_x_kp: .45
 follow_x_kd: .3
 follow_x_ki: .0
@@ -24,7 +23,7 @@ follow_y_kp: .45
 follow_y_kd: .3
 follow_y_ki: .0
 
-follow_z: -3
+follow_z: -1.5
 follow_z_kp: .2
 follow_z_kd: 0
 follow_z_ki: 0

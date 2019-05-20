@@ -100,7 +100,6 @@ private:
 	sensor_msgs::Imu uavImu_, boatImu_;
 	geometry_msgs::PoseStamped tagPose_ = geometry_msgs::PoseStamped();
 	double uavHeight_ = 0;
-	double vGain;
 
 	bsc_common::pose4d_t simpleTag_ = {0, 0, 0, 0, 0};
 	bsc_common::vel3d_t tagVel_ = {0, 0, 0, 0};			 // body
