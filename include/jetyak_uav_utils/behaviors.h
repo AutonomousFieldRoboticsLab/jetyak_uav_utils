@@ -101,7 +101,6 @@ private:
 	geometry_msgs::QuaternionStamped uavAttitude_;
 	sensor_msgs::Imu uavImu_, boatImu_;
 	double uavHeight_ = 0;
-	double vGain;
 
 	jetyak_uav_utils::ObservedState state;
 	bsc_common::vel3d_t uavWorldVel_ = {0, 0, 0, 0}; // world

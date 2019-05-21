@@ -35,14 +35,14 @@ SOFTWARE.
 gimbal_tag::gimbal_tag(ros::NodeHandle &nh)
 {
 	// Subscribe to topics
-	tagPoseSub = nh.subscribe("ar_pose_marker", 10, &gimbal_tag::tagCallback, this);
+	tagPoseSub = nh.subscribe("ar_pose_marker", 1, &gimbal_tag::tagCallback, this);
 
-	gimbalAngleSub = nh.subscribe("/dji_sdk/gimbal_angle", 10, &gimbal_tag::gimbalCallback, this);
-	vehicleAttiSub = nh.subscribe("/dji_sdk/attitude", 10, &gimbal_tag::attitudeCallback, this);
+	gimbalAngleSub = nh.subscribe("/dji_sdk/gimbal_angle", 1, &gimbal_tag::gimbalCallback, this);
+	vehicleAttiSub = nh.subscribe("/dji_sdk/attitude", 1, &gimbal_tag::attitudeCallback, this);
 
 	// Set up publisher
-	tagPosePub = nh.advertise<geometry_msgs::Vector3>("ar_pose_v3", 10);
-	tagBodyPosePub = nh.advertise<geometry_msgs::PoseStamped>("tag_pose", 10);
+	tagPosePub = nh.advertise<geometry_msgs::Vector3>("ar_pose_v3", 1);
+	tagBodyPosePub = nh.advertise<geometry_msgs::PoseStamped>("tag_pose", 1);
 
 	tagFound = false;
 
@@ -128,6 +128,7 @@ void gimbal_tag::tagCallback(const ar_track_alvar_msgs::AlvarMarkers &msg)
 		posTag = qCamera2Gimbal * posTag * qCamera2Gimbal.inverse();
 
 		tagFound = true;
+		publishTagPose();
 	}
 	else
 		tagFound = false;
@@ -164,14 +165,7 @@ int main(int argc, char **argv)
 
 	gimbal_tag tagTracker(nh);
 
-	ros::Rate rate(30);
-
-	while (ros::ok())
-	{
-		ros::spinOnce();
-		tagTracker.publishTagPose();
-		rate.sleep();
-	}
-
+	ros::spin();
+	
 	return 0;
 }

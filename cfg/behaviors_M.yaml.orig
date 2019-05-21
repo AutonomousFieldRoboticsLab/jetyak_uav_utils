@@ -3,8 +3,11 @@
 #
 integral_size: 200
 reset_kalman_threshold: 3.0
-
+<<<<<<< HEAD
+vGain: 1.0
 k_matrix_path: "matrix.txt"
+=======
+>>>>>>> bsc
 
 #
 # Takeoff
@@ -15,9 +18,27 @@ takeoff_threshold: .25
 #
 # Follow Parameters
 #
+<<<<<<< HEAD
 follow_x: 1
 follow_y: 0
 follow_z: -3
+=======
+follow_x: 2.5
+follow_x_kp: .45
+follow_x_kd: .3
+follow_x_ki: .0
+
+follow_y: 0
+follow_y_kp: .45
+follow_y_kd: .3
+follow_y_ki: .0
+
+follow_z: -1.5
+follow_z_kp: .2
+follow_z_kd: 0
+follow_z_ki: 0
+
+>>>>>>> bsc
 follow_w: 0
 
 #
@@ -27,6 +48,7 @@ land_x: 1.7
 land_y: 0
 land_z: .3 # this should be .1-.2m over the tag to allow the uav to maneuver
 land_w: 0
+
 
 land_vel_mag: .1
 land_x_low: 1.5

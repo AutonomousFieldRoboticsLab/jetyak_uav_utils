@@ -57,7 +57,7 @@ void Behaviors::downloadParams(std::string ns_param)
 		ROS_WARN("FAILED: %s", "k_matrix_path");
 
 	getP(ns, "reset_kalman_threshold", resetFilterTimeThresh);
-	getP(ns, "vGain", vGain);
+
 
 	getP(ns, "land_x", land_.goal_pose.x);
 	getP(ns, "land_y", land_.goal_pose.y);

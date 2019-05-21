@@ -39,6 +39,7 @@ from sensor_msgs.msg import Joy
 from sensor_msgs.msg import NavSatFix
 from geometry_msgs.msg import QuaternionStamped
 from math import atan2,cos,sin,pi,sqrt
+import numpy as np
 
 def lat_lon_to_m(lat1,lon1,lat2,lon2):
 	R = 6378137
@@ -89,7 +90,7 @@ class WaypointFollow():
 		self.lat = 0
 		self.lon = 0
 		self.height = 0
-		self.max_speed=3
+		self.max_speed=5
 		self.in_waypoint = False
 		self.time_entered_wp = 0
 
@@ -179,7 +180,7 @@ class WaypointFollow():
 			wp.heading=p[3]
 
 
-			wp.radius = .1
+			wp.radius = 1
 			wp.loiter_time = 0
 			self.wps.append(wp)
 			
@@ -193,21 +194,23 @@ class WaypointFollow():
 	def spiral_callback(self, srv):
 		self.wps = []
 
-		wp_radius = .1
-		endradius = .00005
+		wp_radius = 5
+		end_radius_m = 50
 		turns = 3
-		points = 30
 		altitude = 10
-		maxR = 10.0
-		r = 1.0
-		rmult = .3
+
+		#dont modify
+		maxR = 1
+		r = .01
+		rmult = r/turns
+		endradius = end_radius_m*.00001
 
 		x = []
 		y = []
 
 		while(r < maxR):
 			r = r+(1.0/r)*rmult
-			t = (r/maxR)*turns*2*pi
+			t = (r/maxR)*(turns+1)*2*pi
 			x.append(r*cos(t))
 			y.append(r*sin(t))
 
@@ -218,7 +221,7 @@ class WaypointFollow():
 			wp.lat = self.lat + (x[i] / maxR) * endradius
 			wp.lon = self.lon + (y[i] / maxR) * endradius
 
-			wp.radius = 1
+			wp.radius = wp_radius
 			wp.loiter_time = 0
 			self.wps.append(wp)
 		return TriggerResponse(True,"Spiral created")
@@ -235,7 +238,6 @@ class WaypointFollow():
 			#If this is our first time noticing we are in a waypoint
 			if self.time_entered_wp == 0:
 				self.time_entered_wp = rospy.Time.now().to_sec()
-				self.deb_f.write("%f,%f\n"%(self.lon,self.lat))
 				print("Entered waypoint")
 			elif rospy.Time.now().to_sec() - self.time_entered_wp > self.wps[0].loiter_time:
 				self.wps.pop(0)
@@ -251,30 +253,69 @@ class WaypointFollow():
 					print("Moving to next objective: %i left"%len(self.wps))
 				return
 		
-		east = lat_lon_to_m(0, self.wps[0].lon, 0, self.lon)
-		if(self.wps[0].lon<self.lon):
-			east = -east
-		north = lat_lon_to_m(self.wps[0].lat, 0, self.lat, 0)
-		if(self.wps[0].lat<self.lat):
-			north = -north
-		#print("N: %1.5f, E: %1.5f"%(north,east))
+		""" 
+		if len(wps) >1:
+			let v0 <- wps[0]
+			let v1 <- wps[1]
+			if(v0 dot v1 < 0):
+				vg = v0
+			else
+				vg = interpolation(v1,v0)
+		else:
+			vg <- wps[0]
+		"""
+		vg=np.array([0,0,0])
+		if(len(self.wps)>1):
+			v0=np.array([0,0,0])
+			v1=np.array([0,0,0])
+
+			v0[0] = lat_lon_to_m(self.lat, self.wps[0].lon, self.lat, self.lon)
+			if(self.wps[0].lon<self.lon):
+				v0[0] = -v0[0]
+			v0[1] = lat_lon_to_m(self.wps[0].lat, self.lon, self.lat, self.lon)
+			if(self.wps[0].lat<self.lat):
+				v0[1] = -v0[1]
+
+			v1[0] = lat_lon_to_m(self.lat, self.wps[1].lon, self.lat, self.lon)
+			if(self.wps[1].lon<self.lon):
+				v1[0] = -v1[0]
+			v1[1] = lat_lon_to_m(self.wps[1].lat, self.lon, self.lat, self.lon)
+			if(self.wps[1].lat<self.lat):
+				v1[1] = -v1[1]
+			
+			if(np.dot(v0,v1)<0):
+				vg=v0
+			else:
+				d = v1-v0
+				y = v0*(d/(np.linalg.norm(d)**2))
+				vg=v0+y*(v1-v0)
+		else:
+			vg[0] = lat_lon_to_m(self.lat, self.wps[0].lon, self.lat, self.lon)
+			if(self.wps[0].lon<self.lon):
+				vg[0] = -vg[0]
+			vg[1] = lat_lon_to_m(self.wps[0].lat, self.lon, self.lat, self.lon)
+			if(self.wps[0].lat<self.lat):
+				vg[1] = -vg[1]
+
 		self.hover_alt = self.wps[0].alt
 
 		height_diff=self.wps[0].alt-self.height
-
-		mag= sqrt(east**2+north**2)
+		
+		mag= sqrt(vg[0]**2+vg[1]**2)
 		if(mag>self.max_speed):
-			east = (east/mag)*self.max_speed
-			north= (north/mag)*self.max_speed
+			vg[0]=vg[0]*self.max_speed/mag
+			vg[1]=vg[1]*self.max_speed/mag
 
 		cmd = Joy()
-		cmd.axes = [east, north, height_diff, self.wps[0].heading, self.flag]
+
+		cmd.axes = [vg[0], vg[1], height_diff, self.wps[0].heading, self.flag]
 		#cmd.axes=[east,0,height_diff,0,self.flag]
 		self.cmd_pub.publish(cmd)
 
 
 	def check_if_in_wp(self,):
 		dist = lat_lon_to_m(self.lat, self.lon, self.wps[0].lat, self.wps[0].lon)
+		print(dist)
 		return pow(dist, 2) + pow(self.height - self.wps[0].alt, 2) < pow(self.wps[0].radius, 2)
 
 
