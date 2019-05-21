@@ -80,6 +80,12 @@ dji_pilot::dji_pilot(ros::NodeHandle &nh)
 		extCommand.axes.push_back(0);
 	
 	extCommand.axes.push_back(commandFlag);
+
+	rcCommand.axes.clear();
+	for (int i = 0; i < 4; ++i)
+		rcCommand.axes.push_back(0);
+	
+	rcCommand.axes.push_back(commandFlag);
 }
 
 dji_pilot::~dji_pilot()
@@ -134,8 +140,10 @@ void dji_pilot::extCallback(const sensor_msgs::Joy::ConstPtr &msg)
 		extCommand.axes.clear();
 		sensor_msgs::Joy *output = new sensor_msgs::Joy();
 
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 4; i++)
 			output->axes.push_back(msg->axes[i]);
+		output->axes.push_back(buildFlag((JETYAK_UAV_UTILS::Flag)(msg->axes[4])));
+
 
 		// Clip commands according to flag
 		extCommand = adaptiveClipping(*output);
@@ -169,13 +177,10 @@ void dji_pilot::rcCallback(const sensor_msgs::Joy::ConstPtr &msg)
 		if (std::abs(msg->axes[0]) > rcStickThresh || std::abs(msg->axes[1]) > rcStickThresh ||
 				std::abs(msg->axes[2]) > rcStickThresh || std::abs(msg->axes[3]) > rcStickThresh)
 		{
-			// Clear any previous RC commands
-			rcCommand.axes.clear();
-			rcCommand.axes.push_back(msg->axes[0] * rcVelocityMultiplier);	// Roll
-			rcCommand.axes.push_back(msg->axes[1] * rcVelocityMultiplier); // Pitch
-			rcCommand.axes.push_back(msg->axes[3] * 3);	// Altitude
-			rcCommand.axes.push_back(-msg->axes[2]);			// Yaw
-			rcCommand.axes.push_back(commandFlag);				// Command Flag
+			rcCommand.axes[0]=msg->axes[0] * rcVelocityMultiplier;	// Roll
+			rcCommand.axes[1]=msg->axes[1] * rcVelocityMultiplier; // Pitch
+			rcCommand.axes[2]=msg->axes[3] * 3;	// Altitude
+			rcCommand.axes[3]=-msg->axes[2];			// Yaw
 
 			bypassPilot = true;
 		}
@@ -266,7 +271,7 @@ bool dji_pilot::requestControl(int requestFlag)
 
 sensor_msgs::Joy dji_pilot::adaptiveClipping(sensor_msgs::Joy msg)
 {
-	uint8_t flag = buildFlag((JETYAK_UAV_UTILS::Flag)msg.axes[4]);
+
 
 	// Create command buffer
 	sensor_msgs::Joy cmdBuffer;
@@ -274,7 +279,9 @@ sensor_msgs::Joy dji_pilot::adaptiveClipping(sensor_msgs::Joy msg)
 
 	for (int i = 0; i < 4; ++i)
 		cmdBuffer.axes.push_back(0);
-	cmdBuffer.axes.push_back(commandFlag);
+
+	uint8_t flag = msg.axes[4];
+	cmdBuffer.axes.push_back(flag);
 
 	// Coordinate frame
 	double hVelcmdMax, vVelcmdMax;
@@ -335,8 +342,9 @@ void dji_pilot::publishCommand()
 		// Prepare command
 		sensor_msgs::Joy djiCommand;
 
-		if (bypassPilot)
-			djiCommand = rcCommand;
+		if (bypassPilot){
+			djiCommand = rcCommand;		
+		}
 		else
 			djiCommand = extCommand;
 

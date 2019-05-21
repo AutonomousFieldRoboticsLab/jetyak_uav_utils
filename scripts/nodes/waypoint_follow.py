@@ -38,7 +38,7 @@ from std_srvs.srv import Trigger,TriggerResponse
 from sensor_msgs.msg import Joy
 from sensor_msgs.msg import NavSatFix
 from geometry_msgs.msg import QuaternionStamped
-from math import atan2, cos, sin, pi, sqrt
+from math import atan2,cos,sin,pi,sqrt
 import numpy as np
 
 def lat_lon_to_m(lat1,lon1,lat2,lon2):
@@ -78,16 +78,6 @@ def angle_dist(a1,a2):
 		diff+=2*pi
 	return diff
 
-def gen_waypoint(lat,lon,alt,heading,radius,loiter):
-	wp = Waypoint()
-	wp.lat = lat
-	wp.lon = lon
-	wp.alt = alt
-	wp.heading = heading
-
-	wp.radius = radius
-	wp.loiter_time = loiter
-	return wp
 
 
 class WaypointFollow():	
@@ -100,7 +90,7 @@ class WaypointFollow():
 		self.lat = 0
 		self.lon = 0
 		self.height = 0
-		self.max_speed=3
+		self.max_speed=5
 		self.in_waypoint = False
 		self.time_entered_wp = 0
 
@@ -172,19 +162,27 @@ class WaypointFollow():
 		path = []
 		for i in range(len(left)):
 			if(i % 2 == 0):
-				wps.append(gen_waypoints(left.pop(0)[0], left.pop(0)[1], left.pop(0)[2], left.pop(0)[3],.1,.5))
-				
+				path.append(left.pop(0))
 				for j in range(intermediate):
-					wps.append(gen_waypoints(mid[j].pop(0)[0], mid[j].pop(0)[1], mid[j].pop(0)[2], mid[j].pop(0)[3], 1, 0))
-				wps.append(gen_waypoints(right.pop(0)[0], right.pop(0)[1], right.pop(0)[2], right.pop(0)[3], .1, .5))
-
+					path.append(mid[j].pop(0))
+				path.append(right.pop(0))
 			else:
-				wps.append(gen_waypoints(left.pop(0)[0], left.pop(0)[1], left.pop(0)[2], left.pop(0)[3], .1, .5))
-
+				path.append(right.pop(0))
 				for j in range(intermediate)[::-1]:
-					wps.append(gen_waypoints(mid[j].pop(0)[0], mid[j].pop(0)[1], mid[j].pop(0)[2], mid[j].pop(0)[3], 1, 0))
-				wps.append(gen_waypoints(right.pop(0)[0], right.pop(0)[1], right.pop(0)[2], right.pop(0)[3], .1, .5))
+					path.append(mid[j].pop(0))
+				path.append(left.pop(0))
 
+		for p in path:
+			wp = Waypoint()
+			wp.lat = p[0]
+			wp.lon = p[1]
+			wp.alt = p[2]
+			wp.heading=p[3]
+
+
+			wp.radius = 1
+			wp.loiter_time = 0
+			self.wps.append(wp)
 			
 	def wps_callback(self, req):
 		del self.wps[:]
@@ -196,21 +194,23 @@ class WaypointFollow():
 	def spiral_callback(self, srv):
 		self.wps = []
 
-		wp_radius = .1
-		endradius = .00005
+		wp_radius = 5
+		end_radius_m = 50
 		turns = 3
-		points = 30
 		altitude = 10
-		maxR = 10.0
-		r = 1.0
-		rmult = .3
+
+		#dont modify
+		maxR = 1
+		r = .01
+		rmult = r/turns
+		endradius = end_radius_m*.00001
 
 		x = []
 		y = []
 
 		while(r < maxR):
 			r = r+(1.0/r)*rmult
-			t = (r/maxR)*turns*2*pi
+			t = (r/maxR)*(turns+1)*2*pi
 			x.append(r*cos(t))
 			y.append(r*sin(t))
 
@@ -221,7 +221,7 @@ class WaypointFollow():
 			wp.lat = self.lat + (x[i] / maxR) * endradius
 			wp.lon = self.lon + (y[i] / maxR) * endradius
 
-			wp.radius = 1
+			wp.radius = wp_radius
 			wp.loiter_time = 0
 			self.wps.append(wp)
 		return TriggerResponse(True,"Spiral created")
@@ -233,12 +233,11 @@ class WaypointFollow():
 		if not self.in_waypoint:
 			self.in_waypoint = self.check_if_in_wp()
 			
-		#If we are in a waypoint
+		#If we are still in a waypoint
 		if self.in_waypoint:
 			#If this is our first time noticing we are in a waypoint
 			if self.time_entered_wp == 0:
 				self.time_entered_wp = rospy.Time.now().to_sec()
-				self.deb_f.write("%f,%f\n"%(self.lon,self.lat))
 				print("Entered waypoint")
 			elif rospy.Time.now().to_sec() - self.time_entered_wp > self.wps[0].loiter_time:
 				self.wps.pop(0)
@@ -247,48 +246,76 @@ class WaypointFollow():
 				if(len(self.wps)==0):
 					cmd = Joy()
 					cmd.axes = [0,0, 0, 0, 0b010]
+					#cmd.axes=[east,0,height_diff,0,self.flag]
 					self.cmd_pub.publish(cmd)
 					print("Mission Complete")
 				else:
 					print("Moving to next objective: %i left"%len(self.wps))
 				return
 		
-		# Algorithm 1 from DOI: 10.1109/ICRA.2018.8460885
+		""" 
+		if len(wps) >1:
+			let v0 <- wps[0]
+			let v1 <- wps[1]
+			if(v0 dot v1 < 0):
+				vg = v0
+			else
+				vg = interpolation(v1,v0)
+		else:
+			vg <- wps[0]
+		"""
+		vg=np.array([0,0,0])
+		if(len(self.wps)>1):
+			v0=np.array([0,0,0])
+			v1=np.array([0,0,0])
 
-		i = 0
-		y = 10
-		while (y >= 1):
-			i = i + 1
+			v0[0] = lat_lon_to_m(self.lat, self.wps[0].lon, self.lat, self.lon)
+			if(self.wps[0].lon<self.lon):
+				v0[0] = -v0[0]
+			v0[1] = lat_lon_to_m(self.wps[0].lat, self.lon, self.lat, self.lon)
+			if(self.wps[0].lat<self.lat):
+				v0[1] = -v0[1]
 
-			pdi = np.array([self.wps[i].lon, self.wps[i].lat,
-                            self.wps[i].alt, self.wps[i-1].heading])
-
-			pd0 = np.array([self.wps[i-1].lon, self.wps[i-1].lat,
-                            self.wps[i-1].alt, self.wps[i-1].heading])
-
-			d = pdi - pd0
+			v1[0] = lat_lon_to_m(self.lat, self.wps[1].lon, self.lat, self.lon)
+			if(self.wps[1].lon<self.lon):
+				v1[0] = -v1[0]
+			v1[1] = lat_lon_to_m(self.wps[1].lat, self.lon, self.lat, self.lon)
+			if(self.wps[1].lat<self.lat):
+				v1[1] = -v1[1]
 			
-			p = np.array([self.lon, self.lat, self.alt])
-			
-			y= np.dot((p-pd0),d)/(np.abs(d)**2.0)
+			if(np.dot(v0,v1)<0):
+				vg=v0
+			else:
+				d = v1-v0
+				y = v0*(d/(np.linalg.norm(d)**2))
+				vg=v0+y*(v1-v0)
+		else:
+			vg[0] = lat_lon_to_m(self.lat, self.wps[0].lon, self.lat, self.lon)
+			if(self.wps[0].lon<self.lon):
+				vg[0] = -vg[0]
+			vg[1] = lat_lon_to_m(self.wps[0].lat, self.lon, self.lat, self.lon)
+			if(self.wps[0].lat<self.lat):
+				vg[1] = -vg[1]
 
-		xd1 = np.array([self.wps[i-1].lon, self.wps[i-1].lon, self.wps[i-1].alt, self.wps[i-1].heading])
-		xdi = np.array([self.wps[i].lon, self.wps[i].lon, self.wps[i].alt, self.wps[i].heading])
-		
-		xd = xd1 + y * (xdi - xd1)
+		self.hover_alt = self.wps[0].alt
 
-		mag = xd[0] ** 2 + xd[1] ** 2
-		if (mag > self.max_speed):
-			xd[0] = xd[0] / mag
-			xd[1] = xd[1] / mag
+		height_diff=self.wps[0].alt-self.height
 		
+		mag= sqrt(vg[0]**2+vg[1]**2)
+		if(mag>self.max_speed):
+			vg[0]=vg[0]*self.max_speed/mag
+			vg[1]=vg[1]*self.max_speed/mag
+
 		cmd = Joy()
-		cmd.axes = [xd[0], xd[1], xd[2], xd[3], self.flag]
+
+		cmd.axes = [vg[0], vg[1], height_diff, self.wps[0].heading, self.flag]
+		#cmd.axes=[east,0,height_diff,0,self.flag]
 		self.cmd_pub.publish(cmd)
 
 
 	def check_if_in_wp(self,):
 		dist = lat_lon_to_m(self.lat, self.lon, self.wps[0].lat, self.wps[0].lon)
+		print(dist)
 		return pow(dist, 2) + pow(self.height - self.wps[0].alt, 2) < pow(self.wps[0].radius, 2)
 
 
