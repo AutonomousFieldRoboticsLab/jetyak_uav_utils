@@ -1,5 +1,12 @@
 Header header
-float64[3] position
-float64[3] velocity
-float64[3] attitude
-float64[3] angular_velocity
+Vector3 drone_p
+Vector3 drone_pdot
+Vector3 drone_q
+Vector3 drone_qdot
+
+Vector3 boat_p
+Vector3 boat_pdot
+float64 heading
+
+# ENU Origin coordinate [lon,lat,alt]
+Vector3 origin
