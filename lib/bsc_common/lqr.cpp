@@ -88,40 +88,17 @@ void LQR::initVectors()
 	u = Eigen::Matrix<double, 4, 1>::Zero();
 }
 
-void LQR::updatePos(double x, double y, double z)
+// [0_3,pdot_drone_dronebody,q_drone_world,qdot_drone_world]^T
+void LQR::updateState(Eigen::Matrix<double, 12, 1> state)
 {
-	xh(0, 0) = x;
-	xh(1, 0) = y;
-	xh(2, 0) = z;
+	xh = state;
 }
-void LQR::updateVel(double x, double y, double z)
+
+// [p_goal_dronebody,pdot_goal_dronebody,[0,0,yaw_goal_world],0_3]^T
+Eigen::Matrix<double, 4, 1> LQR::getCommand(Eigen::Matrix<double, 12, 1> set)
 {
-	xh(3, 0) = x;
-	xh(4, 0) = y;
-	xh(5, 0) = z;
-}
-void LQR::updateAngPos(double r, double p, double y)
-{
-	xh(6, 0) = r;
-	xh(7, 0) = p;
-	xh(8, 0) = y;
-}
-void LQR::updateAngVel(double r, double p, double y)
-{
-	xh(9, 0) = r;
-	xh(10, 0) = p;
-	xh(11, 0) = y;
-}
-Eigen::Matrix<double, 4, 1> LQR::getCommand(double x, double y, double z,
-																						double xd, double yd, double zd,
-																						double r, double p, double yaw,
-																						double rd, double pd, double yawd)
-{
-	xs << x, y, z, xd, yd, zd, r, p, yaw, rd, pd, yawd;
-	return K * (xs - xh);
-}
-Eigen::Matrix<double, 4, 1> LQR::getCommand(double x, double y, double z, double yaw)
-{
-	return getCommand(x, y, z, 0, 0, 0, 0, 0, yaw, 0, 0, 0);
+	xs = set;
+	u = K * (xh - xs);
+	return u;
 }
 } // namespace bsc_common

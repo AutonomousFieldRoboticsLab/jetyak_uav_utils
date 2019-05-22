@@ -32,104 +32,24 @@ SOFTWARE.
 void Behaviors::stateCallback(const jetyak_uav_utils::ObservedState::ConstPtr &msg)
 {
 	this->state.header = msg->header;
-	this->state.position = msg->position;
-	this->state.velocity = msg->velocity;
-	this->state.attitude = msg->attitude;
-	this->state.angular_velocity = msg->angular_velocity;
+	this->state.drone_p = msg->drone_p;
+	this->state.drone_pdot = msg->drone_pdot;
+	this->state.drone_q = msg->drone_q;
+	this->state.drone_qdot = msg->drone_qdot;
+	this->state.boat_p = msg->boat_p;
+	this->state.boat_pdot = msg->boat_pdot;
+	this->state.heading = msg->heading;
+	this->state.origin = msg->origin;
 
-	lqr_->updatePos(msg->position[0], msg->position[1], msg->position[2]);
-	lqr_->updateVel(msg->velocity[0], msg->velocity[1], msg->velocity[2]);
-	lqr_->updateAngPos(msg->attitude[0], msg->attitude[1], msg->attitude[2]);
-	lqr_->updateAngVel(msg->angular_velocity[0], msg->angular_velocity[1], msg->angular_velocity[2]);
+	Eigen::Matrix<double, 12, 1> state;
 }
-void Behaviors::uavGPSCallback(const sensor_msgs::NavSatFix::ConstPtr &msg)
+void Behaviors::tagCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
-	if (msg->status.status >= 0)
+	if (msg->header.stamp.toSec() - lastSpotted > resetFilterTimeThresh)
 	{
-		uavGPS_.header = msg->header;
-		uavGPS_.status = msg->status;
-		uavGPS_.latitude = msg->latitude;
-		uavGPS_.longitude = msg->longitude;
-		uavGPS_.altitude = msg->altitude;
-		uavGPS_.position_covariance = msg->position_covariance;
-		uavGPS_.position_covariance_type = msg->position_covariance_type;
+		ROS_WARN("Tag lost for %1.2fs", msg->header.stamp.toSec() - lastSpotted);
 	}
-	else
-	{
-		ROS_WARN("UAV GNSS fix failed. Status: %i", msg->status.status);
-	}
-}
-
-void Behaviors::uavHeightCallback(const std_msgs::Float32::ConstPtr &msg)
-{
-	uavHeight_ = msg->data;
-}
-
-void Behaviors::boatGPSCallback(const sensor_msgs::NavSatFix::ConstPtr &msg)
-{
-	if (msg->status.status >= 0)
-	{
-		boatGPS_.header = msg->header;
-		boatGPS_.status = msg->status;
-		boatGPS_.latitude = msg->latitude;
-		boatGPS_.longitude = msg->longitude;
-		boatGPS_.altitude = msg->altitude;
-		boatGPS_.position_covariance = msg->position_covariance;
-		boatGPS_.position_covariance_type = msg->position_covariance_type;
-	}
-	else
-	{
-		ROS_WARN("Boat GNSS fix failed. Status: %i", msg->status.status);
-	}
-}
-
-void Behaviors::uavAttitudeCallback(const geometry_msgs::QuaternionStamped::ConstPtr &msg)
-{
-	uavAttitude_.header = msg->header;
-	uavAttitude_.quaternion = msg->quaternion;
-}
-
-void Behaviors::uavImuCallback(const sensor_msgs::Imu::ConstPtr &msg)
-{
-	uavImu_.header = msg->header;
-	uavImu_.orientation = msg->orientation;
-	uavImu_.orientation_covariance = msg->orientation_covariance;
-	uavImu_.angular_velocity = msg->angular_velocity;
-	uavImu_.angular_velocity_covariance = msg->angular_velocity_covariance;
-	uavImu_.linear_acceleration = msg->linear_acceleration;
-	uavImu_.linear_acceleration_covariance = msg->linear_acceleration_covariance;
-}
-
-void Behaviors::boatIMUCallback(const sensor_msgs::Imu::ConstPtr &msg)
-{
-	boatImu_.header = msg->header;
-	boatImu_.orientation = msg->orientation;
-	boatImu_.orientation_covariance = msg->orientation_covariance;
-	boatImu_.angular_velocity = msg->angular_velocity;
-	boatImu_.angular_velocity_covariance = msg->angular_velocity_covariance;
-	boatImu_.linear_acceleration = msg->linear_acceleration;
-	boatImu_.linear_acceleration_covariance = msg->linear_acceleration_covariance;
-}
-
-void Behaviors::uavVelCallback(const geometry_msgs::Vector3Stamped::ConstPtr &msg)
-{
-	uavWorldVel_.x = msg->vector.x;
-	uavWorldVel_.y = msg->vector.y;
-	uavWorldVel_.z = msg->vector.z;
-	uavWorldVel_.t = msg->header.stamp.toSec();
-	if (uavAttitude_.header.stamp.toSec() != 0)
-	{
-		tf2::Quaternion qRot;
-		tf2::convert(uavAttitude_.quaternion, qRot);
-		tf2::Vector3 wVel;
-		tf2::convert(msg->vector, wVel);
-		tf2::Vector3 bVel = tf2::quatRotate(qRot.inverse(), wVel);
-		uavBodyVel_.x = bVel.getX();
-		uavBodyVel_.y = bVel.getY();
-		uavBodyVel_.z = bVel.getZ();
-		uavBodyVel_.t = uavWorldVel_.t;
-		//ROS_WARN("BV\t x: %.2f, y: %.2f, z: %.2f", uavBodyVel_.x, uavBodyVel_.y, uavBodyVel_.z);
-	}
+	lastSpotted = msg->header.stamp.toSec();
 }
 
 void Behaviors::extCmdCallback(const sensor_msgs::Joy::ConstPtr &msg)

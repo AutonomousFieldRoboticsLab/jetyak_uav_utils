@@ -53,16 +53,6 @@ bool Behaviors::getModeCallback(jetyak_uav_utils::GetString::Request &req, jetya
 	return true;
 }
 
-bool Behaviors::setBoatNSCallback(jetyak_uav_utils::SetString::Request &req, jetyak_uav_utils::SetString::Response &res)
-{
-	std::string ns = req.data;
-	boatGPSSub_ = nh.subscribe(ns + "/global_posiiton/global", 1, &Behaviors::boatGPSCallback, this);
-	boatIMUSub_ = nh.subscribe(ns + "/imu/data", 1, &Behaviors::boatIMUCallback, this);
-
-	res.success = true;
-	return true;
-}
-
 bool Behaviors::setFollowPositionCallback(jetyak_uav_utils::FourAxes::Request &req,
 																					jetyak_uav_utils::FourAxes::Response &res)
 {

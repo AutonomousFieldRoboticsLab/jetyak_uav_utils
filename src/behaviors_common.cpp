@@ -58,7 +58,6 @@ void Behaviors::downloadParams(std::string ns_param)
 
 	getP(ns, "reset_kalman_threshold", resetFilterTimeThresh);
 
-
 	getP(ns, "land_x", land_.goal_pose.x);
 	getP(ns, "land_y", land_.goal_pose.y);
 	getP(ns, "land_z", land_.goal_pose.z);
@@ -102,51 +101,6 @@ void Behaviors::downloadParams(std::string ns_param)
 	return_.settleRadiusSquared = settleRadius * settleRadius;
 }
 
-void Behaviors::uploadParams(std::string ns_param)
-{
-	std::string ns;
-	// If it ends in / or is only a ~, it is good to use
-	if (ns_param.length() == 0 or ns_param.back() == '/' or ns_param.compare("~") == 0)
-		ns = ns_param;
-	else // if it needs a / seperator, add it
-		ns = ns_param + "/";
-
-	/**********************
-	 * LANDING PARAMETERS *
-	 *********************/
-	ros::param::set(ns + "land_x", land_.goal_pose.x);
-	ros::param::set(ns + "land_y", land_.goal_pose.y);
-	ros::param::set(ns + "land_z", land_.goal_pose.z);
-	ros::param::set(ns + "land_w", land_.goal_pose.w);
-
-	/**********************
-	 * TAKEOFF PARAMETERS *
-	 *********************/
-	ros::param::set(ns + "takeoff_height", takeoff_.height);
-	ros::param::set(ns + "takeoff_threshold", takeoff_.threshold);
-
-	/**********************
-	 * FOLLOW PARAMETERS *
-	 *********************/
-	ros::param::set(ns + "follow_x", follow_.goal_pose.x);
-	ros::param::set(ns + "follow_y", follow_.goal_pose.y);
-	ros::param::set(ns + "follow_z", follow_.goal_pose.z);
-	ros::param::set(ns + "follow_w", follow_.goal_pose.w);
-
-	/**********************
-	 * RETURN PARAMETERS *
-	 *********************/
-	double settleRadius;
-	ros::param::set(ns + "return_gotoHeight", return_.gotoHeight);
-	ros::param::set(ns + "return_finalHeight", return_.finalHeight);
-	ros::param::set(ns + "return_downRadius", return_.downRadius);
-	ros::param::set(ns + "return_settleRadius", settleRadius);
-	ros::param::set(ns + "return_tagTime", return_.tagTime);
-	ros::param::set(ns + "return_tagLossThresh", return_.tagLossThresh);
-	return_.settleRadiusSquared = settleRadius * settleRadius;
-	ros::param::set(ns + "return_maxVel", return_.maxVel);
-}
-
 void Behaviors::assignPublishers()
 {
 	cmdPub_ = nh.advertise<sensor_msgs::Joy>("behavior_cmd", 1);
@@ -167,7 +121,6 @@ void Behaviors::assignServiceServers()
 {
 	setModeService_ = nh.advertiseService("setMode", &Behaviors::setModeCallback, this);
 	getModeService_ = nh.advertiseService("getMode", &Behaviors::getModeCallback, this);
-	setBoatNSService_ = nh.advertiseService("setBoatNS", &Behaviors::setBoatNSCallback, this);
 	setFollowPosition_ = nh.advertiseService("setFollowPosition", &Behaviors::setFollowPositionCallback, this);
 	setLandPosition_ = nh.advertiseService("setLandPosition", &Behaviors::setLandPositionCallback, this);
 }
@@ -175,11 +128,28 @@ void Behaviors::assignServiceServers()
 void Behaviors::assignSubscribers()
 {
 	stateSub_ = nh.subscribe("/jetyak_uav_vision/state", 1, &Behaviors::stateCallback, this);
-	uavHeightSub_ = nh.subscribe("/dji_sdk/height_above_takeoff", 1, &Behaviors::uavHeightCallback, this);
-	uavGPSSub_ = nh.subscribe("/dji_sdk/gps_position", 1, &Behaviors::uavGPSCallback, this);
-	boatGPSSub_ = nh.subscribe("/jetyak2/global_position/global", 1, &Behaviors::boatGPSCallback, this);
-	uavAttSub_ = nh.subscribe("/dji_sdk/attitude", 1, &Behaviors::uavAttitudeCallback, this);
-	boatIMUSub_ = nh.subscribe("/jetyak2/imu/data", 1, &Behaviors::boatIMUCallback, this);
-	uavVelSub = nh.subscribe("/dji_sdk/velocity", 1, &Behaviors::uavVelCallback, this);
+	tagSub_ = nh.subscribe("/jetyak_uav_vision/tag_pose", 1, &Behaviors::tagCallback, this);
 	extCmdSub_ = nh.subscribe("extCommand", 1, &Behaviors::extCmdCallback, this);
+}
+
+Eigen::Vector4d Behaviors::boat_to_drone(Eigen::Vector4d pos)
+{
+	//vertical setpoint
+	double vDiff = pos(2) - state.boat_p.z - state.drone_p.z;
+	double wDiff = pos(3) + state.heading - state.drone_q.z;
+
+	//get setpoint in world frame
+	Eigen::Vector2d hGoal(pos(0), pos(1));														//setpoint relative to boat frame
+	hGoal = bsc_common::util::rotation_matrix(state.heading) * hGoal; //relative to boat in world frame
+	Eigen::Vector2d hBoat(state.boat_p.x, state.boat_p.y);						//boat position in world
+	hGoal = hBoat + hGoal;																						// setpoint in world frame
+
+	//transform to drone frame
+	Eigen::Vector2d hDrone(state.drone_p.x, state.drone_p.y);						 // drone position in world
+	hGoal = hGoal - hDrone;																							 //world frame vector from drone to setpoint
+	hGoal = bsc_common::util::rotation_matrix(-state.drone_q.z) * hGoal; // transform into the drone frame
+
+	Eigen::Vector4d dronePos;
+	dronePos << hGoal(0), hGoal(1), vDiff, wDiff;
+	return dronePos;
 }

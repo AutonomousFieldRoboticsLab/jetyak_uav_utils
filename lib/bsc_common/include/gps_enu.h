@@ -23,61 +23,50 @@ SOFTWARE.
 */
 
 /**
- * This class provides an interface for a LQR controller
+ * This class provides an interface for an ENU reference
+ * Converts a gps signal (longitude, latitude, height) to a local cartesian ENU system
+ *	
+ * Use setENUorigin(lat, lon, height) to set the local ENU coordinate system
+ * Use geo2enu(lat, lon, height) to get position in the local ENU system
  * 
- * Author: Brennan Cain
+ * Author: Michail Kalaitzakis
+ * Ported by Brennan Cain from python to C++ 
  */
-#ifndef BSC_COMMON_LQR_
-#define BSC_COMMON_LQR_
+#ifndef BSC_COMMON_GPS_ENU_
+#define BSC_COMMON_GPS_ENU_
+#include <list>
 #include <eigen3/Eigen/Dense>
-#include <fstream>
-#include <iostream>
-#include <cstdlib>
+#include <cmath>
 
 namespace bsc_common
 {
-class LQR
+class GPS_ENU
 {
 private:
-	/* 
-	K*(xh-xs)=u
-	K(4,12) is the LQR Matrix
-	xh(1,12) is the estimate of the state
-	xs(1,12) is the setpoint of the state
-	u(1,4) is the command output
+	// Geodetic System WGS 84 Axes
+	double a = 6378137;
+	double b = 6356752.314245;
+	double a2 = a * a;
+	double b2 = b * b;
+	double e2 = 1 - (b2 / a2);
 
-	*/
-	Eigen::Matrix<double, 4, 12> K;
-	Eigen::Matrix<double, 12, 1> xh;
-	Eigen::Matrix<double, 12, 1> xs;
-	Eigen::Matrix<double, 4, 1> u;
-
-	/** initVectors
-	 * initialize the vectors as zeroes.
-	 */
-	void initVectors();
+	// local ENU
+	double latZero = 0;
+	double lonZero = 0;
+	double altZero = 0;
+	double xZero = 0;
+	double yZero = 0;
+	double zZero = 0;
+	Eigen::Matrix<double, 3, 1> oZero = Eigen::Matrix<double, 3, 1>::Identity();
+	Eigen::Matrix<double, 3, 3> R = Eigen::Matrix<double, 3, 3>::Identity();
 
 public:
-	/** Constructor
-	 * Takes a 4x12 Matrix and saves it as the LQR K matrix
-	 */
-	LQR(Eigen::Matrix<double, 4, 12> K);
-
-	/** Constructor
-	 * Parses a file to build the K matrix
-	 * format:
-	 * column row value
-	 *    .    .    .
-	 *    .    .    .
-	 */
-	LQR(std::string file);
-	~LQR();
-
-	// [0_3,pdot_drone_dronebody,q_drone_world,qdot_drone_world]^T
-	void updateState(Eigen::Matrix<double, 12, 1> state);
-
-	// [p_goal_dronebody,pdot_goal_dronebody,[0,0,yaw_goal_world],0_3]^T
-	Eigen::Matrix<double, 4, 1> getCommand(Eigen::Matrix<double, 12, 1> set);
+	GPS_ENU();
+	void setENUOrigin(double lat, double lon, double alt);
+	Eigen::Matrix<double, 3, 1> geo2ecef(double lat, double lon, double alt);
+	Eigen::Matrix<double, 3, 1> ecef2enu(double x, double y, double z);
+	Eigen::Matrix<double, 3, 1> geo2enu(double lat, double lon, double alt);
 };
 } // namespace bsc_common
+
 #endif

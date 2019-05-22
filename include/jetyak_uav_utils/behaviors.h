@@ -75,12 +75,10 @@ private:
 	/*********************************************
 	 * ROS PUBLISHERS, SUBSCRIBERS, AND SERVICES
 	 *********************************************/
-	ros::Subscriber stateSub_, boatGPSSub_, boatIMUSub_, uavGPSSub_, uavAttSub_, uavHeightSub_, uavVelSub,
-			extCmdSub_;
+	ros::Subscriber stateSub_, tagSub_, extCmdSub_;
 	ros::Publisher cmdPub_, modePub_;
 	ros::ServiceClient propSrv_, takeoffSrv_, landSrv_, lookdownSrv_, resetKalmanSrv_, enableGimbalSrv_;
-	ros::ServiceServer setModeService_, getModeService_, setBoatNSService_, setFollowPIDService_, setLandPIDService_,
-			setFollowPosition_, setLandPosition_;
+	ros::ServiceServer setModeService_, getModeService_, setFollowPosition_, setLandPosition_;
 	ros::NodeHandle nh;
 
 	/**********************
@@ -97,14 +95,9 @@ private:
 	/************************************
 	 * STATE VARIABLES
 	 ************************************/
-	sensor_msgs::NavSatFix uavGPS_, boatGPS_;
-	geometry_msgs::QuaternionStamped uavAttitude_;
-	sensor_msgs::Imu uavImu_, boatImu_;
 	double uavHeight_ = 0;
-
+	double lastSpotted = 0;
 	jetyak_uav_utils::ObservedState state;
-	bsc_common::vel3d_t uavWorldVel_ = {0, 0, 0, 0}; // world
-	bsc_common::vel3d_t uavBodyVel_ = {0, 0, 0, 0};	// world
 
 	/*********************************************
 	 * BEHAVIOR SPECIFIC VARIABLES AND CONSTANTS
@@ -119,9 +112,7 @@ private:
 	// Land specific constants
 	struct
 	{
-		bsc_common::pose4d_t kp, kd, ki;
 		bsc_common::pose4d_t goal_pose; // landing goal
-		double lastSpotted;
 		double heightGoal;
 		double heightThresh;
 		double lowX, highX, lowY, highY, lowZ, highZ;
@@ -132,9 +123,7 @@ private:
 	// follow specific constants
 	struct
 	{
-		bsc_common::pose4d_t kp, kd, ki;
 		bsc_common::pose4d_t goal_pose; // follow goal
-		double lastSpotted;
 		double deadzone_radius;
 	} follow_;
 
@@ -181,31 +170,6 @@ private:
 	 */
 	bool getModeCallback(jetyak_uav_utils::GetString::Request &req, jetyak_uav_utils::GetString::Response &res);
 
-	/** setBoatNSCallback
-	 * Callback for the boat namespace service. This changes the topics for the
-	 * boat gps and imu subscriptions.
-	 *
-	 * @param req string of the root NS of the boat (ex. "/jetyak1")
-	 * @param res boolean indicating a success or failure
-	 */
-	bool setBoatNSCallback(jetyak_uav_utils::SetString::Request &req, jetyak_uav_utils::SetString::Response &res);
-
-	/** setFollowPIDCallback
-	 * Change the constants in the follow pid controller
-	 *
-	 * @param req 4 arrays of new constants in P,I,D order for each axis
-	 * @param res boolean indicating a success or failure
-	 */
-	bool setFollowPIDCallback(jetyak_uav_utils::FourAxes::Request &req, jetyak_uav_utils::FourAxes::Response &res);
-
-	/** setLandPIDCallback
-	 * Change the constants in the land pid controller
-	 *
-	 * @param req 4 arrays of new constants in P,I,D order for each axis
-	 * @param res boolean indicating a success or failure
-	 */
-	bool setLandPIDCallback(jetyak_uav_utils::FourAxes::Request &req, jetyak_uav_utils::FourAxes::Response &res);
-
 	/** setFollowPositionCallback
 	 * Change the constants in the follow position
 	 *
@@ -231,54 +195,10 @@ private:
 	 */
 	void stateCallback(const jetyak_uav_utils::ObservedState::ConstPtr &msg);
 
-	/** uavGPSCallback
-	 * Listens for updates from the UAVs GPS
-	 *
-	 * @param msg gets the global position of the UAV
+	/** tagCallback
+	 * 
 	 */
-	void uavGPSCallback(const sensor_msgs::NavSatFix::ConstPtr &msg);
-
-	/** uavHeightCallback
-	 * Listens for updates on the UAVs height
-	 *
-	 * @param msg gets the ground relative altitude of the UAV
-	 */
-	void uavHeightCallback(const std_msgs::Float32::ConstPtr &msg);
-
-	/** boatGPSCallback
-	 * Listens for updates from the boat's GPS
-	 *
-	 * @param msg gets the global position of the boat
-	 */
-	void boatGPSCallback(const sensor_msgs::NavSatFix::ConstPtr &msg);
-
-	/** uavAttitudeCallback
-	 * Listens for updates in the UAVs Attitude
-	 *
-	 * @param msg gets the global attitude of the UAV
-	 */
-	void uavAttitudeCallback(const geometry_msgs::QuaternionStamped::ConstPtr &msg);
-
-	/** uavImuCallback
-	 * Listens for updates in the UAVs IMU
-	 *
-	 * @param msg gets the Imu reading of the UAV
-	 */
-	void uavImuCallback(const sensor_msgs::Imu::ConstPtr &msg);
-
-	/** uavVelVallback
-	 * Receive the velocity of the UAv in the world frame
-	 *
-	 * @param msg gets the UAV velocity reading
-	 */
-	void uavVelCallback(const geometry_msgs::Vector3Stamped::ConstPtr &msg);
-
-	/** boatIMUCallback
-	 * Listens for updates in the boat's IMU
-	 *
-	 * @param msg gets the IMU reading of the boat
-	 */
-	void boatIMUCallback(const sensor_msgs::Imu::ConstPtr &msg);
+	void tagCallback(const geometry_msgs::PoseStamped::ConstPtr &msg);
 
 	/** extCallback
 	 * listens for external commands, pass through when in LEAVE mode.
@@ -335,12 +255,12 @@ private:
 	 */
 	void downloadParams(std::string ns = "");
 
-	/** uploadParams
-	 * Upload params to the namespaces's ros param server
-	 *
-	 * @param ns name of the namespace
-	 */
-	void uploadParams(std::string ns = "");
+	/** boat_to_drone
+	 * Converts a 4d posein the boat FLU frame to the UAV FLU frame. Useful in translating boat relative setpoints to the drone's frame.
+	 * @param pos position in the boat frame
+	 * @param yaw offset relative to boat frame
+	 * */
+	Eigen::Vector4d boat_to_drone(Eigen::Vector4d pos);
 
 	/***********************
 	 * Constructor Methods

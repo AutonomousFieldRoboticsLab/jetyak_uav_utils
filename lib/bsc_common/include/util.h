@@ -31,7 +31,7 @@ SOFTWARE.
 #define BSC_COMMON_UTIL_
 
 #include <math.h>
-
+#include <eigen3/Eigen/Dense>
 #include <tf/transform_datatypes.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
@@ -84,6 +84,12 @@ public:
 	 * @param yp y after rotation
 	 */
 	static void rotate_vector(double x, double y, double theta, double &xp, double &yp);
+
+	/* rotation_matrix
+	 *
+	 * @param theta angle to rotate
+	 */
+	static Eigen::Matrix2d rotation_matrix(double theta);
 
 	/* inverse_pose
 	 * invert the pose. Make it from child to parent frame

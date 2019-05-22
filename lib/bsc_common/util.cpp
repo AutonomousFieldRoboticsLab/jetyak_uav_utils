@@ -28,9 +28,7 @@ SOFTWARE.
  */
 
 #include "include/util.h"
-namespace bsc_common
-{
-void util::rpy_from_quat(const geometry_msgs::Quaternion &orientation, geometry_msgs::Vector3 *state)
+void bsc_common::util::rpy_from_quat(const geometry_msgs::Quaternion &orientation, geometry_msgs::Vector3 *state)
 {
 	// Get message as quaternion, then get roll, pitch, yaw
 	tf::Quaternion q(orientation.x, orientation.y, orientation.z, orientation.w);
@@ -54,7 +52,7 @@ void util::rpy_from_quat(const geometry_msgs::Quaternion &orientation, geometry_
 	}
 }
 
-double util::yaw_from_quat(const geometry_msgs::Quaternion &orientation)
+double bsc_common::util::yaw_from_quat(const geometry_msgs::Quaternion &orientation)
 {
 	geometry_msgs::Vector3 *state = new geometry_msgs::Vector3();
 
@@ -69,17 +67,30 @@ double util::yaw_from_quat(const geometry_msgs::Quaternion &orientation)
 }
 
 template <typename T>
-T util::clip(T x, T low, T high)
+T bsc_common::util::clip(T x, T low, T high)
 {
 	return std::max(std::min(high, x), low);
 }
 
-void util::rotate_vector(double x, double y, double theta, double &xp, double &yp)
+void bsc_common::util::rotate_vector(double x, double y, double theta, double &xp, double &yp)
 {
 	xp = (x * std::cos(theta) - y * std::sin(theta));
 	yp = (x * std::sin(theta) + y * std::cos(theta));
 }
-void util::inverse_pose(const geometry_msgs::Pose &in, geometry_msgs::Pose &out)
+
+/* rotation_matrix
+	 *
+	 * @param theta angle to rotate
+	 */
+Eigen::Matrix2d bsc_common::util::rotation_matrix(double theta)
+{
+	Eigen::Matrix2d rot;
+	rot << std::cos(theta), -std::sin(theta),
+			std::sin(theta), std::cos(theta);
+	return rot;
+}
+
+void bsc_common::util::inverse_pose(const geometry_msgs::Pose &in, geometry_msgs::Pose &out)
 {
 	tf2::Transform trans;
 	tf2::fromMsg(in, trans);
@@ -87,7 +98,7 @@ void util::inverse_pose(const geometry_msgs::Pose &in, geometry_msgs::Pose &out)
 	const tf2::Transform inverse_trans = trans.inverse();
 	tf2::toMsg(inverse_trans, out);
 }
-double util::ang_dist(double start, double stop, bool rad)
+double bsc_common::util::ang_dist(double start, double stop, bool rad)
 {
 	double pi = rad ? C_PI : 180;
 
@@ -108,7 +119,7 @@ double util::ang_dist(double start, double stop, bool rad)
 	return d1;
 }
 
-double util::latlondist(double lat1, double lon1, double lat2, double lon2)
+double bsc_common::util::latlondist(double lat1, double lon1, double lat2, double lon2)
 {
 	double R = 6378137; // Radius of earth in m
 
@@ -124,7 +135,7 @@ double util::latlondist(double lat1, double lon1, double lat2, double lon2)
 	return R * 2 * atan2(sqrt(a), sqrt(1 - a));
 }
 
-bool util::insensitiveEqual(std::string &str1, std::string &str2)
+bool bsc_common::util::insensitiveEqual(std::string &str1, std::string &str2)
 {
 	return ((str1.size() == str2.size()) && std::equal(str1.begin(), str1.end(), str2.begin(), [](char &c1, char &c2) {
 						return (c1 == c2 || std::toupper(c1) == std::toupper(c2));
@@ -132,8 +143,7 @@ bool util::insensitiveEqual(std::string &str1, std::string &str2)
 }
 
 // x/(1+|x|)
-double util::fastSigmoid(double x)
+double bsc_common::util::fastSigmoid(double x)
 {
 	return x / (1 + abs(x));
 }
-} // namespace bsc_common
