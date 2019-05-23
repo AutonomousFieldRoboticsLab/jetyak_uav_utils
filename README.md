@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> mike
 # Jetyak UAV Utilities
 
 ***Aiming to provide an interface for the interaction of UAVs and ASVs***

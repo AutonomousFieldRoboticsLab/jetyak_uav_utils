@@ -9,4 +9,8 @@ geometry_msgs/Vector3 boat_pdot
 float64 heading
 
 # ENU Origin coordinate [lon,lat,alt]
+<<<<<<< HEAD
 geometry_msgs/Vector3 origin
+=======
+geometry_msgs/Vector3 origin
+>>>>>>> mike
