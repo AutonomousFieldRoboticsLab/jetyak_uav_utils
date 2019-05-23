@@ -27,94 +27,142 @@ Author: Michail Kalaitzakis
 import numpy as np
 from kalman_filter import KalmanFilter
 from data_point import DataPoint
+
 from quaternion import Quaternion
 from quaternion import quatMultiply
+from quaternion import quatInverse
 
 class FusionEKF:
 	"""
 		Gets inputs from multiple sources and uses a Kalman Filter to estimate the state of the system
-		
-		The state of the system is X = [x y z xdot ydot zdot xddot yddot zddot qX qY qZ qW qXdot qYdot qZdot qWdot]
-		the position and velocity of the tag in the drone's body frame. Model is assuming constant acceleration.
+
+		The state of the system is: 
+			X = {pD, dotpD, attD, dotattD, pJ, dotpJ, headJ, GSPoffsetJ, GPSbiasD}
 		
 		The inputs are:
-			- IMU Accelerometer data.
-			- Tag position data in the drone's body frame
+			- Drone's position in local ENU
+			- Drone's attitude
+			- Drone's angular velocities
+			- Jetyak's position in local ENU
+			- Jetyak's heading
+			- Jetyak's position in the Drone's body frame
 	"""
 	
-	def __init__(self, n, F, P, Htag, Himu, Rtag, Rimu, N):
-		self.kalmanF   = KalmanFilter(n)
-		self.n         = n
+	def __init__(self, F, P, N):
+		self.kalmanF   = KalmanFilter()
 		self.F         = F
 		self.P         = P
-		self.Htag      = Htag
-		self.Himu      = Himu
-		self.Rtag      = Rtag
-		self.Rimu      = Rimu
 		self.N         = N
+		self.n         = np.shape(F)[0]
 		self.timeStamp = None
 		self.isInit    = False
+		self.X         = np.matrix(np.zeros((self.n, 1)))
+		self.X[0:3] = np.nan    # Drone's position
+		self.X[6:10] = np.nan   # Drone's attitude
+		self.X[14:17] = np.nan  # Jetyak's position
+		self.X[19:23] = np.nan  # Jetyak's heading and GPS offset
 
 	def initialize(self, dataPoint):
-		if dataPoint.getID() == 'tagPose':
-			self.timeStamp = dataPoint.getTime()
-			initialState = np.matrix(np.zeros((self.n, 1)))
-			initialState[0] = dataPoint.getZ().item(0)
-			initialState[1] = dataPoint.getZ().item(1)
-			initialState[2] = dataPoint.getZ().item(2)
-			initialState[9] = dataPoint.getZ().item(3)
-			initialState[10] = dataPoint.getZ().item(4)
-			initialState[11] = dataPoint.getZ().item(5)
-			initialState[12] = dataPoint.getZ().item(6)
-			self.kalmanF.initialize(initialState, self.F, self.P, self.N)
-			self.isInit = True
-			print("Filter initialized")
+		if dataPoint.getID() == 'dgps':
+			self.X[0] = dataPoint.getZ().item(0)
+			self.X[1] = dataPoint.getZ().item(1)
+			self.X[2] = dataPoint.getZ().item(2)
+		elif dataPoint.getID() == 'jgps':
+			self.X[14] = dataPoint.getZ().item(0)
+			self.X[15] = dataPoint.getZ().item(1)
+			self.X[16] = dataPoint.getZ().item(2)
+		elif dataPoint.getID() == 'atti':
+			self.X[6] = dataPoint.getZ().item(0)
+			self.X[7] = dataPoint.getZ().item(1)
+			self.X[8] = dataPoint.getZ().item(2)
+			self.X[9] = dataPoint.getZ().item(3)
+		elif dataPoint.getID() == 'jhdg':
+			self.X[19] = dataPoint.getZ().item(0)
+		elif dataPoint.getID() == 'tag':
+			if (not (np.isnan(self.X[0]) or 
+					 np.isnan(self.X[6]) or
+					 np.isnan(self.X[14]) or
+					 np.isnan(self.X[19]))):
 
-	def process(self, dataPoint):
+				q = Quaternion(self.X[6], self.X[7], self.X[8], self.X[9])
+
+				tagPos = Quaternion(dataPoint.getZ().item(0),
+									dataPoint.getZ().item(1),
+									dataPoint.getZ().item(2),
+									0)
+				
+				posWq = quatMultiply(quatMultiply(q, tagPos), quatInverse(q))
+
+				self.X[20] = self.X[14] - self.X[0] - posWq.x
+				self.X[21] = self.X[15] - self.X[1] - posWq.y
+				self.X[22] = self.X[16] - self.X[2] - posWq.z
+
+				self.timeStamp = dataPoint.getTime()
+				self.kalmanF.initialize(self.X, self.F, self.P, self.N)
+				self.isInit = True
+				print 'Colocalization filter initialized'
+
+	def process(self, dataPoint, H, R):
 		if not self.isInit:
 			self.initialize(dataPoint)
 		else:
-			# Update time
+			# Check the data ID
 			dt = dataPoint.getTime() - self.timeStamp
-			self.timeStamp = dataPoint.getTime()
+
+			if dt > 0.01:
+				self.timeStamp = dataPoint.getTime()
 			
-			# Update F and Q Matrices
-			self.kalmanF.updateF(dt)
-			self.kalmanF.updateQ(dt)
+				# Update F, G and Q Matrices
+				self.kalmanF.updateF(dt)
+				self.kalmanF.updateQ()
 			
-			# KF Prediction Step
-			self.kalmanF.predict()
-			
+				# KF Prediction Step
+				self.kalmanF.predict()
+
 			# KF Correction Step
-			if dataPoint.getID() == 'tagPose':
-				self.kalmanF.correct(dataPoint.getZ(), self.Htag, self.Rtag)
-			elif dataPoint.getID() == 'imuAcc':
-				# Initialize quaternion
-				state = self.kalmanF.getState()
-				qState = Quaternion(state.item(9), state.item(10), state.item(11), state.item(12))
-				qOmega = Quaternion(-1 * dataPoint.getZ().item(3),
-									-1 * dataPoint.getZ().item(4),
-									-1 * dataPoint.getZ().item(5),
+			if dataPoint.getID() == 'tag':
+				X = self.kalmanF.getState()
+				q = Quaternion(X.item(6),
+							   X.item(7),
+							   X.item(8),
+							   X.item(9))
+
+				tagPos = Quaternion(dataPoint.getZ().item(0),
+									dataPoint.getZ().item(1),
+									dataPoint.getZ().item(2),
 									0)
 
-				dq = quatMultiply(qState, qOmega)
+				posWq = quatMultiply(quatMultiply(q, tagPos), quatInverse(q))
+				posW = np.matrix([[posWq.x],
+								  [posWq.y],
+								  [posWq.z]])
 
-				measurement = np.matrix([[dataPoint.getZ().item(0)],
-										 [dataPoint.getZ().item(1)],
-										 [dataPoint.getZ().item(2)],
-										 [0.5 * dq.x],
-										 [0.5 * dq.y],
-										 [0.5 * dq.z],
-										 [0.5 * dq.w]])
+				self.kalmanF.correct(posW, H, R)
+			elif dataPoint.getID() == 'imu':
+				X = self.kalmanF.getState()
+				q = Quaternion(X.item(6),
+							   X.item(7),
+							   X.item(8),
+							   X.item(9))
 
-				self.kalmanF.correct(measurement, self.Himu, self.Rimu)
+				qOmega = Quaternion(dataPoint.getZ().item(0),
+									dataPoint.getZ().item(1),
+									dataPoint.getZ().item(2),
+									0)
+
+				dq = quatMultiply(q, qOmega)
+
+				dqm = np.matrix([[0.5 * dq.x],
+								 [0.5 * dq.y],
+								 [0.5 * dq.z],
+								 [0.5 * dq.w]])
+					
+				self.kalmanF.correct(dqm, H, R)
 			else:
-				print("Bad ID")
-
-	def resetFilter(self, P):
-		self.P = P
-		self.isInit = False
-		print("Filter reset")
+				self.kalmanF.correct(dataPoint.getZ(), H, R)
 
 	def getState(self):
-		return self.kalmanF.getState()
+		if self.isInit:
+			return self.kalmanF.getState()
+		else:
+			return None

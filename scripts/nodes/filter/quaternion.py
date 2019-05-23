@@ -25,6 +25,7 @@ Author: Michail Kalaitzakis
 
 """
 
+import numpy as np
 
 class Quaternion:
     """
@@ -51,15 +52,30 @@ class Quaternion:
             self.y = self.y / mag
             self.z = self.z / mag
             self.w = self.w / mag
-
+	
+def quatInverse(q):
+	return Quaternion(-q.x, -q.y, -q.z, q.w)
 
 def quatMultiply(p, q):
-    w = p.w * q.w - p.x * q.x - p.y * q.y - p.z * q.z
     x = p.w * q.x + p.x * q.w + p.y * q.z - p.z * q.y
     y = p.w * q.y - p.x * q.z + p.y * q.w + p.z * q.x
     z = p.w * q.z + p.x * q.y - p.y * q.x + p.z * q.w
+    w = p.w * q.w - p.x * q.x - p.y * q.y - p.z * q.z
     
-    pq = Quaternion(x, y, z, w)
-    pq.norm()
+    return Quaternion(x, y, z, w)
 
-    return pq
+def quat2rpy(q):
+    # Roll
+    r = np.arctan2(2 * (q.w*q.x + q.y*q.z), 1 - 2*(q.x*q.x + q.y*q.y))
+
+    # Pitch
+    sinP = 2 * (q.w*q.y - q.z*q.x)
+    if np.abs(sinP) > 1:
+        p = np.sign(sinP) * np.pi / 2
+    else:
+        p = np.arcsin(sinP)
+    
+    # Yaw
+    y = np.arctan2(2 * (q.w*q.z + q.x*q.y), 1 - 2*(q.y*q.y + q.z*q.z))
+
+    return np.array([r, p, y])
