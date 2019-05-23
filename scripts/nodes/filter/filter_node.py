@@ -211,9 +211,9 @@ class FilterNode():
 				stateMsg.header.stamp = rp.Time.now()
 				stateMsg.header.frame_id = 'localENU'
 			
-				stateMsg.drone_p.x = X.item(0)
-				stateMsg.drone_p.y = X.item(1)
-				stateMsg.drone_p.z = X.item(2)
+				stateMsg.drone_p.x = X.item(0) - X.item(23)
+				stateMsg.drone_p.y = X.item(1) - X.item(24)
+				stateMsg.drone_p.z = X.item(2) - X.item(25)
 
 				stateMsg.drone_pdot.x = X.item(3)
 				stateMsg.drone_pdot.y = X.item(4)
@@ -227,9 +227,9 @@ class FilterNode():
 				stateMsg.drone_qdot.y = 2 * omega.y
 				stateMsg.drone_qdot.z = 2 * omega.z
 
-				stateMsg.boat_p.x = X.item(14)
-				stateMsg.boat_p.y = X.item(15)
-				stateMsg.boat_p.z = X.item(16)
+				stateMsg.boat_p.x = X.item(14) - X.item(20)
+				stateMsg.boat_p.y = X.item(15) - X.item(21)
+				stateMsg.boat_p.z = X.item(16) - X.item(22)
 
 				stateMsg.boat_pdot.x = X.item(17)
 				stateMsg.boat_pdot.y = X.item(18)
