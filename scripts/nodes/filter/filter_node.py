@@ -57,7 +57,7 @@ class FilterNode():
 		self.originSet = False
 
 		# Number of States
-		n = 26
+		n = 23
 
 		# Initial State Transition Matrix
 		F = np.asmatrix(np.eye(n))
@@ -70,7 +70,6 @@ class FilterNode():
 		self.Htag[0:3,   0:3] = np.matrix(-1 * np.eye(3))
 		self.Htag[0:3, 14:17] = np.matrix(np.eye(3))
 		self.Htag[0:3, 20:23] = np.matrix(-1 * np.eye(3))
-		self.Htag[0:3, 23:26] = np.matrix(np.eye(3))
 
 		# Covariance Matrix for Tag measurements
 		self.Rtag = np.asmatrix(1.0e-6 * np.eye(3))
@@ -92,10 +91,16 @@ class FilterNode():
 		# Covariance Matrix for IMU measurements
 		self.Rimu = np.asmatrix(1.0e-6 * np.eye(4))
 
+		# Transition Matrix for Drone velocity measurements
+		self.HvelD = np.matrix(np.zeros((3, n)))
+		self.HvelD[0:3, 3:6] = np.matrix(np.eye(3))
+
+		# Covariance Matrix for Drone velocity measurements
+		self.RvelD = np.asmatrix(1.0e-4 * np.eye(4))
+
 		# Transition Matrix for Drone GPS measurements
 		self.HgpsD = np.matrix(np.zeros((3, n)))
 		self.HgpsD[0:3, 0:3] = np.matrix(np.eye(3))
-		# self.HgpsD[0:3, 23:26] = np.matrix(np.eye(3))
 
 		# Covariance Matrix for Drone GPS measurements
 		self.RgpsD = np.asmatrix(1.0e-1 * np.eye(3))
@@ -124,6 +129,7 @@ class FilterNode():
 		self.dGPS_sub = rp.Subscriber("/dji_sdk/gps_position", NavSatFix, self.dGPS_callback)
 		self.dAtti_sub = rp.Subscriber("/dji_sdk/attitude", QuaternionStamped, self.dAtti_callback)
 		self.dIMU_sub = rp.Subscriber("/dji_sdk/imu", Imu, self.dIMU_callback)
+		self.dVel_sub = rp.Subscriber("/dji_sdk/velocity", Vector3Stamped, self.dVel_callback)
 		self.jGPS_sub = rp.Subscriber("/jetyak2/global_position/global", NavSatFix, self.jGPS_callback)
 		self.jCompass_sub = rp.Subscriber("/jetyak2/global_position/compass_hdg", Float64, self.jCompass_callback)
 		self.tag_sub = rp.Subscriber("tag_pose", PoseStamped, self.tag_callback)
@@ -168,6 +174,15 @@ class FilterNode():
 								  [msg.angular_velocity.z]]))
 		dIMUPoint.setTime(msg.header.stamp.to_sec())
 		self.fusionF.process(dIMUPoint, self.Himu, self.Rimu)
+	
+	def dVel_callback(self, msg):
+		dVelPoint = DataPoint()
+		dVelPoint.setID('dvel')
+		dVelPoint.setZ(np.matrix([[msg.vector.x],
+								  [msg.vector.y],
+								  [msg.vector.z]]))
+		dVelPoint.setTime(msg.header.stamp.to_sec())
+		self.fusionF.process(dVelPoint, self.HvelD, self.RvelD)
 
 	def jGPS_callback(self, msg):
 		if self.originSet:
@@ -188,7 +203,7 @@ class FilterNode():
 
 	def tag_callback(self, msg):
 		tagPoint = DataPoint()
-		tagPoint.setID('tagPose')
+		tagPoint.setID('tag')
 		tagPoint.setZ(np.matrix([[msg.pose.position.x],
 								 [msg.pose.position.y],
 								 [msg.pose.position.z]]))
@@ -211,9 +226,9 @@ class FilterNode():
 				stateMsg.header.stamp = rp.Time.now()
 				stateMsg.header.frame_id = 'localENU'
 			
-				stateMsg.drone_p.x = X.item(0) - X.item(23)
-				stateMsg.drone_p.y = X.item(1) - X.item(24)
-				stateMsg.drone_p.z = X.item(2) - X.item(25)
+				stateMsg.drone_p.x = X.item(0)
+				stateMsg.drone_p.y = X.item(1)
+				stateMsg.drone_p.z = X.item(2)
 
 				stateMsg.drone_pdot.x = X.item(3)
 				stateMsg.drone_pdot.y = X.item(4)
