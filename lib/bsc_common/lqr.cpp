@@ -28,7 +28,8 @@ SOFTWARE.
  * 
  * Author: Brennan Cain
  */
-
+#include <iostream>
+#include <stdlib.h>
 namespace bsc_common
 {
 LQR::LQR(Eigen::Matrix<double, 4, 12> K)
@@ -40,11 +41,16 @@ LQR::LQR(std::string file)
 {
 	K = Eigen::Matrix<double, 4, 12>::Zero();
 	std::ifstream infile;
-	infile.open(file);
+	infile.open(file.c_str());
 	std::string delim = " ";
 	std::string token;
+	int counter=0;
 	while (!infile.eof())
 	{
+		if(counter++>50) {
+			std::cout <<"Too many iterations of LQR\n";
+			exit(EXIT_FAILURE);
+		}
 		std::string line;
 		std::getline(infile, line);
 		char pos = 0;
@@ -98,7 +104,7 @@ void LQR::updateState(Eigen::Matrix<double, 12, 1> state)
 Eigen::Matrix<double, 4, 1> LQR::getCommand(Eigen::Matrix<double, 12, 1> set)
 {
 	xs = set;
-	u = K * (xh - xs);
+	u = K * (xs- xh);
 	return u;
 }
 } // namespace bsc_common

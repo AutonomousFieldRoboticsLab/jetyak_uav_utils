@@ -151,5 +151,6 @@ Eigen::Vector4d Behaviors::boat_to_drone(Eigen::Vector4d pos)
 
 	Eigen::Vector4d dronePos;
 	dronePos << hGoal(0), hGoal(1), vDiff, wDiff;
+	
 	return dronePos;
 }

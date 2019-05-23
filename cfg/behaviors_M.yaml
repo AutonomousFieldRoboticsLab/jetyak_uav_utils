@@ -4,7 +4,7 @@
 integral_size: 200
 reset_kalman_threshold: 3.0
 
-k_matrix_path: "lqrText.txt"
+k_matrix_path: "/home/ubuntu/git/jetyak_uav_utils/cfg/lqrText.txt"
 
 #
 # Takeoff
@@ -15,9 +15,9 @@ takeoff_threshold: .25
 #
 # Follow Parameters
 #
-follow_x: 1
+follow_x: 0
 follow_y: 0
-follow_z: -3
+follow_z: 2
 follow_w: 0
 
 #

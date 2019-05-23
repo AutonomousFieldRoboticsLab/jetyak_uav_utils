@@ -57,7 +57,7 @@ void Behaviors::takeoffBehavior()
 
 void Behaviors::followBehavior()
 {
-	if (ros::Time::now().toSec() - lastSpotted <= 3) // TODO: Add tag loss threshold for follow_
+	if (ros::Time::now().toSec() - lastSpotted <= 3 or true) // TODO: Add tag loss threshold for follow_
 	{
 		//get the setpoint in the drone FLU
 		Eigen::Vector4d goal_b;
@@ -66,15 +66,16 @@ void Behaviors::followBehavior()
 
 		//get boat velocity in drone frame
 		Eigen::Vector2d vBoat(state.boat_pdot.x, state.boat_pdot.y);				 //boat velocity in world Frame
-		vBoat = bsc_common::util::rotation_matrix(-state.drone_q.z) * vBoat; // boat velocity in drone frame
+		vBoat = bsc_common::util::rotation_matrix(state.drone_q.z) * vBoat; // boat velocity in drone frame
 
 		Eigen::Matrix<double, 12, 1> set;
 		set << goal_d(0), goal_d(1), goal_d(2), //position setpoint (xyz)
 				vBoat(0, 0), vBoat(1, 0), 0,				//velocity setpoint (xyz)
 				0, 0, goal_d(3),										//Angle setpoint (rpy)
 				0, 0, 0;														//angular velocity setpoint (rpy)
-
+		std::cout << set.transpose() <<std::endl;
 		Eigen::Vector4d cmdM = lqr_->getCommand(set);
+
 		sensor_msgs::Joy cmd;
 		cmd.axes.push_back(cmdM(0));
 		cmd.axes.push_back(cmdM(1));
