@@ -144,7 +144,9 @@ class FilterNode():
 		rp.spin()			
 
 	def dGPS_callback(self, msg):
+
 		if self.originSet:
+
 			enu = self.myENU.geo2enu(msg.latitude, msg.longitude, msg.altitude)
 
 			dGPSpoint = DataPoint()
@@ -203,7 +205,11 @@ class FilterNode():
 
 	def tag_callback(self, msg):
 		tagPoint = DataPoint()
+<<<<<<< HEAD
+		tagPoint.setID('tag') #@mike the errpr was here, it was named tagPose
+=======
 		tagPoint.setID('tag')
+>>>>>>> 5d6a4a54057ef1cd349038f15cd2b2d1d5422856
 		tagPoint.setZ(np.matrix([[msg.pose.position.x],
 								 [msg.pose.position.y],
 								 [msg.pose.position.z]]))
