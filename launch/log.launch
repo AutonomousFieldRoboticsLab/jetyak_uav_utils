@@ -4,7 +4,8 @@
 		  args="record -o /media/ubuntu/Manifold/FlightLog/flightData 
 
 /jetyak_uav_vision/ar_pose_marker
-/jetyak_uav_vision/filtered_tag
+/jetyak_uav_vision/state
+
 /jetyak_uav_vision/tag_pose
 /jetyak_uav_vision/tag_velocity
 /jetyak_uav_vision/visualization_marker

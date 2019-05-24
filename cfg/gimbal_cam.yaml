@@ -10,8 +10,9 @@ reset_angle_btn: 0
 face_down_btn: 2
 toggle_track_btn: 3
 
-Kp: .002
-Kd: 0.0005
+Kp: .004
+Kd: 0.000003
+velLimit: .5
 
 # dji_camera config
 camera_info_url: package://dji_gimbal_cam/cfg/zenmuse_z3.yaml

@@ -135,8 +135,12 @@ void Behaviors::assignSubscribers()
 Eigen::Vector4d Behaviors::boat_to_drone(Eigen::Vector4d pos)
 {
 	//vertical setpoint
-	double vDiff = pos(2) - state.boat_p.z - state.drone_p.z;
+	double vDiff = pos(2) + state.boat_p.z - state.drone_p.z;
 	double wDiff = pos(3) + state.heading - state.drone_q.z;
+	if(wDiff>=M_PI)
+		wDiff-=2*M_PI;
+	else if(wDiff<=-M_PI)
+		wDiff+=2*M_PI;
 
 	//get setpoint in world frame
 	Eigen::Vector2d hGoal(pos(0), pos(1));														//setpoint relative to boat frame

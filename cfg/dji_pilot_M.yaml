@@ -7,7 +7,7 @@ rcVelocityMultiplier: .3
 hVelocityMaxBody: 3.0
 hVelocityMaxGround: 3.0
 hAngleRateCmdMax: 5.0 * pi / 6.0
-hAngleCmdMax: 0.1
+hAngleCmdMax: 0.05
 
 
 vVelocityMaxBody: 2.0

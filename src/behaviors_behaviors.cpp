@@ -80,7 +80,7 @@ void Behaviors::followBehavior()
 		cmd.axes.push_back(cmdM(0));
 		cmd.axes.push_back(cmdM(1));
 		cmd.axes.push_back(cmdM(2));
-		cmd.axes.push_back(cmdM(3));
+		cmd.axes.push_back(0);
 		cmd.axes.push_back(JETYAK_UAV_UTILS::LQR);
 		cmdPub_.publish(cmd);
 	}

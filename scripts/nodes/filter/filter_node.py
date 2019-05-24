@@ -138,7 +138,9 @@ class FilterNode():
 		rp.spin()			
 
 	def dGPS_callback(self, msg):
+
 		if self.originSet:
+
 			enu = self.myENU.geo2enu(msg.latitude, msg.longitude, msg.altitude)
 
 			dGPSpoint = DataPoint()
@@ -183,12 +185,12 @@ class FilterNode():
 		jHeadingPoint = DataPoint()
 		jHeadingPoint.setID('jhdg')
 		jHeadingPoint.setZ(np.matrix([np.deg2rad(msg.data)]))
-		jHeadingPoint.setTime(msg.header.stamp.to_sec())
+		jHeadingPoint.setTime(rp.Time.now().to_sec())
 		self.fusionF.process(jHeadingPoint, self.HhdgJ, self.RhdgJ)
 
 	def tag_callback(self, msg):
 		tagPoint = DataPoint()
-		tagPoint.setID('tagPose')
+		tagPoint.setID('tag') #@mike the errpr was here, it was named tagPose
 		tagPoint.setZ(np.matrix([[msg.pose.position.x],
 								 [msg.pose.position.y],
 								 [msg.pose.position.z]]))

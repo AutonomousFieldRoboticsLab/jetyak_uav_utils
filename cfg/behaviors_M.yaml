@@ -15,7 +15,7 @@ takeoff_threshold: .25
 #
 # Follow Parameters
 #
-follow_x: 0
+follow_x: -2
 follow_y: 0
 follow_z: 2
 follow_w: 0
