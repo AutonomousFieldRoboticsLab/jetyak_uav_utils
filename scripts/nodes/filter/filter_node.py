@@ -96,7 +96,7 @@ class FilterNode():
 		self.HvelD[0:3, 3:6] = np.matrix(np.eye(3))
 
 		# Covariance Matrix for Drone velocity measurements
-		self.RvelD = np.asmatrix(1.0e-4 * np.eye(4))
+		self.RvelD = np.asmatrix(1.0e-5 * np.eye(3))
 
 		# Transition Matrix for Drone GPS measurements
 		self.HgpsD = np.matrix(np.zeros((3, n)))
