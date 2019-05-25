@@ -65,17 +65,14 @@ def quatMultiply(p, q):
     return Quaternion(x, y, z, w)
 
 def quat2rpy(q):
-    # Roll
     r = np.arctan2(2 * (q.w*q.x + q.y*q.z), 1 - 2*(q.x*q.x + q.y*q.y))
 
-    # Pitch
     sinP = 2 * (q.w*q.y - q.z*q.x)
     if np.abs(sinP) > 1:
         p = np.sign(sinP) * np.pi / 2
     else:
         p = np.arcsin(sinP)
     
-    # Yaw
     y = np.arctan2(2 * (q.w*q.z + q.x*q.y), 1 - 2*(q.y*q.y + q.z*q.z))
 
     return np.array([r, p, y])
