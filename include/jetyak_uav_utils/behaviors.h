@@ -115,7 +115,7 @@ private:
 		bsc_common::pose4d_t goal_pose; // landing goal
 		double heightGoal;
 		double heightThresh;
-		double lowX, highX, lowY, highY, lowZ, highZ;
+		double xThresh,yThresh,zThresh;
 		double velThreshSqr;
 		double angleThresh;
 	} land_;

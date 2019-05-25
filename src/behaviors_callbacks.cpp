@@ -47,11 +47,11 @@ void Behaviors::stateCallback(const jetyak_uav_utils::ObservedState::ConstPtr &m
 
 	lqrState << 0,0,0,
 		vel(0),vel(1),state.drone_pdot.z,
-		state.drone_q.x,state.drone_q.y,state.drone_q.z,
+		state.drone_q.x,state.drone_q.y,0,
 		state.drone_qdot.x,state.drone_qdot.y,state.drone_qdot.z;
 
 	lqr_->updateState(lqrState);
-	ROS_WARN("state update");
+
 
 	
 }

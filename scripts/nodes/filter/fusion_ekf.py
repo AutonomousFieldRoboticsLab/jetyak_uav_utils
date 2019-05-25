@@ -64,12 +64,10 @@ class FusionEKF:
 
 	def initialize(self, dataPoint):
 		if dataPoint.getID() == 'dgps':
-
 			self.X[0] = dataPoint.getZ().item(0)
 			self.X[1] = dataPoint.getZ().item(1)
 			self.X[2] = dataPoint.getZ().item(2)
 		elif dataPoint.getID() == 'jgps':
-			print("jgps")
 			self.X[14] = dataPoint.getZ().item(0)
 			self.X[15] = dataPoint.getZ().item(1)
 			self.X[16] = dataPoint.getZ().item(2)

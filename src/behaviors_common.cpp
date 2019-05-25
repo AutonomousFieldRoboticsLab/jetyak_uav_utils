@@ -66,12 +66,9 @@ void Behaviors::downloadParams(std::string ns_param)
 	double velMag;
 	getP(ns, "land_vel_mag", velMag);
 	land_.velThreshSqr = velMag * velMag;
-	getP(ns, "land_x_low", land_.lowX);
-	getP(ns, "land_x_high", land_.highX);
-	getP(ns, "land_y_low", land_.lowY);
-	getP(ns, "land_y_high", land_.highY);
-	getP(ns, "land_z_low", land_.lowZ);
-	getP(ns, "land_z_high", land_.highZ);
+	getP(ns, "land_xThresh", land_.xThresh);
+	getP(ns, "land_yThresh", land_.yThresh);
+	getP(ns, "land_zThresh", land_.zThresh);
 	getP(ns, "land_angle_thresh", land_.angleThresh);
 
 	/**********************

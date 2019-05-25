@@ -73,14 +73,14 @@ void Behaviors::followBehavior()
 				vBoat(0, 0), vBoat(1, 0), 0,				//velocity setpoint (xyz)
 				0, 0, goal_d(3),										//Angle setpoint (rpy)
 				0, 0, 0;														//angular velocity setpoint (rpy)
-		std::cout << set.transpose() <<std::endl;
+
 		Eigen::Vector4d cmdM = lqr_->getCommand(set);
 
 		sensor_msgs::Joy cmd;
 		cmd.axes.push_back(cmdM(0));
 		cmd.axes.push_back(cmdM(1));
 		cmd.axes.push_back(cmdM(2));
-		cmd.axes.push_back(0);
+		cmd.axes.push_back(cmdM(3));
 		cmd.axes.push_back(JETYAK_UAV_UTILS::LQR);
 		cmdPub_.publish(cmd);
 	}
@@ -257,16 +257,16 @@ void Behaviors::landBehavior()
 		Eigen::Vector2d vBoat(state.boat_pdot.x, state.boat_pdot.y);													//boat velocity in world Frame
 		vBoat = bsc_common::util::rotation_matrix(-state.drone_q.z) * vBoat;									// boat velocity in drone frame
 
-		if (ros::Time::now().toSec() - lastSpotted <= 1) //TODO: create land tag loss threshold
+		if (ros::Time::now().toSec() - lastSpotted <= 1 or true) //TODO: create land tag loss threshold
 		{
 
-			// If pose is within a cylinder of radius .1 and height .1
-			bool inX = (land_.lowX < goal_d(0)) and (goal_d(0) < land_.highX);
-			bool inY = (land_.lowY < goal_d(1)) and (goal_d(1) < land_.highY);
-			bool inZ = (land_.lowZ < goal_d(2)) and (goal_d(2) < land_.highZ);
+			bool inX = (fabs(goal_d(0)) < land_.xThresh);
+			bool inY = (fabs(goal_d(1)) < land_.yThresh);
+			bool inZ = (fabs(goal_d(2)) < land_.zThresh);
+	//ROS_WARN("x: %b, Y: %b, Z: %b",inX,inY,inZ);
 
-			bool inVelThreshold = (pow(vBoat(0), 2) + pow(vBoat(1), 2)) < land_.velThreshSqr;
-			bool inAngleThreshhold = abs(goal_d(3)) < land_.angleThresh;
+			bool inVelThreshold = (pow(state.drone_pdot.x, 2) + pow(state.drone_pdot.y, 2)) < land_.velThreshSqr;
+			bool inAngleThreshhold = fabs(goal_d(3)) < land_.angleThresh;
 			if (inX and inY and inZ and inVelThreshold and inAngleThreshhold)
 			{
 				ROS_WARN("CALLING LAND SERVICE");
