@@ -81,8 +81,8 @@ void gimbal_tag::publishTagPose()
 		tf::Matrix3x3 tmp(qOffset);
 		double tR, tP, tY;
 		tmp.getRPY(tR, tP, tY);
-		double bodyYaw=-tY+tagYaw;
-		ROS_WARN("Yaw %1.2f",bodyYaw);
+		double bodyYaw=tY+tagYaw;
+		ROS_WARN("tY: %1.2f, tagYaw: %1.2f, Yaw %1.2f",tY,tagYaw,bodyYaw);
 		
 		tf::Quaternion qTagBody = tf::createQuaternionFromRPY(0,0,bodyYaw);
 

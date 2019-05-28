@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<multimarker markers="5">
+	<marker index="0" status="1">
+		<corner x="-6.45" y="-6.45" z="0" />
+		<corner x="6.45" y="-6.45" z="0" />
+		<corner x="6.45" y="6.45" z="0" />
+		<corner x="-6.45" y="6.45" z="0" />
+	</marker>
+
+	<marker index="1" status="1">
+		<corner x="7.05" y="-6.45" z="0" />
+		<corner x="19.95" y="-6.45" z="0" />
+		<corner x="19.95" y="6.45" z="0" />
+		<corner x="7.05" y="6.45" z="0" />
+	</marker>
+	<marker index="3" status="1">
+		<corner x="12.3" y="-23.0" z="94.8" />
+		<corner x="64.1" y="-23.0" z="94.8" />
+		<corner x="64.1" y="-23.0" z="43" />
+		<corner x="12.3" y="-23.0" z="43" />
+	</marker>
+	<marker index="4" status="1">
+		<corner x="12.3" y="-23.0" z="155.8" />
+		<corner x="64.1" y="-23.0" z="155.8" />
+		<corner x="64.1" y="-23.0" z="104" />
+		<corner x="12.3" y="-23.0" z="104" />
+	</marker>
+	<marker index="5" status="1">
+		<corner x="2.8" y="-23.0" z="104" />
+		<corner x="-49" y="-23.0" z="104" />
+		<corner x="-49" y="-23.0" z="155.8" />
+		<corner x="2.8" y="-23.0" z="155.8" />
+	</marker>
+	<marker index="6" status="1">
+		<corner x="2.8" y="-23.0" z="43" />
+		<corner x="-49" y="-23.0" z="43" />
+		<corner x="-49" y="-23.0" z="94.8" />
+		<corner x="2.8" y="-23.0" z="94.8" />
+	</marker>
+	
+	
+</multimarker>
+<!--
+01
+63
+54
+
+Tag corner order:
+4          3
+ ####  ####
+ ####  ####
+ ##  ##  ##
+ ##########
+ ##########
+1          2
+
+Down:
+	51.8
+	61
+	112.8
+Right:
+	51.8
+	12.3
+	64.1
+-->

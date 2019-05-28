@@ -9,7 +9,7 @@ the ROS param server instead of setting here
 	<arg name="cam_image_topic" value="/jetyak_uav_vision/dji_camera/image_raw"  />
 	<arg name="cam_info_topic" value="/jetyak_uav_vision/dji_camera/camera_info"  />
 	<arg name="output_frame" value="/dji_camera" />
-	<arg name="bundle_files" value="$(find jetyak_uav_utils)/cfg/jetyak2bundle.xml" />
+	<arg name="bundle_files" value="$(find jetyak_uav_utils)/cfg/fullMetal.xml" />
 
 	<node name="ar_track_alvar" pkg="ar_track_alvar" type="findMarkerBundlesNoKinect" respawn="false" output="screen" 
 		  args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) $(arg bundle_files)"
