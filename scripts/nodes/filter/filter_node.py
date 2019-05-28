@@ -59,7 +59,7 @@ class FilterNode():
 		self.rate = 50
 
 		# Number of States
-		n = 23
+		n = 24
 
 		# Initial State Transition Matrix
 		F = np.asmatrix(np.eye(n))
@@ -68,13 +68,15 @@ class FilterNode():
 		P = np.asmatrix(1.0e3 * np.eye(n))
 
 		# Transition Matrix for Tag measurements
-		self.Htag = np.matrix(np.zeros((3, n)))
+		self.Htag = np.matrix(np.zeros((4, n)))
 		self.Htag[0:3,   0:3] = np.matrix(-1 * np.eye(3))
 		self.Htag[0:3, 14:17] = np.matrix(np.eye(3))
 		self.Htag[0:3, 20:23] = np.matrix(-1 * np.eye(3))
+		self.Htag[3,      19] =  1
+		self.Htag[3,      23] = -1
 
 		# Covariance Matrix for Tag measurements
-		self.Rtag = np.asmatrix(1.0e-6 * np.eye(3))
+		self.Rtag = np.asmatrix(1.0e-6 * np.eye(4))
 
 		# Transition Matrix for Attitude measurements
 		self.Hatt = np.matrix(np.zeros((4, n)))
@@ -119,7 +121,7 @@ class FilterNode():
 		self.HhdgJ[0, 19] = 1
 
 		# Covariance Matrix for Jetyak GPS heading
-		self.RhdgJ = np.matrix(1.0e-3)
+		self.RhdgJ = np.matrix(1.0e-4)
 
 		# Process Noise Level
 		N = 1.0e-7
@@ -194,7 +196,10 @@ class FilterNode():
 	def jCompass_callback(self, msg):
 		jHeadingPoint = DataPoint()
 		jHeadingPoint.setID('jhdg')
-		jHeadingPoint.setZ(np.matrix([np.deg2rad(msg.data)]))
+		if msg.data < 270:
+			jHeadingPoint.setZ(np.matrix([np.deg2rad(90 - msg.data)]))
+		else:
+			jHeadingPoint.setZ(np.matrix([np.deg2rad(450 - msg.data)]))
 		self.fusionF.process(jHeadingPoint, self.HhdgJ, self.RhdgJ)
 
 	def tag_callback(self, msg):
@@ -202,7 +207,11 @@ class FilterNode():
 		tagPoint.setID('tag')
 		tagPoint.setZ(np.matrix([[msg.pose.position.x],
 								 [msg.pose.position.y],
-								 [msg.pose.position.z]]))
+								 [msg.pose.position.z],
+								 [msg.pose.orientation.x],
+								 [msg.pose.orientation.y],
+								 [msg.pose.orientation.z],
+								 [msg.pose.orientation.w]]))
 		self.fusionF.process(tagPoint, self.Htag, self.Rtag)
 	
 	def statePublisher(self):
@@ -245,7 +254,7 @@ class FilterNode():
 				stateMsg.boat_pdot.y = X.item(18)
 				stateMsg.boat_pdot.z = 0
 
-				stateMsg.heading = X.item(19)
+				stateMsg.heading = X.item(19) - X.item(23)
 
 				stateMsg.origin.x = self.myENU.latZero
 				stateMsg.origin.y = self.myENU.lonZero
