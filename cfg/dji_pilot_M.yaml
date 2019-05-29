@@ -4,14 +4,14 @@ isM100: true
 rcVelocityMultiplier: .3
 
 
-hVelocityMaxBody: 3.0
-hVelocityMaxGround: 3.0
+hVelocityMaxBody: 1.0
+hVelocityMaxGround: 1.0
 hAngleRateCmdMax: 5.0 * pi / 6.0
 hAngleCmdMax: 0.25
 
 
-vVelocityMaxBody: 2.0
-vVelocityMaxGround: 2.0
+vVelocityMaxBody: 1.0
+vVelocityMaxGround: 1.0
 vPosCmdMax: 30.0
 vPosCmdMin: 0.0
 vThrustCmdMax: 1.0

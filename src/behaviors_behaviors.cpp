@@ -51,7 +51,7 @@ void Behaviors::takeoffBehavior()
 
 void Behaviors::followBehavior()
 {
-	if (ros::Time::now().toSec() - lastSpotted <= 3) // TODO: Add tag loss threshold for follow_
+	if (ros::Time::now().toSec() - lastSpotted <= 3 or true) // TODO: Add tag loss threshold for follow_
 	{
 		//get the setpoint in the drone FLU
 		Eigen::Vector4d goal_b;
@@ -279,7 +279,7 @@ void Behaviors::landBehavior()
 
 			bool inX = (fabs(goal_d(0)) < land_.xThresh);
 			bool inY = (fabs(goal_d(1)) < land_.yThresh);
-			bool inZ = (fabs(goal_d(2)) < land_.zThresh);
+			bool inZ = (goal_d(2) > -land_.zThresh);
 			//ROS_WARN("x: %b, Y: %b, Z: %b",inX,inY,inZ);
 
 			bool inVelThreshold = (pow(state.boat_pdot.x - state.drone_pdot.x, 2) + pow(state.boat_pdot.y - state.drone_pdot.y, 2)) < land_.velThreshSqr;

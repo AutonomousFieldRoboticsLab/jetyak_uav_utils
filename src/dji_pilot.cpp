@@ -314,6 +314,8 @@ sensor_msgs::Joy dji_pilot::adaptiveClipping(sensor_msgs::Joy msg)
 	}
 	else
 	{
+		cmdBuffer.axes[0]-=.0105;
+		cmdBuffer.axes[1]-=.0105;
 		cmdBuffer.axes[0] = clip(msg.axes[0], -hAngleCmdMax, hAngleCmdMax);
 		cmdBuffer.axes[1] = clip(msg.axes[1], -hAngleCmdMax, hAngleCmdMax);
 	}
