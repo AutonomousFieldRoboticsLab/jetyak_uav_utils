@@ -51,9 +51,9 @@ gimbal_tag::gimbal_tag(ros::NodeHandle &nh)
 		isM100 = true;
 		ROS_WARN("isM100 not available, defaulting to %i", isM100);
 	}
-
 	
 	qCamera2Gimbal = tf::Quaternion(0.5, -0.5, 0.5, 0.5);
+	qFix = tf::Quaternion(-1.0, 0.0, 0.0, 0.0);
 }
 
 void gimbal_tag::changeTagAxes()
@@ -62,31 +62,23 @@ void gimbal_tag::changeTagAxes()
 	double tR, tP, tY;
 	rTag.getRPY(tR, tP, tY);
 
-	tagYaw=tP+C_PI/2.0;
-	if(tagYaw>C_PI) tagYaw-= 2*C_PI;
-	else if(tagYaw<-C_PI) tagYaw+=2*C_PI; 
+	qTag = tf::createQuaternionFromRPY(-tY, -tR, tP);
 }
 
 void gimbal_tag::publishTagPose()
 {
 	if (tagFound)
 	{
-		// Calculate offset quaternion
-		qOffset = qVehicle.inverse() * qGimbal;
-		qOffset.normalize();
-
 		// Apply rotation to go from gimbal frame to body frame
 		changeTagAxes();
 
-		tf::Matrix3x3 tmp(qOffset);
-		double tR, tP, tY;
-		tmp.getRPY(tR, tP, tY);
-		double bodyYaw=tY+tagYaw;
-		ROS_WARN("tY: %1.2f, tagYaw: %1.2f, Yaw %1.2f",tY,tagYaw,bodyYaw);
+		// Calculate offset quaternion
+		qOffset = qVehicle * qGimbal.inverse();
+		qOffset.normalize();
 		
-		tf::Quaternion qTagBody = tf::createQuaternionFromRPY(0,0,bodyYaw);
+		tf::Quaternion qTagBody = qOffset.inverse() * qTag;
 
-		tf::Quaternion positonTagBody = qOffset * posTag * qOffset.inverse();
+		tf::Quaternion positonTagBody = qOffset.inverse() * posTag * qOffset;
 		geometry_msgs::PoseStamped tagPoseBody;
 
 		// Get time
@@ -110,7 +102,7 @@ void gimbal_tag::tagCallback(const ar_track_alvar_msgs::AlvarMarkers &msg)
 {
 	if (!msg.markers.empty())
 	{
-		// pass the ar_pose as a vector3 for the dji_gimbal
+		// Pass the ar_pose as a vector3 for the dji_gimbal
 		geometry_msgs::Vector3 arVec3;
 		arVec3.x = msg.markers[0].pose.pose.position.x;
 		arVec3.y = msg.markers[0].pose.pose.position.y;
@@ -127,7 +119,7 @@ void gimbal_tag::tagCallback(const ar_track_alvar_msgs::AlvarMarkers &msg)
 		posTag[3] = 0;
 
 		// Go from Camera frame to Gimbal frame
-		qTag = qCamera2Gimbal * qTag;
+		qTag = qFix * qTag;
 		qTag.normalize();
 		posTag = qCamera2Gimbal.inverse() * posTag * qCamera2Gimbal;
 
@@ -140,12 +132,15 @@ void gimbal_tag::tagCallback(const ar_track_alvar_msgs::AlvarMarkers &msg)
 
 void gimbal_tag::gimbalCallback(const geometry_msgs::Vector3Stamped &msg)
 {
-	double newY = -msg.vector.y;
-	double newZ = 90-msg.vector.z;
-	if(newZ>=180) newZ-=360;
-	else if(newZ<-180) newZ+=360;
-	qGimbal = tf::createQuaternionFromRPY(DEG2RAD(msg.vector.x), DEG2RAD(newY), DEG2RAD(newZ));
+	// The gimbal's frame is NED while the drone's frame is ENU
+	double rotZ = 90 - msg.vector.z;
 
+	if (rotZ >= 180)
+		rotZ -= 360;
+	else if (rotZ < -180)
+		rotZ += 360;
+
+	qGimbal = tf::createQuaternionFromRPY(DEG2RAD(msg.vector.x), DEG2RAD(-msg.vector.y), DEG2RAD(rotZ));
 	qGimbal.normalize();
 }
 

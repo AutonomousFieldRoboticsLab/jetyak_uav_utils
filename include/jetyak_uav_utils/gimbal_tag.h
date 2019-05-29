@@ -99,15 +99,14 @@ private:
 
 	// Data
 	tf::Quaternion qCamera2Gimbal;
+	tf::Quaternion qFix;
 
-	tf::Quaternion qConstant;
 	tf::Quaternion qOffset;
 	tf::Quaternion qGimbal;
 	tf::Quaternion qVehicle;
 	tf::Quaternion qTag;
 	tf::Quaternion posTag;
 
-	double tagYaw=0;
 	bool tagFound;
 	bool isM100;
 };

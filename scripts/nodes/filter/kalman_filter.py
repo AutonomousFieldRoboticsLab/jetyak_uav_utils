@@ -61,9 +61,9 @@ class KalmanFilter:
 						   1e1, 1e1, 1e1, 1e1,
 						   1e-1, 1e-1, 1e-3,
 						   1e1, 1e1,
-						   1e0,
+						   1e-3,
 						   1e0, 1e0, 1e0,
-						   1e0])
+						   1e-3])
 		self.Cf = np.diag(diagCf)
 
 	def updateQ(self):

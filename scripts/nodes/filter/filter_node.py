@@ -121,7 +121,7 @@ class FilterNode():
 		self.HhdgJ[0, 19] = 1
 
 		# Covariance Matrix for Jetyak GPS heading
-		self.RhdgJ = np.matrix(1.0e-4)
+		self.RhdgJ = np.matrix(1.0e-12)
 
 		# Process Noise Level
 		N = 1.0e-7
