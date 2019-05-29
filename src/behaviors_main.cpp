@@ -49,7 +49,8 @@ Behaviors::Behaviors(ros::NodeHandle &nh_param)
 	leave_.input.axes.push_back(0);
 	leave_.input.axes.push_back(JETYAK_UAV_UTILS::WORLD_RATE);
 
-	lqr_ = new bsc_common::LQR(k_matrix_path);
+	lqr_ = new bsc_common::LQR(generalK);
+	land_.lqr = new bsc_common::LQR(landK);
 }
 
 Behaviors::~Behaviors()

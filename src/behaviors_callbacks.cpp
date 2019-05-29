@@ -51,6 +51,7 @@ void Behaviors::stateCallback(const jetyak_uav_utils::ObservedState::ConstPtr &m
 		state.drone_qdot.x,state.drone_qdot.y,state.drone_qdot.z;
 
 	lqr_->updateState(lqrState);
+	land_.lqr->updateState(lqrState);
 
 
 	

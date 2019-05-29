@@ -4,7 +4,8 @@
 integral_size: 200
 reset_kalman_threshold: 3.0
 
-k_matrix_path: "/home/ubuntu/git/jetyak_uav_utils/cfg/lqrText.txt"
+generalK: "/home/ubuntu/git/jetyak_uav_utils/cfg/generalK.txt"
+landK: "/home/ubuntu/git/jetyak_uav_utils/cfg/landK.txt"
 
 #
 # Takeoff
@@ -28,16 +29,18 @@ land_y: 0
 land_z: .3 # this should be .1-.2m over the tag to allow the uav to maneuver
 land_w: 0
 
-land_vel_mag: .1
+land_velMag: .1
 land_xThresh: .1
 land_yThresh: .1
 land_zThresh: .1
-land_angle_thresh: .25
+land_angleThresh: .25
+land_heightThresh: .5
 
 #
 # Return Parameters
 #
 return_gotoHeight: 10
+return_heightThresh: 1
 return_finalHeight: 4
 return_downRadius: 1
 return_settleRadius: .5

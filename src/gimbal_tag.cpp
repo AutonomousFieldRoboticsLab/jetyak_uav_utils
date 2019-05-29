@@ -70,7 +70,7 @@ void gimbal_tag::publishTagPose()
 	if (tagFound)
 	{
 		// Apply rotation to go from gimbal frame to body frame
-		changeTagAxes();
+		tf::Quaternion qTagBody = qFix * qOffset.inverse() * qTag;
 
 		// Calculate offset quaternion
 		qOffset = qVehicle * qGimbal.inverse();
@@ -111,6 +111,12 @@ void gimbal_tag::tagCallback(const ar_track_alvar_msgs::AlvarMarkers &msg)
 
 		// Update Tag quaternion
 		tf::quaternionMsgToTF(msg.markers[0].pose.pose.orientation, qTag);
+		qTag = qTag.inverse();
+
+		tf::Matrix3x3 tmp(qTag);
+		double tR, tP, tY;
+		tmp.getRPY(tR, tP, tY);
+		ROS_WARN("Tag -> Roll: %1.2f, Pitch: %1.2f, Yaw: %1.2f", RAD2DEG(tR), RAD2DEG(tP), RAD2DEG(tY));
 
 		// Update Tag position as quaternion
 		posTag[0] = msg.markers[0].pose.pose.position.x;
