@@ -1,0 +1,14 @@
+<launch>
+	<!-- Vision node -->
+	<group ns="jetyak_uav_vision">
+		<!-- Start tag tracking -->
+		<include file="$(find jetyak_uav_utils)/launch/ar_track.launch"/>
+		<node name="filter" pkg="jetyak_uav_utils" type="filter_node.py" output="screen"/>
+	</group>
+
+	<!-- Mavros -->
+	<include file="$(find jetyak_uav_utils)/launch/jetyak_mavros.launch"/>
+
+	<!-- Capturing the flight data -->
+	<include file="$(find jetyak_uav_utils)/launch/colocLog.launch"/>
+</launch>

@@ -15,12 +15,12 @@ Kd: 0.000003
 velLimit: .5
 
 # dji_camera config
-camera_info_url: package://dji_gimbal_cam/cfg/zenmuse_z3.yaml
-camera_name: zenmuseZ3
+camera_info_url: package://dji_gimbal_cam/cfg/zenmuse_x3.yaml
+camera_name: zenmuseX3
 camera_frame_id: dji_camera
 
 is_mono: true
 transfer: false
 
 # gimbal_tag config
-isM100: true
+isM100: false

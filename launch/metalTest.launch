@@ -28,4 +28,7 @@
 		<node name="filter" pkg="jetyak_uav_utils" type="filter_node.py" output="screen"/>
 	</group>
 
+	
+	<!-- Mavros -->
+	<include file="$(find jetyak_uav_utils)/launch/jetyak_mavros.launch"/>
 </launch>

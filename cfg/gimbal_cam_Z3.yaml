@@ -23,4 +23,4 @@ is_mono: true
 transfer: false
 
 # gimbal_tag config
-isM100: true
+isM100: false

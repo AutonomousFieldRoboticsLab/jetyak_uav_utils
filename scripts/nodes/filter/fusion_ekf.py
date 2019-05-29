@@ -31,16 +31,18 @@ from data_point import DataPoint
 from quaternion import Quaternion
 from quaternion import quatMultiply
 from quaternion import quatInverse
+from quaternion import quat2rpy
 
 class FusionEKF:
 	"""
 		Gets inputs from multiple sources and uses a Kalman Filter to estimate the state of the system
 
 		The state of the system is: 
-			X = {pD, dotpD, attD, dotattD, pJ, dotpJ, headJ, GSPoffsetJ, GPSbiasD}
+			X = {pD, dotpD, attD, dotattD, pJ, dotpJ, headJ, GSPoffsetJ, compassOffsetJ}
 		
 		The inputs are:
 			- Drone's position in local ENU
+			- Drone's velocity in local ENU
 			- Drone's attitude
 			- Drone's angular velocities
 			- Jetyak's position in local ENU
@@ -48,19 +50,20 @@ class FusionEKF:
 			- Jetyak's position in the Drone's body frame
 	"""
 	
-	def __init__(self, F, P, N):
+	def __init__(self, F, P, N, rate):
 		self.kalmanF   = KalmanFilter()
 		self.F         = F
 		self.P         = P
 		self.N         = N
 		self.n         = np.shape(F)[0]
-		self.timeStamp = None
-		self.isInit    = False
 		self.X         = np.matrix(np.zeros((self.n, 1)))
-		self.X[0:3] = np.nan    # Drone's position
-		self.X[6:10] = np.nan   # Drone's attitude
-		self.X[14:17] = np.nan  # Jetyak's position
-		self.X[19:23] = np.nan  # Jetyak's heading and GPS offset
+		self.dt        = 1 / rate
+		self.isInit    = False		
+
+		self.X[0:3]    = np.nan  # Drone's position
+		self.X[6:10]   = np.nan  # Drone's attitude
+		self.X[14:17]  = np.nan  # Jetyak's position
+		self.X[19:24]  = np.nan  # Jetyak's heading and GPS offset
 
 	def initialize(self, dataPoint):
 		if dataPoint.getID() == 'dgps':
@@ -91,59 +94,70 @@ class FusionEKF:
 									dataPoint.getZ().item(2),
 									0)
 				
+				qT = Quaternion(dataPoint.getZ().item(3),
+								dataPoint.getZ().item(4),
+								dataPoint.getZ().item(5),
+								dataPoint.getZ().item(6))
+				
+				rpyT = quat2rpy(qT)
+				rpyD = quat2rpy(q)
+				
 				posWq = quatMultiply(quatMultiply(q, tagPos), quatInverse(q))
 
 				self.X[20] = self.X[14] - self.X[0] - posWq.x
 				self.X[21] = self.X[15] - self.X[1] - posWq.y
 				self.X[22] = self.X[16] - self.X[2] - posWq.z
+				self.X[23] = self.X[19] - rpyD[2] - rpyT[2]
 
-				self.timeStamp = dataPoint.getTime()
 				self.kalmanF.initialize(self.X, self.F, self.P, self.N)
+				self.kalmanF.updateF(self.dt)
+				self.kalmanF.updateQ()
 				self.isInit = True
+
 				print 'Colocalization filter initialized'
 
 	def process(self, dataPoint, H, R):
 		if not self.isInit:
 			self.initialize(dataPoint)
 		else:
-			# Check the data ID
-			dt = dataPoint.getTime() - self.timeStamp
-
-			if dt > 0.01:
-				self.timeStamp = dataPoint.getTime()
-			
-				# Update F, G and Q Matrices
-				self.kalmanF.updateF(dt)
-				self.kalmanF.updateQ()
-			
-				# KF Prediction Step
-				self.kalmanF.predict()
-
 			# KF Correction Step
 			if dataPoint.getID() == 'tag':
-				X = self.kalmanF.getState()
-				q = Quaternion(X.item(6),
-							   X.item(7),
-							   X.item(8),
-							   X.item(9))
+				q = Quaternion(self.X.item(6),
+							   self.X.item(7),
+							   self.X.item(8),
+							   self.X.item(9))
 
 				tagPos = Quaternion(dataPoint.getZ().item(0),
 									dataPoint.getZ().item(1),
 									dataPoint.getZ().item(2),
 									0)
+				
+				qTag = Quaternion(dataPoint.getZ().item(3),
+								  dataPoint.getZ().item(4),
+								  dataPoint.getZ().item(5),
+								  dataPoint.getZ().item(6))
 
-				posWq = quatMultiply(quatMultiply(q, tagPos), quatInverse(q))
+				posWq = quatMultiply(quatMultiply(q, tagPos), quatInverse(q))				
+				rpyT = quat2rpy(qTag)
+				rpyD = quat2rpy(q)
+
+				byaw = rpyT[2] + rpyD[2]
+				if byaw > np.pi:
+					byaw = np.pi
+				elif byaw < - np.pi:
+					byaw = -np.pi
+				
 				posW = np.matrix([[posWq.x],
 								  [posWq.y],
-								  [posWq.z]])
+								  [posWq.z],
+								  [byaw]])
 
 				self.kalmanF.correct(posW, H, R)
 			elif dataPoint.getID() == 'imu':
-				X = self.kalmanF.getState()
-				q = Quaternion(X.item(6),
-							   X.item(7),
-							   X.item(8),
-							   X.item(9))
+				q = Quaternion(self.X.item(6),
+							   self.X.item(7),
+							   self.X.item(8),
+							   self.X.item(9))
 
 				qOmega = Quaternion(dataPoint.getZ().item(0),
 									dataPoint.getZ().item(1),
@@ -160,9 +174,12 @@ class FusionEKF:
 				self.kalmanF.correct(dqm, H, R)
 			else:
 				self.kalmanF.correct(dataPoint.getZ(), H, R)
+			
+			self.X = self.kalmanF.getState()
 
 	def getState(self):
 		if self.isInit:
-			return self.kalmanF.getState()
+			self.kalmanF.predict()
+			return self.X
 		else:
 			return None

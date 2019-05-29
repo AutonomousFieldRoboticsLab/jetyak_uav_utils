@@ -14,8 +14,9 @@
 		<node name="gimbal_tag" pkg="jetyak_uav_utils" type="gimbal_tag_node" output="screen" />
 
 		<!-- Start tag tracking -->
-		<include file="$(find jetyak_uav_utils)/launch/ar_track.launch"/>
-		<node name="filter" pkg="jetyak_uav_utils" type="filter_node.py" output="screen"/>
+		<!--include file="$(find jetyak_uav_utils)/launch/ar_track.launch"/-->
+		<!--node name="filter" pkg="jetyak_uav_utils" type="filter_node.py" output="screen"/-->
 	</group>
+
 
 </launch>

@@ -37,18 +37,15 @@ class KalmanFilter:
 		Q  -> Process Noise Matrix
 		N  -> Noise Level
 		Cf -> Continuous White Noise Matrix
-		R  -> Covariance Matrix
-		H  -> Transition Matrix
 	"""
 
 	def __init__(self):
 		self.n  = None
 		self.X  = None
-		self.u  = None
 		self.F  = None
 		self.P  = None
-		self.N  = None
 		self.Q  = None
+		self.N  = None
 		self.Cf = None
 
 	def initialize(self, X, F, P, N):
@@ -58,15 +55,15 @@ class KalmanFilter:
 		self.N = N
 		self.n = np.shape(F)[0]
 
-		diagCf = np.array([   0,    0,    0,
-						      1,    1,    1,
-							  0,    0,    0,    0,
-						   1e-3, 1e-3, 1e-3, 1e-3,
-						      0,    0, 1e-3,
-							  1,    1,
-						      0,
-						   1e-1, 1e-1, 1e-1,
-						   1e-3, 1e-3, 1e-3])
+		diagCf = np.array([1e0, 1e0, 1e0,
+						   1e1, 1e1, 1e1,
+						   1e0, 1e0, 1e0, 1e0,
+						   1e1, 1e1, 1e1, 1e1,
+						   1e-1, 1e-1, 1e-3,
+						   1e1, 1e1,
+						   1e0,
+						   1e0, 1e0, 1e0,
+						   1e0])
 		self.Cf = np.diag(diagCf)
 
 	def updateQ(self):
@@ -80,7 +77,7 @@ class KalmanFilter:
 	def predict(self):
 		self.X = self.F * self.X
 		self.P = self.F * self.P * self.F.T + self.Q
-		# self.P = (self.P + self.P.T) / 2
+		self.P = (self.P + self.P.T) / 2
 
 	def correct(self, z, H, R):
 		hatP = self.P * H.T
@@ -90,6 +87,7 @@ class KalmanFilter:
 
 		self.X = self.X + K * (z - H * self.X)
 		self.P = (I - K * H) * self.P
+		self.P = (self.P + self.P.T) / 2
 
 	def getState(self):
 		return self.X

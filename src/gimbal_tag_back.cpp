@@ -29,6 +29,7 @@ SOFTWARE.
  */
 
 #include "jetyak_uav_utils/gimbal_tag.h"
+#include <math.h>
 
 #include "tf/transform_datatypes.h"
 
@@ -52,46 +53,46 @@ gimbal_tag::gimbal_tag(ros::NodeHandle &nh)
 		ROS_WARN("isM100 not available, defaulting to %i", isM100);
 	}
 
-	
+	// Initialize the constant offset between Gimbal and Vehicle orientation
 	qCamera2Gimbal = tf::Quaternion(0.5, -0.5, 0.5, 0.5);
+
 }
 
 void gimbal_tag::changeTagAxes()
 {
-//	tf::Matrix3x3 rTag(qTag);
-//	double tR, tP, tY;
-//	rTag.getRPY(tR, tP, tY);
+	tf::Matrix3x3 rTag(qTag);
+	double tR, tP, tY;
+	rTag.getRPY(tR, tP, tY);
+
+	qTag = tf::createQuaternionFromRPY(0, 0, tP);
+
+//	if (isM100)
+//		
+//	else {
+//		qTagBody = tf::createQuaternionFromRPY(-tP, -tR, -tY);
 //
-//	tagYaw=tP+C_PI/2.0;
-//	if(tagYaw>C_PI) tagYaw-= 2*C_PI;
-//	else if(tagYaw<-C_PI) tagYaw+=2*C_PI; 
+//	}
+	//qTagBody.normalize();
 }
 
 void gimbal_tag::publishTagPose()
 {
 	if (tagFound)
 	{
-		// Calculate offset quaternion
-		qOffset = qVehicle * qGimbal.inverse();
-		qOffset.normalize();
-
-		tf::Quaternion qFix = tf::Quaternion(0.5, -0.5, -0.5, -0.5);
-
-		// Apply rotation to go from gimbal frame to body frame
-		tf::Quaternion qTagBody = qFix * qOffset.inverse() * qTag;
-
-//		changeTagAxes();
-//
-		tf::Matrix3x3 tmp(qTagBody);
-		double tR, tP, tY;
-		tmp.getRPY(tR, tP, tY);
-		ROS_WARN("Body -> Roll: %1.2f, Pitch: %1.2f, Yaw: %1.2f", RAD2DEG(tR), RAD2DEG(tP), RAD2DEG(tY));
-//		
-//		tf::Quaternion qTagBody = tf::createQuaternionFromRPY(0,0,0);
-
-		tf::Quaternion positonTagBody = qOffset.inverse() * posTag * qOffset;
+		
 		geometry_msgs::PoseStamped tagPoseBody;
 
+		// Calculate offset quaternion
+		qOffset = qVehicle.inverse() * qGimbal;
+		qOffset.normalize();
+		//ROS_WARN("offset X: %1.2f, Y: %1.2f, Z: %1.2f W: %1.2f", qOffset[0],qOffset[1],qOffset[2],qOffset[3]);
+
+
+		// Apply rotation to go from gimbal frame to body frame
+		changeTagAxes();
+		qTagBody = qOffset * qTag;
+		
+		tf::Quaternion positionTagBody = qOffset * posTag * qOffset.inverse();
 		// Get time
 		ros::Time time = ros::Time::now();
 
@@ -99,10 +100,16 @@ void gimbal_tag::publishTagPose()
 		tagPoseBody.header.stamp = time;
 		tagPoseBody.header.frame_id = "body_FLU";
 
-		tagPoseBody.pose.position.x = positonTagBody[0];
-		tagPoseBody.pose.position.y = positonTagBody[1];
-		tagPoseBody.pose.position.z = positonTagBody[2];
+		tagPoseBody.pose.position.x = positionTagBody[0];
+		tagPoseBody.pose.position.y = positionTagBody[1];
+		tagPoseBody.pose.position.z = positionTagBody[2];
+
 		tf::quaternionTFToMsg(qTagBody, tagPoseBody.pose.orientation);
+
+		tf::Matrix3x3 tmp(qTagBody);
+		double tR, tP, tY;
+		tmp.getRPY(tR, tP, tY);
+		ROS_WARN("pose R %1.2f, P %1.2f, Y %1.2f",tR,tP,tY);
 
 		tagBodyPosePub.publish(tagPoseBody);
 	}
@@ -113,41 +120,27 @@ void gimbal_tag::tagCallback(const ar_track_alvar_msgs::AlvarMarkers &msg)
 {
 	if (!msg.markers.empty())
 	{
-		// Pass the ar_pose as a vector3 for the dji_gimbal
-		geometry_msgs::Vector3 arVec3;
-		arVec3.x = msg.markers[0].pose.pose.position.x;
-		arVec3.y = msg.markers[0].pose.pose.position.y;
-		arVec3.z = msg.markers[0].pose.pose.position.z;
-		tagPosePub.publish(arVec3);
-
+		
 		// Update Tag quaternion
 		tf::quaternionMsgToTF(msg.markers[0].pose.pose.orientation, qTag);
-		qTag = qTag.inverse();
-
-		tf::Matrix3x3 tmp(qTag);
-		double tR, tP, tY;
-		tmp.getRPY(tR, tP, tY);
-		ROS_WARN("Tag -> Roll: %1.2f, Pitch: %1.2f, Yaw: %1.2f", RAD2DEG(tR), RAD2DEG(tP), RAD2DEG(tY));
-
+		//qTag=qTag.inverse().normalized();
+		//tf::Quaternion offset(-0.5,0.5,0.5,0.5);
+		//qTag = offset *qTag;		
+//		tf::Matrix3x3 tmp(qTag);
+//		double tR, tP, tY;
+//		tmp.getRPY(tR, tP, tY);
+//		ROS_WARN("qTag R %1.2f, P %1.2f, Y %1.2f",tR,tP,tY);
 		// Update Tag position as quaternion
 		posTag[0] = msg.markers[0].pose.pose.position.x;
 		posTag[1] = msg.markers[0].pose.pose.position.y;
 		posTag[2] = msg.markers[0].pose.pose.position.z;
 		posTag[3] = 0;
 
-		tf::Quaternion qFix = tf::Quaternion(-0.5, 0.5, 0.5, 0.5);
-
-		// From Camera frame to Gimbal frame
-		qTag = qFix * qTag;
-		//qTag.normalize();
-
-		tf::Matrix3x3 tmpG(qTag);
-		double tRg, tPg, tYg;
-		tmpG.getRPY(tRg, tPg, tYg);
-		ROS_WARN("Gimbal -> Roll: %1.2f, Pitch: %1.2f, Yaw: %1.2f", RAD2DEG(tRg), RAD2DEG(tPg), RAD2DEG(tYg));
-
+		// Go from Camera frame to Gimbal frame
+		qTag = qCamera2Gimbal * qTag;
+		qTag.normalize();
 		posTag = qCamera2Gimbal.inverse() * posTag * qCamera2Gimbal;
-
+		//ROS_WARN("tag X: %1.2f, Y: %1.2f, Z: %1.2f",posTag[0],posTag[1],posTag[2]);
 		tagFound = true;
 		publishTagPose();
 	}

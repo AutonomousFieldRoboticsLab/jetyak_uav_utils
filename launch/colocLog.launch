@@ -1,7 +1,7 @@
 <launch>
 	<!-- Start recording the flight log data -->
 	<node pkg="rosbag" type="record" name="flight_log_bagfile" output="screen"
-		  args="record -o /media/ubuntu/Manifold/FlightLog/flightData 
+		  args="record -o /media/ubuntu/Manifold/FlightLog/coloctData 
 
 /jetyak_uav_vision/ar_pose_marker
 /jetyak_uav_vision/state

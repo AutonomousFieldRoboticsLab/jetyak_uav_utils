@@ -1,7 +1,4 @@
 <launch>
-	
-	<!-- Mavros -->
-	<include file="$(find jetyak_uav_utils)/launch/jetyak_mavros.launch"/>
 
 	<!-- Behaviors Utils -->
 	<group ns="jetyak_uav_utils">
@@ -18,7 +15,8 @@
 
 	</group>
 
-	<!-- Capturing the flight data -->
+	<!-- Capturing the flight data
 	<include file="$(find jetyak_uav_utils)/launch/optiLog.launch"/>
+	-->
 
 </launch>

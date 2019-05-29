@@ -45,7 +45,6 @@ from quaternion import quatInverse
 from quaternion import quat2rpy
 
 import threading
-from time import sleep
 
 class FilterNode():
 
@@ -56,8 +55,11 @@ class FilterNode():
 		self.myENU = GPS_utils()
 		self.originSet = False
 
+		# Set rate of publisher
+		self.rate = 50
+
 		# Number of States
-		n = 26
+		n = 24
 
 		# Initial State Transition Matrix
 		F = np.asmatrix(np.eye(n))
@@ -66,17 +68,15 @@ class FilterNode():
 		P = np.asmatrix(1.0e3 * np.eye(n))
 
 		# Transition Matrix for Tag measurements
-		self.Htag = np.matrix(np.zeros((3, n)))
+		self.Htag = np.matrix(np.zeros((4, n)))
 		self.Htag[0:3,   0:3] = np.matrix(-1 * np.eye(3))
 		self.Htag[0:3, 14:17] = np.matrix(np.eye(3))
 		self.Htag[0:3, 20:23] = np.matrix(-1 * np.eye(3))
-		self.Htag[0:3, 23:26] = np.matrix(np.eye(3))
+		self.Htag[3,      19] =  1
+		self.Htag[3,      23] = -1
 
 		# Covariance Matrix for Tag measurements
-		self.Rtag = np.asmatrix(1.0e-6 * np.eye(3))
-
-		# Covariance Matrix for Tag measurements
-		self.Rtag = np.asmatrix(1.0e-6 * np.eye(3))
+		self.Rtag = np.asmatrix(1.0e-6 * np.eye(4))
 
 		# Transition Matrix for Attitude measurements
 		self.Hatt = np.matrix(np.zeros((4, n)))
@@ -92,44 +92,54 @@ class FilterNode():
 		# Covariance Matrix for IMU measurements
 		self.Rimu = np.asmatrix(1.0e-6 * np.eye(4))
 
+		# Transition Matrix for Drone velocity measurements
+		self.HvelD = np.matrix(np.zeros((3, n)))
+		self.HvelD[0:3, 3:6] = np.matrix(np.eye(3))
+
+		# Covariance Matrix for Drone velocity measurements
+		self.RvelD = np.asmatrix(1.0e-5 * np.eye(3))
+
 		# Transition Matrix for Drone GPS measurements
 		self.HgpsD = np.matrix(np.zeros((3, n)))
 		self.HgpsD[0:3, 0:3] = np.matrix(np.eye(3))
-		# self.HgpsD[0:3, 23:26] = np.matrix(np.eye(3))
 
 		# Covariance Matrix for Drone GPS measurements
-		self.RgpsD = np.asmatrix(1.0e-1 * np.eye(3))
+		self.RgpsD = np.matrix(np.zeros((3, 3)))
+		self.RgpsD[0:2, 0:2] = np.asmatrix(1.0e-1 * np.eye(2))
+		self.RgpsD[2, 2] = 1.0e-5
 
 		# Transition Matrix for Jetyak GPS measurements
 		self.HgpsJ = np.matrix(np.zeros((3, n)))
 		self.HgpsJ[0:3, 14:17] = np.matrix(np.eye(3))
 
 		# Covariance Matrix for Jetyak GPS measurements
-		self.RgpsJ = np.asmatrix(1.0e-1 * np.eye(3))
+		self.RgpsJ = np.asmatrix(1.0e-3 * np.eye(3))
+		self.RgpsJ[2, 2] = 1.0e-1
 
 		# Transition Matrix for Jetyak GPS heading
 		self.HhdgJ = np.matrix(np.zeros((1, n)))
 		self.HhdgJ[0, 19] = 1
 
 		# Covariance Matrix for Jetyak GPS heading
-		self.RhdgJ = np.matrix(1.0e-3)
+		self.RhdgJ = np.matrix(1.0e-4)
 
 		# Process Noise Level
-		N = 1.0
+		N = 1.0e-7
 
 		# Initialize Kalman Filter
-		self.fusionF = FusionEKF(F, P, N)
+		self.fusionF = FusionEKF(F, P, N, self.rate)
 
 		# Set up Subscribers
 		self.dGPS_sub = rp.Subscriber("/dji_sdk/gps_position", NavSatFix, self.dGPS_callback)
 		self.dAtti_sub = rp.Subscriber("/dji_sdk/attitude", QuaternionStamped, self.dAtti_callback)
 		self.dIMU_sub = rp.Subscriber("/dji_sdk/imu", Imu, self.dIMU_callback)
+		self.dVel_sub = rp.Subscriber("/dji_sdk/velocity", Vector3Stamped, self.dVel_callback)
 		self.jGPS_sub = rp.Subscriber("/jetyak2/global_position/global", NavSatFix, self.jGPS_callback)
 		self.jCompass_sub = rp.Subscriber("/jetyak2/global_position/compass_hdg", Float64, self.jCompass_callback)
-		self.tag_sub = rp.Subscriber("tag_pose", PoseStamped, self.tag_callback)
+		self.tag_sub = rp.Subscriber("/jetyak_uav_vision/tag_pose", PoseStamped, self.tag_callback)
 
 		# Set up Publisher
-		self.state_pub = rp.Publisher("state", ObservedState, queue_size = 1)
+		self.state_pub = rp.Publisher("/jetyak_uav_vision/state", ObservedState, queue_size = 1)
 
 		# Create thread for publisher
 		t = threading.Thread(target=self.statePublisher)
@@ -144,7 +154,6 @@ class FilterNode():
 			dGPSpoint = DataPoint()
 			dGPSpoint.setID('dgps')
 			dGPSpoint.setZ(np.matrix([[enu.item(0)],[enu.item(1)],[enu.item(2)]]))
-			dGPSpoint.setTime(msg.header.stamp.to_sec())
 			self.fusionF.process(dGPSpoint, self.HgpsD, self.RgpsD)
 		else:
 			self.myENU.setENUorigin(msg.latitude, msg.longitude, msg.altitude)
@@ -157,7 +166,6 @@ class FilterNode():
 								   [msg.quaternion.y],
 								   [msg.quaternion.z],
 								   [msg.quaternion.w]]))
-		dAttiPoint.setTime(msg.header.stamp.to_sec())
 		self.fusionF.process(dAttiPoint, self.Hatt, self.Ratt)
 
 	def dIMU_callback(self, msg):
@@ -166,8 +174,15 @@ class FilterNode():
 		dIMUPoint.setZ(np.matrix([[msg.angular_velocity.x],
 								  [msg.angular_velocity.y],
 								  [msg.angular_velocity.z]]))
-		dIMUPoint.setTime(msg.header.stamp.to_sec())
 		self.fusionF.process(dIMUPoint, self.Himu, self.Rimu)
+	
+	def dVel_callback(self, msg):
+		dVelPoint = DataPoint()
+		dVelPoint.setID('dvel')
+		dVelPoint.setZ(np.matrix([[msg.vector.x],
+								  [msg.vector.y],
+								  [msg.vector.z]]))
+		self.fusionF.process(dVelPoint, self.HvelD, self.RvelD)
 
 	def jGPS_callback(self, msg):
 		if self.originSet:
@@ -176,27 +191,31 @@ class FilterNode():
 			jGPSpoint = DataPoint()
 			jGPSpoint.setID('jgps')
 			jGPSpoint.setZ(np.matrix([[enu.item(0)],[enu.item(1)],[enu.item(2)]]))
-			jGPSpoint.setTime(msg.header.stamp.to_sec())
 			self.fusionF.process(jGPSpoint, self.HgpsJ, self.RgpsJ)
 
 	def jCompass_callback(self, msg):
 		jHeadingPoint = DataPoint()
 		jHeadingPoint.setID('jhdg')
-		jHeadingPoint.setZ(np.matrix([np.deg2rad(msg.data)]))
-		jHeadingPoint.setTime(msg.header.stamp.to_sec())
+		if msg.data < 270:
+			jHeadingPoint.setZ(np.matrix([np.deg2rad(90 - msg.data)]))
+		else:
+			jHeadingPoint.setZ(np.matrix([np.deg2rad(450 - msg.data)]))
 		self.fusionF.process(jHeadingPoint, self.HhdgJ, self.RhdgJ)
 
 	def tag_callback(self, msg):
 		tagPoint = DataPoint()
-		tagPoint.setID('tagPose')
+		tagPoint.setID('tag')
 		tagPoint.setZ(np.matrix([[msg.pose.position.x],
 								 [msg.pose.position.y],
-								 [msg.pose.position.z]]))
-		tagPoint.setTime(msg.header.stamp.to_sec())
+								 [msg.pose.position.z],
+								 [msg.pose.orientation.x],
+								 [msg.pose.orientation.y],
+								 [msg.pose.orientation.z],
+								 [msg.pose.orientation.w]]))
 		self.fusionF.process(tagPoint, self.Htag, self.Rtag)
 	
 	def statePublisher(self):
-		r = rp.Rate(50)
+		r = rp.Rate(self.rate)
 		while not rp.is_shutdown():
 			X = self.fusionF.getState()
 
@@ -209,11 +228,11 @@ class FilterNode():
 
 				stateMsg = ObservedState()
 				stateMsg.header.stamp = rp.Time.now()
-				stateMsg.header.frame_id = 'localENU'
+				stateMsg.header.frame_id = 'local_ENU'
 			
-				stateMsg.drone_p.x = X.item(0) - X.item(23)
-				stateMsg.drone_p.y = X.item(1) - X.item(24)
-				stateMsg.drone_p.z = X.item(2) - X.item(25)
+				stateMsg.drone_p.x = X.item(0)
+				stateMsg.drone_p.y = X.item(1)
+				stateMsg.drone_p.z = X.item(2)
 
 				stateMsg.drone_pdot.x = X.item(3)
 				stateMsg.drone_pdot.y = X.item(4)
@@ -235,7 +254,7 @@ class FilterNode():
 				stateMsg.boat_pdot.y = X.item(18)
 				stateMsg.boat_pdot.z = 0
 
-				stateMsg.heading = X.item(19)
+				stateMsg.heading = X.item(19) - X.item(23)
 
 				stateMsg.origin.x = self.myENU.latZero
 				stateMsg.origin.y = self.myENU.lonZero
