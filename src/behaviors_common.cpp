@@ -53,8 +53,10 @@ void Behaviors::downloadParams(std::string ns_param)
 	if (!ros::param::get(ns + "integral_size", integral_size))
 		ROS_WARN("FAILED: %s", "integral_size");
 
-	if (!ros::param::get(ns + "k_matrix_path", k_matrix_path))
-		ROS_WARN("FAILED: %s", "k_matrix_path");
+	if (!ros::param::get(ns + "generalK", generalK))
+		ROS_WARN("FAILED: %s", "generalK");
+	if (!ros::param::get(ns + "landK", landK))
+		ROS_WARN("FAILED: %s", "landK");
 
 	getP(ns, "reset_kalman_threshold", resetFilterTimeThresh);
 
@@ -64,12 +66,13 @@ void Behaviors::downloadParams(std::string ns_param)
 	getP(ns, "land_w", land_.goal_pose.w);
 
 	double velMag;
-	getP(ns, "land_vel_mag", velMag);
+	getP(ns, "land_velMag", velMag);
 	land_.velThreshSqr = velMag * velMag;
 	getP(ns, "land_xThresh", land_.xThresh);
 	getP(ns, "land_yThresh", land_.yThresh);
 	getP(ns, "land_zThresh", land_.zThresh);
-	getP(ns, "land_angle_thresh", land_.angleThresh);
+	getP(ns, "land_angleThresh", land_.angleThresh);
+
 
 	/**********************
 	 * TAKEOFF PARAMETERS *
@@ -95,6 +98,7 @@ void Behaviors::downloadParams(std::string ns_param)
 	getP(ns, "return_settleRadius", settleRadius);
 	getP(ns, "return_tagTime", return_.tagTime);
 	getP(ns, "return_tagLossThresh", return_.tagLossThresh);
+	getP(ns, "return_heightThresh", return_.heightThresh);
 	return_.settleRadiusSquared = settleRadius * settleRadius;
 }
 
