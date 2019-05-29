@@ -41,6 +41,7 @@ land_angle_thresh: .25
 # Return Parameters
 #
 return_gotoHeight: 10
+return_heightThresh: 1
 return_finalHeight: 4
 return_downRadius: 1
 return_settleRadius: .5

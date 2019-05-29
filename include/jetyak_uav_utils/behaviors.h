@@ -132,6 +132,7 @@ private:
 	{
 		bsc_common::pose4d_t kp, kd, ki;
 		double gotoHeight;
+		double heightThresh; // for all height based things (gotoHeight, finalHeight)
 		double finalHeight;
 		double downRadius;
 		double settleRadiusSquared = 1;

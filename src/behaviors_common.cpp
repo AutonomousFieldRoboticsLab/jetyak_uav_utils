@@ -58,6 +58,9 @@ void Behaviors::downloadParams(std::string ns_param)
 
 	getP(ns, "reset_kalman_threshold", resetFilterTimeThresh);
 
+	/**********************
+	 * LANDING PARAMETERS *
+	 *********************/
 	getP(ns, "land_x", land_.goal_pose.x);
 	getP(ns, "land_y", land_.goal_pose.y);
 	getP(ns, "land_z", land_.goal_pose.z);
@@ -88,11 +91,12 @@ void Behaviors::downloadParams(std::string ns_param)
 	getP(ns, "follow_z", follow_.goal_pose.z);
 	getP(ns, "follow_w", follow_.goal_pose.w);
 
-	/**********************
-	 * LANDING PARAMETERS *
-	 *********************/
+	/*********************
+	 * RETURN PARAMETERS *
+	 ********************/
 	double settleRadius;
 	getP(ns, "return_gotoHeight", return_.gotoHeight);
+	getP(ns, "return_heightThresh", return_.heightThresh);
 	getP(ns, "return_finalHeight", return_.finalHeight);
 	getP(ns, "return_downRadius", return_.downRadius);
 	getP(ns, "return_settleRadius", settleRadius);
@@ -135,22 +139,28 @@ void Behaviors::assignSubscribers()
 Eigen::Vector4d Behaviors::boat_to_drone(Eigen::Vector4d pos)
 {
 	//vertical setpoint
-	double vDiff = pos(2) - state.boat_p.z - state.drone_p.z;
-	double wDiff = pos(3) + state.heading - state.drone_q.z;
+	double vDiff = pos(2) - state.boat_p.z - state.drone_p.z; //dist from uav to point (- if below UAV)
+	double wDiff = pos(3) + state.heading - state.drone_q.z;	//angular distance between headings (- if CW of UAV)
+
+	//ensure angular dist [-pi,pi)
+	if (wDiff >= M_PI)
+		wDiff -= 2 * M_PI;
+	else if (wDiff < -M_PI)
+		wDiff += 2 * M_PI;
 
 	//get setpoint in world frame
-	Eigen::Vector2d hGoal(pos(0), pos(1));														//setpoint relative to boat frame
-	hGoal = bsc_common::util::rotation_matrix(state.heading) * hGoal; //relative to boat in world frame
-	Eigen::Vector2d hBoat(state.boat_p.x, state.boat_p.y);						//boat position in world
-	hGoal = hBoat + hGoal;																						// setpoint in world frame
+	Eigen::Vector2d goal_boat_body(pos(0), pos(1));																											 //setpoint relative to boat frame
+	Eigen::Vector2d goal_boat_world = bsc_common::util::rotation_matrix(state.heading) * goal_boat_body; //relative to boat in world frame
+	Eigen::Vector2d boat_world(state.boat_p.x, state.boat_p.y);																					 //boat position in world
+	Eigen::Vector2d goal_world = boat_world + goal_boat_world;																					 // setpoint in world frame
 
 	//transform to drone frame
-	Eigen::Vector2d hDrone(state.drone_p.x, state.drone_p.y);						 // drone position in world
-	hGoal = hGoal - hDrone;																							 //world frame vector from drone to setpoint
-	hGoal = bsc_common::util::rotation_matrix(-state.drone_q.z) * hGoal; // transform into the drone frame
+	Eigen::Vector2d drone_world(state.drone_p.x, state.drone_p.y);																						// drone position in world
+	Eigen::Vector2d goal_drone_world = goal_world - drone_world;																							//world frame vector from drone to setpoint
+	Eigen::Vector2d goal_drone_body = bsc_common::util::rotation_matrix(-state.drone_q.z) * goal_drone_world; // transform into the drone frame
 
 	Eigen::Vector4d dronePos;
-	dronePos << hGoal(0), hGoal(1), vDiff, wDiff;
-	
+	dronePos << goal_drone_body(0), goal_drone_body(1), vDiff, wDiff;
+
 	return dronePos;
 }
