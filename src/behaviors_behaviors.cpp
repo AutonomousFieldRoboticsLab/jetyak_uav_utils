@@ -303,7 +303,7 @@ void Behaviors::landBehavior()
 						0, 0, goal_d(3),										//Angle setpoint (rpy)
 						0, 0, 0;														//angular velocity setpoint (rpy)
 
-				Eigen::Vector4d cmdM = lqr_->getCommand(set);
+				Eigen::Vector4d cmdM = land_.lqr->getCommand(set);
 				sensor_msgs::Joy cmd;
 				cmd.axes.push_back(cmdM(0));
 				cmd.axes.push_back(cmdM(1));

@@ -86,7 +86,7 @@ private:
 	 **********************/
 	int integral_size = 0;
 	bsc_common::LQR *lqr_; // pid controllers
-	std::string generalK,landK;
+	std::string generalK, landK;
 	bool behaviorChanged_ = false;
 	JETYAK_UAV_UTILS::Mode currentMode_;
 	bool propellorsRunning = false;
@@ -114,7 +114,7 @@ private:
 	{
 		bsc_common::pose4d_t goal_pose; // landing goal
 		double heightGoal;
-		double xThresh,yThresh,zThresh;
+		double xThresh, yThresh, zThresh;
 		double velThreshSqr;
 		double angleThresh;
 		bsc_common::LQR *lqr;
@@ -139,7 +139,6 @@ private:
 		double tagTime;
 		double tagLossThresh;
 		double maxVel;
-		double heightThresh;
 		enum Stage
 		{
 			UP,
