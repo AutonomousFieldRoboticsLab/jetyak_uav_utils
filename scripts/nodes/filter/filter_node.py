@@ -215,7 +215,7 @@ class FilterNode():
 								 [msg.pose.orientation.y],
 								 [msg.pose.orientation.z],
 								 [msg.pose.orientation.w]]))
-		
+		tagPoint.setTime(msg.header.stamp.to_secs())
 		if self.tagFilter(tagPoint):
 			self.fusionF.process(tagPoint, self.Htag, self.Rtag)
 			self.lastTag = tagPoint
