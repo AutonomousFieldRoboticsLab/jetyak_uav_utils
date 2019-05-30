@@ -93,10 +93,6 @@ void gimbal_tag::publishTagPose()
 		tagPoseBody.pose.position.z = positonTagBody[2];
 		tf::quaternionTFToMsg(qTagBody, tagPoseBody.pose.orientation);
 
-		tf::Matrix3x3 rTag(qTagBody);
-		double tR, tP, tY;
-		rTag.getRPY(tR, tP, tY);
-		ROS_WARN("Yaw %1.2f",tY);
 		tagBodyPosePub.publish(tagPoseBody);
 	}
 }
