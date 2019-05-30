@@ -3,9 +3,9 @@ track_point: true
 camera_info_topic: /jetyak_uav_vision/dji_camera/camera_info
 track_point_topic: /jetyak_uav_vision/ar_pose_v3
 
-yaw_axis: 0
-pitch_axis: 4
-roll_axis: 3
+yaw_axis: 2
+pitch_axis: 1
+roll_axis: 0
 reset_angle_btn: 0
 face_down_btn: 2
 toggle_track_btn: 3

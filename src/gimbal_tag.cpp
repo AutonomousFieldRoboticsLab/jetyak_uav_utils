@@ -63,6 +63,7 @@ void gimbal_tag::changeTagAxes()
 	rTag.getRPY(tR, tP, tY);
 
 	qTag = tf::createQuaternionFromRPY(-tY, -tR, tP);
+	qTag.normalize();
 }
 
 void gimbal_tag::publishTagPose()
@@ -73,12 +74,11 @@ void gimbal_tag::publishTagPose()
 		changeTagAxes();
 
 		// Calculate offset quaternion
-		qOffset = qVehicle * qGimbal.inverse();
-		qOffset.normalize();
-		
+		qOffset = qVehicle.inverse() * qGimbal;
+
 		tf::Quaternion qTagBody = qOffset.inverse() * qTag;
 
-		tf::Quaternion positonTagBody = qOffset.inverse() * posTag * qOffset;
+		tf::Quaternion positonTagBody = qOffset * posTag * qOffset.inverse();
 		geometry_msgs::PoseStamped tagPoseBody;
 
 		// Get time
@@ -90,7 +90,7 @@ void gimbal_tag::publishTagPose()
 
 		tagPoseBody.pose.position.x = positonTagBody[0];
 		tagPoseBody.pose.position.y = positonTagBody[1];
-		tagPoseBody.pose.position.z = -positonTagBody[2];
+		tagPoseBody.pose.position.z = positonTagBody[2];
 		tf::quaternionTFToMsg(qTagBody, tagPoseBody.pose.orientation);
 
 		tagBodyPosePub.publish(tagPoseBody);
@@ -111,6 +111,7 @@ void gimbal_tag::tagCallback(const ar_track_alvar_msgs::AlvarMarkers &msg)
 
 		// Update Tag quaternion
 		tf::quaternionMsgToTF(msg.markers[0].pose.pose.orientation, qTag);
+		qTag.normalize();
 
 		// Update Tag position as quaternion
 		posTag[0] = msg.markers[0].pose.pose.position.x;
@@ -120,7 +121,7 @@ void gimbal_tag::tagCallback(const ar_track_alvar_msgs::AlvarMarkers &msg)
 
 		// Go from Camera frame to Gimbal frame
 		qTag = qFix * qTag;
-		qTag.normalize();
+
 		posTag = qCamera2Gimbal.inverse() * posTag * qCamera2Gimbal;
 
 		tagFound = true;

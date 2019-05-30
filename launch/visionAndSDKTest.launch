@@ -15,6 +15,10 @@
 
 		<!-- Start tag tracking -->
 		<include file="$(find jetyak_uav_utils)/launch/ar_track_test.launch"/>
+
+		<node name="joy" pkg="joy" type="joy_node">
+			<remap from="joy" to="/jetyak_uav_vision/joy"/>
+		</node>
 	</group>
 
 </launch>
