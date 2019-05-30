@@ -76,7 +76,7 @@ void gimbal_tag::publishTagPose()
 		// Calculate offset quaternion
 		qOffset = qVehicle.inverse() * qGimbal;
 
-		tf::Quaternion qTagBody = qOffset.inverse() * qTag;
+		tf::Quaternion qTagBody = qOffset * qTag;
 
 		tf::Quaternion positonTagBody = qOffset * posTag * qOffset.inverse();
 		geometry_msgs::PoseStamped tagPoseBody;

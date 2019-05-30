@@ -55,6 +55,9 @@ class FilterNode():
 		self.myENU = GPS_utils()
 		self.originSet = False
 
+		# Create handle for last tag
+		self.lastTag = DataPoint()
+
 		# Set rate of publisher
 		self.rate = 50
 
@@ -212,7 +215,10 @@ class FilterNode():
 								 [msg.pose.orientation.y],
 								 [msg.pose.orientation.z],
 								 [msg.pose.orientation.w]]))
-		self.fusionF.process(tagPoint, self.Htag, self.Rtag)
+		
+		if self.tagFilter(tagPoint):
+			self.fusionF.process(tagPoint, self.Htag, self.Rtag)
+			self.lastTag = tagPoint
 	
 	def statePublisher(self):
 		r = rp.Rate(self.rate)
@@ -263,6 +269,22 @@ class FilterNode():
 				self.state_pub.publish(stateMsg)
 			
 			r.sleep()
+	
+	def tagFilter(self, newTag):
+		if (self.lastTag.getTime() == None):
+			return True
+		else:
+			dt = newTag.getTime() - self.lastTag.getTime()
+			vX = (newTag.getZ().item(0) - self.lastTag.getZ().item(0)) / dt
+			vY = (newTag.getZ().item(1) - self.lastTag.getZ().item(1)) / dt
+			vZ = (newTag.getZ().item(2) - self.lastTag.getZ().item(2)) / dt
+
+			v = np.sqrt(pow(vX, 2) + pow(vY, 2) + pow(vZ, 2))
+		
+			if v < 5.0:
+				return True
+			else:
+				return False
 
 # Start Node
 filtered = FilterNode()
