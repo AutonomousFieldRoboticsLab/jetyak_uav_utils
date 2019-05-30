@@ -76,7 +76,7 @@ void gimbal_tag::publishTagPose()
 		// Calculate offset quaternion
 		qOffset = qVehicle.inverse() * qGimbal;
 
-		tf::Quaternion qTagBody = qOffset.inverse() * qTag;
+		tf::Quaternion qTagBody = qOffset * qTag;
 
 		tf::Quaternion positonTagBody = qOffset * posTag * qOffset.inverse();
 		geometry_msgs::PoseStamped tagPoseBody;
@@ -93,6 +93,10 @@ void gimbal_tag::publishTagPose()
 		tagPoseBody.pose.position.z = positonTagBody[2];
 		tf::quaternionTFToMsg(qTagBody, tagPoseBody.pose.orientation);
 
+		tf::Matrix3x3 rTag(qTagBody);
+		double tR, tP, tY;
+		rTag.getRPY(tR, tP, tY);
+		ROS_WARN("Yaw %1.2f",tY);
 		tagBodyPosePub.publish(tagPoseBody);
 	}
 }
