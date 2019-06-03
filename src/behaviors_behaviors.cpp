@@ -51,7 +51,7 @@ void Behaviors::takeoffBehavior()
 
 void Behaviors::followBehavior()
 {
-	if (ros::Time::now().toSec() - lastSpotted <= 3 or true) // TODO: Add tag loss threshold for follow_
+	if (ros::Time::now().toSec() - lastSpotted <= 5) // TODO: Add tag loss threshold for follow_
 	{
 		// Get the setpoint in the drone FLU
 		Eigen::Vector4d goal_b;
@@ -64,9 +64,9 @@ void Behaviors::followBehavior()
 
 		Eigen::Matrix<double, 12, 1> set;
 		set << goal_d(0), goal_d(1), goal_d(2), // Position setpoint (xyz)
-				vBoat(0, 0), vBoat(1, 0), 0,	// Velocity setpoint (xyz)
-				0, 0, goal_d(3),				// Angle setpoint (rpy)
-				0, 0, 0;						// Angular velocity setpoint (rpy)
+			vBoat(0, 0), vBoat(1, 0), 0,		// Velocity setpoint (xyz)
+			0, 0, goal_d(3),					// Angle setpoint (rpy)
+			0, 0, 0;							// Angular velocity setpoint (rpy)
 		Eigen::Vector4d cmdM = lqr_->getCommand(set);
 
 		sensor_msgs::Joy cmd;
@@ -79,13 +79,11 @@ void Behaviors::followBehavior()
 	}
 	else
 	{
-		sensor_msgs::Joy cmd;
-		cmd.axes.push_back(0);
-		cmd.axes.push_back(0);
-		cmd.axes.push_back(0);
-		cmd.axes.push_back(0);
-		cmd.axes.push_back(JETYAK_UAV_UTILS::WORLD_RATE);
-		cmdPub_.publish(cmd);
+		ROS_WARN("Follow lost tag for more than 5 seconds, returning");
+		currentMode_ = JETYAK_UAV_UTILS::RETURN;
+		return_.stage = return_.UP;
+		behaviorChanged_ = true;
+		returnBehavior();
 	}
 }
 
@@ -105,20 +103,20 @@ void Behaviors::returnBehavior()
 {
 	// TO DO: Use gimbal_angle_cmd to publish commands to gimbalCmdPub_ for
 	// gimbal control
-	if(ros::Time::now().toSec() - lastSpotted >=3) 
+	if (ros::Time::now().toSec() - lastSpotted >= 3)
 	{
 		Eigen::Vector2d cmds = gimbal_angle_cmd();
 		geometry_msgs::Vector3 msg;
-		msg.x=0;
-		msg.y=cmds(0);
-		msg.z=cmds(1);
+		msg.x = 0;
+		msg.y = cmds(0);
+		msg.z = cmds(1);
 		gimbalCmdPub_.publish(msg);
 	}
 	Eigen::Vector4d goal_boatFLU;
 	goal_boatFLU << follow_.goal_pose.x, follow_.goal_pose.y, return_.finalHeight, follow_.goal_pose.w;
 	Eigen::Vector4d offset = boat_to_drone(goal_boatFLU); // Vector pointing from the UAV to the follow setpoint
 
-	if (ros::Time::now().toSec() - lastSpotted <= return_.tagTime and -offset(2) <= return_.finalHeight)
+	if (ros::Time::now().toSec() - lastSpotted <= return_.tagTime and state.drone_p.z <= return_.finalHeight + return_.heightThresh)
 	{
 		return_.stage = return_.SETTLE;
 		if ((pow(offset(0), 2) + pow(offset(1), 2)) < return_.settleRadiusSquared)
@@ -136,10 +134,10 @@ void Behaviors::returnBehavior()
 			vBoat = bsc_common::util::rotation_matrix(-state.drone_q.z) * vBoat; // Boat velocity in drone frame
 
 			Eigen::Matrix<double, 12, 1> set;
-			set << offset(0), offset(1), offset(2), // Position setpoint (xyz)
-					vBoat(0), vBoat(1), 0,			// Velocity setpoint (xyz)
-					0, 0, offset(3),				// Angle setpoint (rpy)
-					0, 0, 0;						// Angular velocity setpoint (rpy)
+			set << offset(0), offset(1), return_.finalHeight - state.drone_p.z, // Position setpoint (xyz)
+				vBoat(0), vBoat(1), 0,											// Velocity setpoint (xyz)
+				0, 0, offset(3),												// Angle setpoint (rpy)
+				0, 0, 0;														// Angular velocity setpoint (rpy)
 
 			Eigen::Vector4d cmdM = lqr_->getCommand(set);
 			sensor_msgs::Joy cmd;
@@ -167,26 +165,25 @@ void Behaviors::returnBehavior()
 
 	else if (return_.stage == return_.UP)
 	{
-		if (state.drone_p.z - state.boat_p.z >= return_.gotoHeight - return_.heightThresh)
+		if (state.drone_p.z >= return_.gotoHeight - return_.heightThresh)
 		{
 			ROS_WARN("Changed OVER");
 			return_.stage = return_.OVER;
-
 		}
 		else
 		{
-			double u_c = return_.gotoHeight + state.boat_p.z - state.drone_p.z;
+			double u_c = return_.gotoHeight - state.drone_p.z;
 			ROS_WARN("Goal: %1.2f, Current %1.2f", return_.gotoHeight, state.drone_p.z);
-			
+
 			// Get boat velocity in drone frame
 			Eigen::Vector2d vBoat(state.boat_pdot.x, state.boat_pdot.y);		 // Boat velocity in world frame
 			vBoat = bsc_common::util::rotation_matrix(-state.drone_q.z) * vBoat; // Boat velocity in drone frame
 
 			Eigen::Matrix<double, 12, 1> set;
-			set << 0, 0, u_c,		 // Position setpoint (xyz)
-					0, 0, 0,		 // Velocity setpoint (xyz)
-					0, 0, offset(3), // Angle setpoint (rpy)
-					0, 0, 0;		 // Angular velocity setpoint (rpy)
+			set << 0, 0, u_c,	// Position setpoint (xyz)
+				0, 0, 0,		 // Velocity setpoint (xyz)
+				0, 0, offset(3), // Angle setpoint (rpy)
+				0, 0, 0;		 // Angular velocity setpoint (rpy)
 
 			Eigen::Vector4d cmdM = lqr_->getCommand(set);
 			sensor_msgs::Joy cmd;
@@ -207,7 +204,7 @@ void Behaviors::returnBehavior()
 		}
 		else
 		{
-			double u_c = return_.gotoHeight + state.boat_p.z - state.drone_p.z;
+			double u_c = return_.gotoHeight - state.drone_p.z;
 
 			// Get boat velocity in drone frame
 			Eigen::Vector2d vBoat(state.boat_pdot.x, state.boat_pdot.y);		 // Boat velocity in world frame
@@ -215,9 +212,9 @@ void Behaviors::returnBehavior()
 
 			Eigen::Matrix<double, 12, 1> set;
 			set << offset(0), offset(1), u_c, // Position setpoint (xyz)
-					vBoat(0), vBoat(1), 0,	  // Velocity setpoint (xyz)
-					0, 0, offset(3),		  // Angle setpoint (rpy)
-					0, 0, 0;				  // Angular velocity setpoint (rpy)
+				vBoat(0), vBoat(1), 0,		  // Velocity setpoint (xyz)
+				0, 0, offset(3),			  // Angle setpoint (rpy)
+				0, 0, 0;					  // Angular velocity setpoint (rpy)
 
 			Eigen::Vector4d cmdM = lqr_->getCommand(set);
 			sensor_msgs::Joy cmd;
@@ -231,7 +228,7 @@ void Behaviors::returnBehavior()
 	}
 	else if (return_.stage = return_.DOWN)
 	{
-		double u_c = return_.finalHeight - state.drone_p.z - state.boat_p.z;
+		double u_c = return_.finalHeight - state.drone_p.z;
 
 		// Get boat velocity in drone frame
 		Eigen::Vector2d vBoat(state.boat_pdot.x, state.boat_pdot.y);		 // Boat velocity in world frame
@@ -239,9 +236,9 @@ void Behaviors::returnBehavior()
 
 		Eigen::Matrix<double, 12, 1> set;
 		set << offset(0), offset(1), u_c, // Position setpoint (xyz)
-				vBoat(0), vBoat(1), 0,	  // Velocity setpoint (xyz)
-				0, 0, offset(3),		  // Angle setpoint (rpy)
-				0, 0, 0;				  // Angular velocity setpoint (rpy)
+			vBoat(0), vBoat(1), 0,		  // Velocity setpoint (xyz)
+			0, 0, offset(3),			  // Angle setpoint (rpy)
+			0, 0, 0;					  // Angular velocity setpoint (rpy)
 
 		Eigen::Vector4d cmdM = lqr_->getCommand(set);
 		sensor_msgs::Joy cmd;
@@ -275,7 +272,7 @@ void Behaviors::landBehavior()
 		Eigen::Vector2d vBoat(state.boat_pdot.x, state.boat_pdot.y);		 // Boat velocity in world frame
 		vBoat = bsc_common::util::rotation_matrix(-state.drone_q.z) * vBoat; // Boat velocity in drone frame
 
-		if (ros::Time::now().toSec() - lastSpotted <= 1 or true) //TODO: create land tag loss threshold
+		if (ros::Time::now().toSec() - lastSpotted <= 1)
 		{
 
 			bool inX = (fabs(goal_d(0)) < land_.xThresh);
@@ -300,9 +297,9 @@ void Behaviors::landBehavior()
 
 				Eigen::Matrix<double, 12, 1> set;
 				set << goal_d(0), goal_d(1), goal_d(2), // Position setpoint (xyz)
-						vBoat(0, 0), vBoat(1, 0), 0,	// Velocity setpoint (xyz)
-						0, 0, goal_d(3),				// Angle setpoint (rpy)
-						0, 0, 0;						// Angular velocity setpoint (rpy)
+					vBoat(0, 0), vBoat(1, 0), 0,		// Velocity setpoint (xyz)
+					0, 0, goal_d(3),					// Angle setpoint (rpy)
+					0, 0, 0;							// Angular velocity setpoint (rpy)
 
 				Eigen::Vector4d cmdM = land_.lqr->getCommand(set);
 				sensor_msgs::Joy cmd;
@@ -314,15 +311,11 @@ void Behaviors::landBehavior()
 				cmdPub_.publish(cmd);
 			}
 		}
-		else
+		else //landing lost the tag for too long, dangerous
 		{
-			sensor_msgs::Joy cmd;
-			cmd.axes.push_back(0);
-			cmd.axes.push_back(0);
-			cmd.axes.push_back(0);
-			cmd.axes.push_back(0);
-			cmd.axes.push_back(JETYAK_UAV_UTILS::WORLD_RATE);
-			cmdPub_.publish(cmd);
+			currentMode_ = JETYAK_UAV_UTILS::FOLLOW;
+			behaviorChanged_ = true;
+			followBehavior();
 		}
 	}
 }
