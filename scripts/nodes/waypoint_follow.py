@@ -117,14 +117,13 @@ class WaypointFollow():
 		
 		self.pose=[msg.drone_p.x,msg.drone_p.y,msg.drone_p.z,msg.drone_q.z]
 		state = [0,0,0,\
-						tx,tx,msg.drone_pdot.z,\
+						tx,ty,msg.drone_pdot.z,\
 						msg.drone_q.x,msg.drone_q.y,0,\
 						msg.drone_qdot.x,msg.drone_qdot.y,msg.drone_qdot.z]
 		self.lqr.setState(state)
 
 		
 	def rectangle_callback(self, req):
-		intermediate = 5 # TODO: Make this a parameter
 		n=req.data
 		if (n <= 1):
 			return IntResponse(False, "number must be greater than 1")
@@ -147,23 +146,17 @@ class WaypointFollow():
 		self.wps = []
 
 		step = scale(v23, 1/float(n-1))
-		#middle = [add(self.corners[1], scale(v12, i/(intermediate+1.0))) for i in range(1, intermediate+1)]
 
 		left = [add(self.corners[1], scale(step, i)) for i in range(n)]
 		right = [add(self.corners[2], scale(step, i)) for i in range(n)]
-		#mid = [[add(middle[j], scale(step, i)) for i in range(n)] for j in range(intermediate)]
 
 		path = []
 		for i in range(len(left)):
 			if(i % 2 == 0):
 				path.append(left.pop(0))
-				#for j in range(intermediate):
-				#	path.append(mid[j].pop(0))
 				path.append(right.pop(0))
 			else:
 				path.append(right.pop(0))
-				#for j in range(intermediate)[::-1]:
-				#	path.append(mid[j].pop(0))
 				path.append(left.pop(0))
 
 		for p in path:
@@ -190,8 +183,8 @@ class WaypointFollow():
 		self.wps = []
 
 		d_desired = .5
-		wp_radius = .5
-		turns = 5
+		wp_radius = 5
+		turns = 4
 
 		initial_r = wp_radius
 
@@ -214,12 +207,13 @@ class WaypointFollow():
 				y.append((a + b*theta)*np.sin(theta))
 
 		for i in range(len(x)):
+			print((x[i],y[i]))
 			wp = Waypoint()
 			wp.alt = self.pose[2]
 			wp.lat = self.pose[1] + y[i]
 			wp.lon = self.pose[0] + x[i]
 
-			wp.radius = wp_radius
+			wp.radius = 1
 			wp.loiter_time = 0
 			self.wps.append(wp)
 
@@ -251,19 +245,19 @@ class WaypointFollow():
 							continue
 						else:
 							print("Moving to next objective: %i left"%len(self.wps))
-							continue
-		
-				goal=np.array([[0] for i in range(12)])
+				print("Begin")				
+				print((self.wps[0].lon,self.wps[0].lat))
+				goal=np.array([[0.0] for i in range(12)])
 				x = self.wps[0].lon - self.pose[0]
 				y = self.wps[0].lat - self.pose[1]
 				z = self.wps[0].alt - self.pose[2]
 				w = self.wps[0].heading - self.pose[3]
 
-				goal[0] = x*cos(self.pose[3])+y*sin(self.pose[3])
-				goal[1] = -x*sin(self.pose[3])+y*cos(self.pose[3])
+				goal[0] = x*np.cos(self.pose[3])+y*np.sin(self.pose[3])
+				goal[1] = -x*np.sin(self.pose[3])+y*np.cos(self.pose[3])
 				goal[2] = z
 				goal[8] = w
-			
+				print((float(goal[0]),float(goal[1])))
 				cmd = self.lqr.getCmd(goal)
 		
 				cmdM = Joy()
@@ -271,8 +265,10 @@ class WaypointFollow():
 				p = float(cmd[1])#clip(float(cmd[1]),-.1,.1)
 				cmdM.axes = [r,p,float(cmd[2]),float(cmd[3]), self.flag]
 
-				self.cmd_pub.publish(cmdM)
 
+				self.cmd_pub.publish(cmdM)
+			else:
+				self.in_waypoint=False
 
 
 	def check_if_in_wp(self,):
