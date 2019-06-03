@@ -105,7 +105,15 @@ void Behaviors::returnBehavior()
 {
 	// TO DO: Use gimbal_angle_cmd to publish commands to gimbalCmdPub_ for
 	// gimbal control
-
+	if(ros::Time::now().toSec() - lastSpotted >=3) 
+	{
+		Eigen::Vector2d cmds = gimbal_angle_cmd();
+		geometry_msgs::Vector3 msg;
+		msg.x=0;
+		msg.y=cmds(0);
+		msg.z=cmds(1);
+		gimbalCmdPub_.publish(msg);
+	}
 	Eigen::Vector4d goal_boatFLU;
 	goal_boatFLU << follow_.goal_pose.x, follow_.goal_pose.y, return_.finalHeight, follow_.goal_pose.w;
 	Eigen::Vector4d offset = boat_to_drone(goal_boatFLU); // Vector pointing from the UAV to the follow setpoint
@@ -155,8 +163,6 @@ void Behaviors::returnBehavior()
 		behaviorChanged_ = false;
 		return_.stage = return_.UP;
 		ROS_WARN("Going Up");
-		std_srvs::Trigger downSrvTmp;
-		lookdownSrv_.call(downSrvTmp);
 	}
 
 	else if (return_.stage == return_.UP)
@@ -166,8 +172,6 @@ void Behaviors::returnBehavior()
 			ROS_WARN("Changed OVER");
 			return_.stage = return_.OVER;
 
-			std_srvs::Trigger downSrvTmp;
-			lookdownSrv_.call(downSrvTmp);
 		}
 		else
 		{
@@ -193,8 +197,6 @@ void Behaviors::returnBehavior()
 			cmd.axes.push_back(JETYAK_UAV_UTILS::LQR);
 			cmdPub_.publish(cmd);
 		}
-		std_srvs::Trigger downSrvTmp;
-		lookdownSrv_.call(downSrvTmp);
 	}
 	else if (return_.stage == return_.OVER)
 	{
@@ -202,9 +204,6 @@ void Behaviors::returnBehavior()
 		{
 			ROS_WARN("Changed DOWN");
 			return_.stage = return_.DOWN;
-
-			std_srvs::Trigger downSrvTmp;
-			lookdownSrv_.call(downSrvTmp);
 		}
 		else
 		{
@@ -229,10 +228,8 @@ void Behaviors::returnBehavior()
 			cmd.axes.push_back(JETYAK_UAV_UTILS::LQR);
 			cmdPub_.publish(cmd);
 		}
-		std_srvs::Trigger downSrvTmp;
-		lookdownSrv_.call(downSrvTmp);
 	}
-	else if (return_.stage = return_.DOWN) // TODO: Change to LQR
+	else if (return_.stage = return_.DOWN)
 	{
 		double u_c = return_.finalHeight - state.drone_p.z - state.boat_p.z;
 
