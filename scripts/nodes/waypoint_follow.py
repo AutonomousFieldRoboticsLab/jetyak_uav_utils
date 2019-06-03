@@ -77,6 +77,7 @@ class WaypointFollow():
 		self.hover_alt=10
 		self.flag = 0b00  # LQR
 		self.wps = []
+		self.pose = []
 		self.corners = {1:None, 2:None, 3: None}
 		self.lqr = LQR()
 		self.max_speed=5
@@ -188,32 +189,40 @@ class WaypointFollow():
 	def spiral_callback(self, srv):
 		self.wps = []
 
+		d_desired = .5
 		wp_radius = .5
-		turns = 4
+		turns = 5
 
-		#dont modify
-		maxR = 10
-		r = .1
+		initial_r = wp_radius
 
 		x = []
 		y = []
+	
+		for t in range(turns):
+			
+			a = initial_r + t * wp_radius
+			b = wp_radius / (2 *np.pi)
 
-		while(r < maxR):
-			r = r+(1.0/r)
-			t = (r/maxR)*(turns+1)*2*pi
-			x.append(r*cos(t))
-			y.append(r*sin(t))
+			r_n = initial_r + t * wp_radius
+			n = np.floor_divide(2 * np.pi * r_n, d_desired)
+		
+			for angle in range(int(n)):
+			
+				theta = 2 * np.pi * angle / n
+			
+				x.append((a + b*theta)*np.cos(theta))
+				y.append((a + b*theta)*np.sin(theta))
 
-		waypoints = []
 		for i in range(len(x)):
 			wp = Waypoint()
 			wp.alt = self.pose[2]
-			wp.lat = self.pose[1] + (y[i] / maxR)
-			wp.lon = self.pose[0] + (x[i] / maxR)
+			wp.lat = self.pose[1] + y[i]
+			wp.lon = self.pose[0] + x[i]
 
 			wp.radius = wp_radius
 			wp.loiter_time = 0
 			self.wps.append(wp)
+
 		return TriggerResponse(True,"Spiral created")
 
 	def do_control(self,):
