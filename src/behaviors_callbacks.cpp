@@ -42,7 +42,7 @@ void Behaviors::stateCallback(const jetyak_uav_utils::ObservedState::ConstPtr &m
 	this->state.origin = msg->origin;
 
 	Eigen::Vector2d vel(state.drone_pdot.x,state.drone_pdot.y);
-	vel = bsc_common::util::rotation_matrix(-state.drone_q.z)*vel;
+	vel = bsc_common::util::rotation_matrix(-state.drone_q.z) * vel;
 	Eigen::Matrix<double,12,1> lqrState;
 
 	lqrState << 0,0,0,
@@ -52,10 +52,8 @@ void Behaviors::stateCallback(const jetyak_uav_utils::ObservedState::ConstPtr &m
 
 	lqr_->updateState(lqrState);
 	land_.lqr->updateState(lqrState);
-
-
-	
 }
+
 void Behaviors::tagCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
 	if (msg->header.stamp.toSec() - lastSpotted > resetFilterTimeThresh)
