@@ -103,6 +103,9 @@ void Behaviors::leaveBehavior()
 
 void Behaviors::returnBehavior()
 {
+	// TO DO: Use gimbal_angle_cmd to publish commands to gimbalCmdPub_ for
+	// gimbal control
+
 	Eigen::Vector4d goal_boatFLU;
 	goal_boatFLU << follow_.goal_pose.x, follow_.goal_pose.y, return_.finalHeight, follow_.goal_pose.w;
 	Eigen::Vector4d offset = boat_to_drone(goal_boatFLU); // Vector pointing from the UAV to the follow setpoint

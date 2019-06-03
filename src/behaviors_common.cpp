@@ -109,6 +109,7 @@ void Behaviors::assignPublishers()
 {
 	cmdPub_ = nh.advertise<sensor_msgs::Joy>("behavior_cmd", 1);
 	modePub_ = nh.advertise<std_msgs::UInt8>("behavior_mode", 1);
+	gimbalCmdPub_ = nh.advertise<geometry_msgs::Vector3>("behavior_gimbal_cmd", 1);
 }
 
 void Behaviors::assignServiceClients()
@@ -163,4 +164,27 @@ Eigen::Vector4d Behaviors::boat_to_drone(Eigen::Vector4d pos)
 	dronePos << goal_drone_body(0), goal_drone_body(1), vDiff, wDiff;
 
 	return dronePos;
+}
+
+Eigen::Vector2d Behaviors::gimbal_angle_cmd()
+{
+	double dx = state.boat_p.x - state.drone_p.x;
+	double dy = state.boat_p.y - state.drone_p.y;
+	double dz = state.boat_p.z - state.drone_p.z;
+
+	double dxy = sqrt(dx*dx + dy*dy);
+
+	double theta = atan2(dxy, dz);
+	double psi = atan2(dy, dx);
+
+	// The gimbal's frame is NED while the local frame is ENU
+	psi += M_PI / 2.0;
+	
+	if (psi < 0)
+		psi += 2 * M_PI;
+	
+	Eigen::Vector2d gimbalAngle;
+	gimbalAngle << theta, psi;
+
+	return gimbalAngle;
 }

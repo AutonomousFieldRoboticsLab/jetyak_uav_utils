@@ -49,6 +49,7 @@ SOFTWARE.
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/QuaternionStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
+#include <geometry_msgs/Vector3.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/Joy.h>
 #include <sensor_msgs/NavSatFix.h>
@@ -76,7 +77,7 @@ private:
 	 * ROS PUBLISHERS, SUBSCRIBERS, AND SERVICES
 	 *********************************************/
 	ros::Subscriber stateSub_, tagSub_, extCmdSub_;
-	ros::Publisher cmdPub_, modePub_;
+	ros::Publisher cmdPub_, modePub_, gimbalCmdPub_;
 	ros::ServiceClient propSrv_, takeoffSrv_, landSrv_, lookdownSrv_, resetKalmanSrv_, enableGimbalSrv_;
 	ros::ServiceServer setModeService_, getModeService_, setFollowPosition_, setLandPosition_;
 	ros::NodeHandle nh;
@@ -257,11 +258,16 @@ private:
 	void downloadParams(std::string ns = "");
 
 	/** boat_to_drone
-	 * Converts a 4d posein the boat FLU frame to the UAV FLU frame. Useful in translating boat relative setpoints to the drone's frame.
+	 * Converts a 4d pose in the boat FLU frame to the UAV FLU frame. Useful in translating boat relative setpoints to the drone's frame.
 	 * @param pos position in the boat frame
 	 * @param yaw offset relative to boat frame
 	 * */
 	Eigen::Vector4d boat_to_drone(Eigen::Vector4d pos);
+
+	/** gimbal_angle_cmd
+	 * Uses the observed state of the UAV and Jetyak to find the gimbal angle in order to point the camera to the boat.
+	 * */
+	Eigen::Vector2d gimbal_angle_cmd();
 
 	/***********************
 	 * Constructor Methods
