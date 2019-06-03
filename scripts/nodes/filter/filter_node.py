@@ -276,11 +276,11 @@ class FilterNode():
 			return True
 		else:
 			dt = newTag.getTime() - self.lastTag.getTime()
-			vX = (newTag.getZ().item(0) - self.lastTag.getZ().item(0)) / dt
-			vY = (newTag.getZ().item(1) - self.lastTag.getZ().item(1)) / dt
-			vZ = (newTag.getZ().item(2) - self.lastTag.getZ().item(2)) / dt
+			dX = newTag.getZ().item(0) - self.lastTag.getZ().item(0)
+			dY = newTag.getZ().item(1) - self.lastTag.getZ().item(1)
+			dZ = newTag.getZ().item(2) - self.lastTag.getZ().item(2)
 
-			v = np.sqrt(pow(vX, 2) + pow(vY, 2) + pow(vZ, 2))
+			v = np.sqrt(pow(dX, 2) + pow(dY, 2) + pow(dZ, 2)) / dt
 		
 			if v < 5.0:
 				return True

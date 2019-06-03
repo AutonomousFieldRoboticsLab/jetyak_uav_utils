@@ -138,26 +138,26 @@ void Behaviors::assignSubscribers()
 
 Eigen::Vector4d Behaviors::boat_to_drone(Eigen::Vector4d pos)
 {
-	//vertical setpoint
-	double vDiff = pos(2) + state.boat_p.z - state.drone_p.z; //dist from uav to point (- if below UAV)
-	double wDiff = pos(3) + state.heading - state.drone_q.z;	//angular distance between headings (- if CW of UAV)
+	// Vertical setpoint
+	double vDiff = pos(2) + state.boat_p.z - state.drone_p.z;   // Distance from UAV to point (- if below UAV)
+	double wDiff = pos(3) + state.heading - state.drone_q.z;	// Angular distance between headings (- if CW of UAV)
 
-	//ensure angular dist [-pi,pi)
+	// Ensure angular dist [-pi, pi)
 	if (wDiff >= M_PI)
 		wDiff -= 2 * M_PI;
 	else if (wDiff < -M_PI)
 		wDiff += 2 * M_PI;
 
-	//get setpoint in world frame
-	Eigen::Vector2d goal_boat_body(pos(0), pos(1));																											 //setpoint relative to boat frame
-	Eigen::Vector2d goal_boat_world = bsc_common::util::rotation_matrix(state.heading) * goal_boat_body; //relative to boat in world frame
-	Eigen::Vector2d boat_world(state.boat_p.x, state.boat_p.y);																					 //boat position in world
-	Eigen::Vector2d goal_world = boat_world + goal_boat_world;																					 // setpoint in world frame
+	// Get setpoint in world frame
+	Eigen::Vector2d goal_boat_body(pos(0), pos(1));														 // Setpoint relative to boat frame
+	Eigen::Vector2d goal_boat_world = bsc_common::util::rotation_matrix(state.heading) * goal_boat_body; // Relative to boat in world frame
+	Eigen::Vector2d boat_world(state.boat_p.x, state.boat_p.y);											 // Boat position in world
+	Eigen::Vector2d goal_world = boat_world + goal_boat_world;											 // Setpoint in world frame
 
-	//transform to drone frame
-	Eigen::Vector2d drone_world(state.drone_p.x, state.drone_p.y);																						// drone position in world
-	Eigen::Vector2d goal_drone_world = goal_world - drone_world;																							//world frame vector from drone to setpoint
-	Eigen::Vector2d goal_drone_body = bsc_common::util::rotation_matrix(-state.drone_q.z) * goal_drone_world; // transform into the drone frame
+	// Transform to drone frame
+	Eigen::Vector2d drone_world(state.drone_p.x, state.drone_p.y);												// Drone position in world
+	Eigen::Vector2d goal_drone_world = goal_world - drone_world;												// World frame vector from drone to setpoint
+	Eigen::Vector2d goal_drone_body = bsc_common::util::rotation_matrix(-state.drone_q.z) * goal_drone_world;   // Transform into the drone frame
 
 	Eigen::Vector4d dronePos;
 	dronePos << goal_drone_body(0), goal_drone_body(1), vDiff, wDiff;

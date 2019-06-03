@@ -170,17 +170,16 @@ void dji_pilot::rcCallback(const sensor_msgs::Joy::ConstPtr &msg)
 			autopilotOn = false;
 	}
 
-	// If it is on P mode and the autodji_pilot is on check if the RC is being
-	// used
+	// If it is on P mode and the autodji_pilot is on check if the RC is being used
 	if (msg->axes[4] == modeFlag && autopilotOn)
 	{
 		if (std::abs(msg->axes[0]) > rcStickThresh || std::abs(msg->axes[1]) > rcStickThresh ||
 				std::abs(msg->axes[2]) > rcStickThresh || std::abs(msg->axes[3]) > rcStickThresh)
 		{
 			rcCommand.axes[0]=msg->axes[0] * rcVelocityMultiplier;	// Roll
-			rcCommand.axes[1]=msg->axes[1] * rcVelocityMultiplier; // Pitch
-			rcCommand.axes[2]=msg->axes[3] * 3;	// Altitude
-			rcCommand.axes[3]=-msg->axes[2];			// Yaw
+			rcCommand.axes[1]=msg->axes[1] * rcVelocityMultiplier;  // Pitch
+			rcCommand.axes[2]=msg->axes[3] * 3;						// Altitude
+			rcCommand.axes[3]=-msg->axes[2];						// Yaw
 
 			bypassPilot = true;
 		}
@@ -271,8 +270,6 @@ bool dji_pilot::requestControl(int requestFlag)
 
 sensor_msgs::Joy dji_pilot::adaptiveClipping(sensor_msgs::Joy msg)
 {
-
-
 	// Create command buffer
 	sensor_msgs::Joy cmdBuffer;
 	cmdBuffer.axes.clear();
