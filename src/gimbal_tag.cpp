@@ -102,30 +102,34 @@ void gimbal_tag::tagCallback(const ar_track_alvar_msgs::AlvarMarkers &msg)
 {
 	if (!msg.markers.empty())
 	{
-		// Pass the ar_pose as a vector3 for the dji_gimbal
-		geometry_msgs::Vector3 arVec3;
-		arVec3.x = msg.markers[0].pose.pose.position.x;
-		arVec3.y = msg.markers[0].pose.pose.position.y;
-		arVec3.z = msg.markers[0].pose.pose.position.z;
-		tagPosePub.publish(arVec3);
+		// Check that z axis is not flipped
+		if (msg.markers[0].pose.pose.position.z > 0)
+		{
+			// Pass the ar_pose as a vector3 for the dji_gimbal
+			geometry_msgs::Vector3 arVec3;
+			arVec3.x = msg.markers[0].pose.pose.position.x;
+			arVec3.y = msg.markers[0].pose.pose.position.y;
+			arVec3.z = msg.markers[0].pose.pose.position.z;
+			tagPosePub.publish(arVec3);
 
-		// Update Tag quaternion
-		tf::quaternionMsgToTF(msg.markers[0].pose.pose.orientation, qTag);
-		qTag.normalize();
+			// Update Tag quaternion
+			tf::quaternionMsgToTF(msg.markers[0].pose.pose.orientation, qTag);
+			qTag.normalize();
 
-		// Update Tag position as quaternion
-		posTag[0] = msg.markers[0].pose.pose.position.x;
-		posTag[1] = msg.markers[0].pose.pose.position.y;
-		posTag[2] = msg.markers[0].pose.pose.position.z;
-		posTag[3] = 0;
+			// Update Tag position as quaternion
+			posTag[0] = msg.markers[0].pose.pose.position.x;
+			posTag[1] = msg.markers[0].pose.pose.position.y;
+			posTag[2] = msg.markers[0].pose.pose.position.z;
+			posTag[3] = 0;
 
-		// Go from Camera frame to Gimbal frame
-		qTag = qFix * qTag;
+			// Go from Camera frame to Gimbal frame
+			qTag = qFix * qTag;
 
-		posTag = qCamera2Gimbal.inverse() * posTag * qCamera2Gimbal;
+			posTag = qCamera2Gimbal.inverse() * posTag * qCamera2Gimbal;
 
-		tagFound = true;
-		publishTagPose();
+			tagFound = true;
+			publishTagPose();
+		}
 	}
 	else
 		tagFound = false;
