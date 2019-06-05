@@ -112,6 +112,7 @@ class FusionEKF:
 				self.kalmanF.initialize(self.X, self.F, self.P, self.N)
 				self.kalmanF.updateF(self.dt)
 				self.kalmanF.updateQ()
+				self.kalmanF.predict()
 				self.isInit = True
 
 				print 'Colocalization filter initialized'

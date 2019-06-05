@@ -59,9 +59,9 @@ class FilterNode():
 		self.lastTag = DataPoint()
 
 		# Set rate of publisher
-		self.rate = 50
+		self.rate = 50.0
 
-		# Number of States
+		# Number of states
 		n = 24
 
 		# Initial State Transition Matrix
@@ -107,16 +107,16 @@ class FilterNode():
 		self.HgpsD[0:3, 0:3] = np.matrix(np.eye(3))
 
 		# Covariance Matrix for Drone GPS measurements
-		self.RgpsD = np.matrix(np.zeros((3, 3)))
-		self.RgpsD[0:3, 0:3] = np.asmatrix(1.0e-3 * np.eye(3))
+		self.RgpsD = np.asmatrix(1.0e-2 * np.eye(3))
+		self.RgpsD[2, 2] = 1.0
 
 		# Transition Matrix for Jetyak GPS measurements
 		self.HgpsJ = np.matrix(np.zeros((3, n)))
 		self.HgpsJ[0:3, 14:17] = np.matrix(np.eye(3))
 
 		# Covariance Matrix for Jetyak GPS measurements
-		self.RgpsJ = np.asmatrix(1.0e-3 * np.eye(3))
-		self.RgpsJ[2, 2] = 1.0e-1
+		self.RgpsJ = np.asmatrix(1.0e-1 * np.eye(3))
+		self.RgpsJ[2, 2] = 1.0
 
 		# Transition Matrix for Jetyak GPS heading
 		self.HhdgJ = np.matrix(np.zeros((1, n)))
@@ -126,7 +126,7 @@ class FilterNode():
 		self.RhdgJ = np.matrix(1.0e-12)
 
 		# Process Noise Level
-		N = 1.0e-7
+		N = 5.0e-3
 
 		# Initialize Kalman Filter
 		self.fusionF = FusionEKF(F, P, N, self.rate)
