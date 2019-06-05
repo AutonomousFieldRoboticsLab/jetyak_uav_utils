@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(jetyak_uav_utils)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++11 -lpthread)
 
 find_package(catkin REQUIRED COMPONENTS
   ar_track_alvar
@@ -68,6 +68,8 @@ include_directories(
 ## Add executables
 add_executable(dji_pilot_node
   src/dji_pilot.cpp
+	lib/bsc_common/flasher.cpp
+	lib/bsc_common/manifoldGPIO.cpp
 )
 
 add_executable(gimbal_tag_node

@@ -424,7 +424,7 @@ bool dji_pilot::checkRCconnection()
 				autopilotOn = false;
 		}
 
-		// TO DO: Sound alarm
+		alarm.startFlash();f
 		ROS_WARN("SDK lost connection to RC: PANIC!!!");
 
 		return false;

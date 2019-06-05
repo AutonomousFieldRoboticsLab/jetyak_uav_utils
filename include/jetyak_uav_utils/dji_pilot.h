@@ -50,6 +50,7 @@ SOFTWARE.
 #include <dji_sdk/dji_sdk.h>
 
 #include "jetyak_uav_utils/jetyak_uav_utils.h"
+#include "../lib/bsc_common/include/flasher.h"
 
 class dji_pilot
 {
@@ -160,6 +161,7 @@ protected:
 	bool panicMode;
 	bool rcReceived;
 	ros::Time lastRCmsg;
+	bsc_common::Flasher alarm;
 
 private:
 	/** buildFlag
