@@ -1,7 +1,8 @@
 isM100: true
 
 
-rcVelocityMultiplier: .3
+rcVelocityMultiplierH: .3
+rcVelocityMultiplierV: 3
 
 
 hVelocityMaxBody: 1.0

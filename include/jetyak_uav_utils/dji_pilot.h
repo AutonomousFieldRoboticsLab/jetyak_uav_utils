@@ -65,6 +65,11 @@ public:
 	 * Pushes a command through that was previously added through a service or subscriber
 	 */
 	void publishCommand();
+	
+	/** checkRCconnection
+	 * Returns true if the RC is properly communicating with the SDK
+	*/
+	bool checkRCconnection();
 
 protected:
 	// ROS Subscribers
@@ -147,9 +152,14 @@ protected:
 	double vVelocityMaxBody, vVelocityMaxGround, vPosCmdMax, vPosCmdMin, vThrustCmdMax;
 	double yAngleRateMax, yAngleMax;
 	double rcStickThresh;
-	double rcVelocityMultiplier;
+	double rcVelocityMultiplierH, rcVelocityMultiplierV;
 
 	bool isM100;
+
+	// If connection to RC is lost set to panic mode
+	bool panicMode;
+	bool rcReceived;
+	ros::Time lastRCmsg;
 
 private:
 	/** buildFlag

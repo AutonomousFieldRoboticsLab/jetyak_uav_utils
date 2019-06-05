@@ -3,10 +3,14 @@
 	<node pkg="rosbag" type="record" name="flight_log_bagfile" output="screen"
 		  args="record -o /media/ubuntu/Manifold/FlightLog/flightData 
 
+/rosout
+/rosout_agg
+
 /jetyak_uav_vision/ar_pose_marker
 /jetyak_uav_vision/state
 /jetyak_uav_vision/tag_pose
 /jetyak_uav_vision/visualization_marker
+/jetyak_uav_vision/gimbal_cmd
 
 /jetyak_uav_utils/behavior_cmd
 /jetyak_uav_utils/behavior_mode
@@ -36,10 +40,17 @@
 /dji_sdk/imu 
 /dji_sdk/rc 
 /dji_sdk/velocity
-
-/vrpn_client_node/Matrice/pose
-/vrpn_client_node/Pad/pose
 "
 	/>
 
 </launch>
+
+<!--
+Video Feed
+/jetyak_uav_vision/dji_camera/image_raw
+/jetyak_uav_vision/dji_camera/camera_info
+
+Optitrack
+/vrpn_client_node/Matrice/pose
+/vrpn_client_node/Pad/pose
+-->

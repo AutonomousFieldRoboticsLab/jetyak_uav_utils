@@ -15,8 +15,7 @@
 
 	</group>
 
-	<!-- Capturing the flight data
-	<include file="$(find jetyak_uav_utils)/launch/optiLog.launch"/>
-	-->
+	<!-- Start flight data log-->
+	<include file="$(find jetyak_uav_utils)/launch/log.launch"/>
 
 </launch>

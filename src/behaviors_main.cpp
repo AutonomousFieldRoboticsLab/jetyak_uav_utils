@@ -34,8 +34,8 @@ Behaviors::Behaviors(ros::NodeHandle &nh_param)
 {
 	nh = nh_param;
 
-	// initialize mode
-	currentMode_ = JETYAK_UAV_UTILS::HOVER;
+	// Initialize mode to Ride
+	currentMode_ = JETYAK_UAV_UTILS::RIDE;
 
 	assignSubscribers();
 	assignPublishers();

@@ -66,6 +66,8 @@ dji_pilot::dji_pilot(ros::NodeHandle &nh)
 
 	// Initialize RC
 	setupRCCallback();
+	rcReceived = false;
+	panicMode = false;
 
 	// Initialize default command flag
 	commandFlag = (DJISDK::VERTICAL_VELOCITY |
@@ -106,7 +108,8 @@ void dji_pilot::loadPilotParameters()
 	nh_private.param("isM100", isM100, true);
 
 	// RC velocity multiplier
-	nh_private.param("rcVelocityMultiplier", rcVelocityMultiplier, 1.0);
+	nh_private.param("rcVelocityMultiplierH", rcVelocityMultiplierH, 1.0);
+	nh_private.param("rcVelocityMultiplierV", rcVelocityMultiplierV, 1.0);
 
 	// Horizontal velocity thresholds
 	nh_private.param("hVelocityMaxBody", hVelocityMaxBody, 1.0);
@@ -154,6 +157,15 @@ void dji_pilot::extCallback(const sensor_msgs::Joy::ConstPtr &msg)
 
 void dji_pilot::rcCallback(const sensor_msgs::Joy::ConstPtr &msg)
 {
+	if (!rcReceived)
+	{
+		rcReceived = true;
+		ROS_WARN("RC msg received");
+	}
+
+	// Update last RC msg time
+	lastRCmsg = ros::Time::now();
+	
 	// Switch autodji_pilot on/off
 	// P mode && Autodji_pilot switch on && Autodji_pilot flag not set
 	if (msg->axes[4] == modeFlag && msg->axes[5] == pilotFlag && !autopilotOn)
@@ -176,9 +188,9 @@ void dji_pilot::rcCallback(const sensor_msgs::Joy::ConstPtr &msg)
 		if (std::abs(msg->axes[0]) > rcStickThresh || std::abs(msg->axes[1]) > rcStickThresh ||
 				std::abs(msg->axes[2]) > rcStickThresh || std::abs(msg->axes[3]) > rcStickThresh)
 		{
-			rcCommand.axes[0]=msg->axes[0] * rcVelocityMultiplier;	// Roll
-			rcCommand.axes[1]=msg->axes[1] * rcVelocityMultiplier;  // Pitch
-			rcCommand.axes[2]=msg->axes[3] * 3;						// Altitude
+			rcCommand.axes[0]=msg->axes[0] * rcVelocityMultiplierH;	// Roll
+			rcCommand.axes[1]=msg->axes[1] * rcVelocityMultiplierH; // Pitch
+			rcCommand.axes[2]=msg->axes[3] * rcVelocityMultiplierV;	// Altitude
 			rcCommand.axes[3]=-msg->axes[2];						// Yaw
 
 			bypassPilot = true;
@@ -334,31 +346,6 @@ sensor_msgs::Joy dji_pilot::adaptiveClipping(sensor_msgs::Joy msg)
 	return cmdBuffer;
 }
 
-void dji_pilot::publishCommand()
-{
-	if (autopilotOn)
-	{
-		// Prepare command
-		sensor_msgs::Joy djiCommand;
-
-		if (bypassPilot){
-			djiCommand = rcCommand;		
-		}
-		else
-			djiCommand = extCommand;
-
-		// Get time
-		ros::Time time = ros::Time::now();
-		djiCommand.header.stamp = time;
-
-		// Publish command
-		controlPub.publish(djiCommand);
-
-		// Reset bypass flag
-		bypassPilot = false;
-	}
-}
-
 uint8_t dji_pilot::buildFlag(JETYAK_UAV_UTILS::Flag flag)
 {
 	uint8_t base = 0;
@@ -385,6 +372,67 @@ uint8_t dji_pilot::buildFlag(JETYAK_UAV_UTILS::Flag flag)
 	return base;
 }
 
+// Public //
+void dji_pilot::publishCommand()
+{
+	if (autopilotOn)
+	{
+		// Prepare command
+		sensor_msgs::Joy djiCommand;
+
+		if (bypassPilot)
+			djiCommand = rcCommand;
+		else
+			djiCommand = extCommand;
+
+		// Get time
+		ros::Time time = ros::Time::now();
+		djiCommand.header.stamp = time;
+
+		// Publish command
+		controlPub.publish(djiCommand);
+
+		// Reset bypass flag
+		bypassPilot = false;
+	}
+}
+
+bool dji_pilot::checkRCconnection()
+{
+	if (panicMode)
+	{
+		// Release control
+		if (autopilotOn) {
+			if (requestControl(0))
+				autopilotOn = false;
+		}
+
+		// TO DO: Sound alarm
+		ROS_WARN("SDK lost connection to RC: PANIC!!!");
+		return false;
+	}
+	else if (!rcReceived)
+		return false;
+	else if (ros::Time::now().toSec() - lastRCmsg.toSec() > 0.5)
+	{
+		// PANIC mode ON
+		panicMode = true;
+
+		// Release control
+		if (autopilotOn) {
+			if (requestControl(0))
+				autopilotOn = false;
+		}
+
+		// TO DO: Sound alarm
+		ROS_WARN("SDK lost connection to RC: PANIC!!!");
+
+		return false;
+	}
+	else
+		return true;
+}
+
 ////////////////////////////////////////////////////////////
 ////////////////////////  Main  ////////////////////////////
 ////////////////////////////////////////////////////////////
@@ -402,7 +450,9 @@ int main(int argc, char **argv)
 	{
 		ros::spinOnce();
 
-		joydji_pilot.publishCommand();
+		// Check if RC is communicating with the SDK
+		if (joydji_pilot.checkRCconnection())
+			joydji_pilot.publishCommand();
 
 		rate.sleep();
 	}

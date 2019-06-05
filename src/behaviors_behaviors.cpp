@@ -79,11 +79,9 @@ void Behaviors::followBehavior()
 	}
 	else
 	{
-		ROS_WARN("Follow lost tag for more than 5 seconds, returning");
-		currentMode_ = JETYAK_UAV_UTILS::RETURN;
-		return_.stage = return_.UP;
+		ROS_WARN("Follow lost tag for more than 5 seconds, hovering");
+		currentMode_ = JETYAK_UAV_UTILS::HOVER;
 		behaviorChanged_ = true;
-		returnBehavior();
 	}
 }
 
@@ -101,8 +99,7 @@ void Behaviors::leaveBehavior()
 
 void Behaviors::returnBehavior()
 {
-	// TO DO: Use gimbal_angle_cmd to publish commands to gimbalCmdPub_ for
-	// gimbal control
+	// If tag is not visible turn the gimbal to the estimated position of the jetyak
 	if (ros::Time::now().toSec() - lastSpotted >= 3)
 	{
 		Eigen::Vector2d cmds = gimbal_angle_cmd();
@@ -112,6 +109,7 @@ void Behaviors::returnBehavior()
 		msg.z = cmds(1);
 		gimbalCmdPub_.publish(msg);
 	}
+	
 	Eigen::Vector4d goal_boatFLU;
 	goal_boatFLU << follow_.goal_pose.x, follow_.goal_pose.y, return_.finalHeight, follow_.goal_pose.w;
 	Eigen::Vector4d offset = boat_to_drone(goal_boatFLU); // Vector pointing from the UAV to the follow setpoint
@@ -180,7 +178,7 @@ void Behaviors::returnBehavior()
 			vBoat = bsc_common::util::rotation_matrix(-state.drone_q.z) * vBoat; // Boat velocity in drone frame
 
 			Eigen::Matrix<double, 12, 1> set;
-			set << 0, 0, u_c,	// Position setpoint (xyz)
+			set << 0, 0, u_c,	 // Position setpoint (xyz)
 				0, 0, 0,		 // Velocity setpoint (xyz)
 				0, 0, offset(3), // Angle setpoint (rpy)
 				0, 0, 0;		 // Angular velocity setpoint (rpy)
@@ -340,6 +338,7 @@ void Behaviors::rideBehavior()
 
 void Behaviors::hoverBehavior()
 {
+	// Hover is space
 	sensor_msgs::Joy cmd;
 	cmd.axes.push_back(0);
 	cmd.axes.push_back(0);
@@ -347,4 +346,12 @@ void Behaviors::hoverBehavior()
 	cmd.axes.push_back(0);
 	cmd.axes.push_back(JETYAK_UAV_UTILS::WORLD_RATE);
 	cmdPub_.publish(cmd);
+
+	// Move gimbal in the estimated jetyak position
+	Eigen::Vector2d cmds = gimbal_angle_cmd();
+	geometry_msgs::Vector3 msg;
+	msg.x = 0;
+	msg.y = cmds(0);
+	msg.z = cmds(1);
+	gimbalCmdPub_.publish(msg);
 };

@@ -3,6 +3,9 @@
 	<!-- Start the DJI SDK -->
 	<include file="$(find dji_sdk)/launch/sdkM.launch"/>
 
+	<!-- Start Mavros -->
+	<include file="$(find jetyak_uav_utils)/launch/jetyak_mavros.launch"/>
+
 	<!-- Vision node -->
 	<group ns="jetyak_uav_vision">
 
@@ -14,9 +17,10 @@
 		<node name="gimbal_tag" pkg="jetyak_uav_utils" type="gimbal_tag_node" output="screen" />
 
 		<!-- Start tag tracking -->
-		<!--include file="$(find jetyak_uav_utils)/launch/ar_track.launch"/-->
-		<!--node name="filter" pkg="jetyak_uav_utils" type="filter_node.py" output="screen"/-->
-	</group>
+		<include file="$(find jetyak_uav_utils)/launch/ar_track.launch"/>
 
+		<!-- Start colocalization filter -->
+		<node name="filter" pkg="jetyak_uav_utils" type="filter_node.py" output="screen"/>
+	</group>
 
 </launch>
