@@ -10,5 +10,5 @@
 	<include file="$(find jetyak_uav_utils)/launch/jetyak_mavros.launch"/>
 
 	<!-- Capturing the flight data -->
-	<include file="$(find jetyak_uav_utils)/launch/colocLog.launch"/>
+	<include file="$(find jetyak_uav_utils)/launch/test_files/colocLog.launch"/>
 </launch>

@@ -1,22 +1,36 @@
 #include "include/flasher.h"
 namespace bsc_common {
+Flasher::Flasher(int delay) {
+		this->delay = delay;
+		out = gpio158 ;     // Ouput
+
+		gpioExport(out) ;
+
+		gpioSetDirection(out,outputPin) ;
+			  gpioSetValue(out, off);
+}
+Flasher::~Flasher() {
+		if(run==true) {
+			run=false;
+			flasher.join();
+		}
+	  gpioSetValue(out, off);
+		
+		gpioUnexport(out);     // unexport the LED
+}
 void Flasher::doFlash() {
-		manifoldGPIONumber redLED = gpio158 ;     // Ouput
-
-		gpioExport(redLED) ;
-
-		gpioSetDirection(redLED,outputPin) ;
+		
 
 
 		while(run){
 
-	    gpioSetValue(redLED, on);
+	    gpioSetValue(out, on);
 	    usleep(delay);         // on for 200ms
 
-	    gpioSetValue(redLED, off);
+	    gpioSetValue(out, off);
 	    usleep(delay);         // off for 200ms
 		}
-		gpioUnexport(redLED);     // unexport the LED
+		
 	}
 
 	void Flasher::startFlash() {

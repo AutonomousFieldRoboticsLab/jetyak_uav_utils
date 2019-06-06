@@ -88,6 +88,8 @@ dji_pilot::dji_pilot(ros::NodeHandle &nh)
 		rcCommand.axes.push_back(0);
 	
 	rcCommand.axes.push_back(commandFlag);
+
+	alarm = new bsc_common::Flasher(250000);
 }
 
 dji_pilot::~dji_pilot()
@@ -98,6 +100,8 @@ dji_pilot::~dji_pilot()
 		if (requestControl(0))
 			ROS_INFO("Control released back to RC");
 	}
+	alarm->stopFlash();
+	delete alarm;
 }
 
 void dji_pilot::loadPilotParameters()
@@ -424,7 +428,7 @@ bool dji_pilot::checkRCconnection()
 				autopilotOn = false;
 		}
 
-		alarm.startFlash();f
+		alarm->startFlash();
 		ROS_WARN("SDK lost connection to RC: PANIC!!!");
 
 		return false;

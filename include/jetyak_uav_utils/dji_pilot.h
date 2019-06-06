@@ -161,7 +161,7 @@ protected:
 	bool panicMode;
 	bool rcReceived;
 	ros::Time lastRCmsg;
-	bsc_common::Flasher alarm;
+	bsc_common::Flasher *alarm;
 
 private:
 	/** buildFlag

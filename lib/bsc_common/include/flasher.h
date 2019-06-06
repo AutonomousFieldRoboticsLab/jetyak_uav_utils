@@ -7,13 +7,13 @@
 namespace bsc_common {
 class Flasher {
 public:
-
+	manifoldGPIONumber out;
 	std::thread flasher;
 	bool run= false;
-	int delay = 100000;
+	int delay;
 
-	Flasher() {};
-	~Flasher(){};
+	Flasher(int delay);
+	~Flasher();
 
 	void doFlash();
 
