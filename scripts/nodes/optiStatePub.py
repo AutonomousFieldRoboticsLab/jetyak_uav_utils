@@ -45,9 +45,7 @@ class StatePub():
 		self.state.boat_p.z=msg.pose.position.z
 
 		(r,p,y) =euler_from_quaternion([msg.pose.orientation.x,msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w])
-		self.state.boat_q.x=r
-		self.state.boat_q.y=p
-		self.state.boat_q.z=y
+		self.state.heading=y
 		self.publish()
 
 	def optiCB(self,msg):

@@ -59,7 +59,7 @@ class KalmanFilter:
 		 				   1e0, 1e0, 1e0,
 		 				   1e0, 1e0, 1e0, 1e0,
 		 				   1e0, 1e0, 1e0, 1e0,
-		 				   1e0, 1e0, 1e1,
+		 				   1e0, 1e0, 1e-3,
 		 				   1e0, 1e0,
 		 				   1e-3,
 		 				   1e0, 1e0, 1e0,
@@ -71,11 +71,12 @@ class KalmanFilter:
 	
 	def updateF(self, dt):
 		self.F[  0:3,   3:6] = np.matrix(dt * np.eye(3))
-		self.F[ 6:10, 10:14] = np.matrix(dt * np.eye(4))
+		#self.F[ 6:10, 10:14] = np.matrix(dt * np.eye(4))
 		self.F[14:16, 17:19] = np.matrix(dt * np.eye(2))
 
 	def predict(self):
 		self.X = self.F * self.X
+		self.checkQuaternion()
 		self.P = self.F * self.P * self.F.T + self.Q
 		self.P = (self.P + self.P.T) / 2
 
@@ -86,8 +87,23 @@ class KalmanFilter:
 		I    = np.asmatrix(np.eye(self.n))
 
 		self.X = self.X + K * (z - H * self.X)
+		self.checkQuaternion()
 		self.P = (I - K * H) * self.P
 		self.P = (self.P + self.P.T) / 2
+	
+	def checkQuaternion(self):
+		qx = self.X.item(6)
+		qy = self.X.item(7)
+		qz = self.X.item(8)
+		qw = self.X.item(9)
+
+		mag = pow(pow(qx,2) + pow(qy,2) + pow(qz,2) + pow(qw,2), 0.5)
+
+		if mag > 0:
+			self.X.item(6) / mag
+			self.X.item(7) / mag
+			self.X.item(8) / mag
+			self.X.item(9) / mag
 
 	def getState(self):
 		return self.X

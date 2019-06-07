@@ -172,7 +172,7 @@ class FusionEKF:
 								 [0.5 * dq.z],
 								 [0.5 * dq.w]])
 					
-				#self.kalmanF.correct(dqm, H, R)
+				self.kalmanF.correct(dqm, H, R)
 			else:
 				self.kalmanF.correct(dataPoint.getZ(), H, R)
 			

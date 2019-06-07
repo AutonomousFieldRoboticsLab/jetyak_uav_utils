@@ -133,13 +133,13 @@ class FilterNode():
 		self.fusionF = FusionEKF(F, P, N, self.rate)
 
 		# Set up Subscribers
-		self.dGPS_sub = rp.Subscriber("/dji_sdk/gps_position", NavSatFix, self.dGPS_callback)
-		self.dAtti_sub = rp.Subscriber("/dji_sdk/attitude", QuaternionStamped, self.dAtti_callback)
-		self.dIMU_sub = rp.Subscriber("/dji_sdk/imu", Imu, self.dIMU_callback)
-		self.dVel_sub = rp.Subscriber("/dji_sdk/velocity", Vector3Stamped, self.dVel_callback)
-		self.jGPS_sub = rp.Subscriber("/jetyak2/global_position/global", NavSatFix, self.jGPS_callback)
-		self.jCompass_sub = rp.Subscriber("/jetyak2/global_position/compass_hdg", Float64, self.jCompass_callback)
-		self.tag_sub = rp.Subscriber("/jetyak_uav_vision/tag_pose", PoseStamped, self.tag_callback)
+		self.dGPS_sub = rp.Subscriber("/dji_sdk/gps_position", NavSatFix, self.dGPS_callback, queue_size = 1)
+		self.dAtti_sub = rp.Subscriber("/dji_sdk/attitude", QuaternionStamped, self.dAtti_callback, queue_size = 1)
+		self.dIMU_sub = rp.Subscriber("/dji_sdk/imu", Imu, self.dIMU_callback, queue_size = 1)
+		self.dVel_sub = rp.Subscriber("/dji_sdk/velocity", Vector3Stamped, self.dVel_callback, queue_size = 1)
+		self.jGPS_sub = rp.Subscriber("/jetyak2/global_position/global", NavSatFix, self.jGPS_callback, queue_size = 1)
+		self.jCompass_sub = rp.Subscriber("/jetyak2/global_position/compass_hdg", Float64, self.jCompass_callback, queue_size = 1)
+		self.tag_sub = rp.Subscriber("/jetyak_uav_vision/tag_pose", PoseStamped, self.tag_callback, queue_size = 1)
 
 		# Set up Publisher
 		self.state_pub = rp.Publisher("/jetyak_uav_vision/state", ObservedState, queue_size = 1)
