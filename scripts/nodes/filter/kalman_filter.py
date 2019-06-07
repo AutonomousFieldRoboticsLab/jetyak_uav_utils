@@ -55,11 +55,11 @@ class KalmanFilter:
 		self.N = N
 		self.n = np.shape(F)[0]
 
-		diagCf = np.array([1e-1, 1e-1, 1e-1,
+		diagCf = np.array([1e-1, 1e-1, 1e1,
 		 				   1e0, 1e0, 1e0,
 		 				   1e0, 1e0, 1e0, 1e0,
 		 				   1e0, 1e0, 1e0, 1e0,
-		 				   1e-1, 1e-1, 1e-3,
+		 				   1e0, 1e0, 1e-3,
 		 				   1e0, 1e0,
 		 				   1e-3,
 		 				   1e0, 1e0, 1e0,

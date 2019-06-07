@@ -16,24 +16,24 @@ takeoff_threshold: .25
 #
 # Follow Parameters
 #
-follow_x: -2.5
+follow_x: -2
 follow_y: 0
-follow_z: 2
+follow_z: 1.5
 follow_w: 0
 
 #
 # Land Parameters
 #
-land_x: -1.0
-land_y: 0
-land_z: 0.1 # this should be .1-.2m over the tag to allow the uav to maneuver
+land_x: -0.9
+land_y: -0.1
+land_z: 0 # this should be .1-.2m over the tag to allow the uav to maneuver
 land_w: 0
 
 land_velMag: .1
-land_xThresh: .12
-land_yThresh: .12
-land_zThresh: .12
-land_angleThresh: .15
+land_xThresh: .1
+land_yThresh: .1
+land_zThresh: .1
+land_angleThresh: .2
 
 #
 # Return Parameters

@@ -127,7 +127,7 @@ class FilterNode():
 		self.RhdgJ = np.matrix(1.0e-12)
 
 		# Process Noise Level
-		N = 5.0e-4
+		N = 5.0e-3
 
 		# Initialize Kalman Filter
 		self.fusionF = FusionEKF(F, P, N, self.rate)
