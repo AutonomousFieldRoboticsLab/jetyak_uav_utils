@@ -136,10 +136,11 @@ private:
 		double heightThresh; // for all height based things (gotoHeight, finalHeight)
 		double finalHeight;
 		double downRadius;
-		double settleRadiusSquared = 1;
+		double settleRadiusSquared = .1;
 		double tagTime;
 		double tagLossThresh;
 		double maxVel;
+		bsc_common::pose4d_t goal; // settle goal
 		enum Stage
 		{
 			UP,

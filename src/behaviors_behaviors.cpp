@@ -111,7 +111,7 @@ void Behaviors::returnBehavior()
 	}
 	
 	Eigen::Vector4d goal_boatFLU;
-	goal_boatFLU << follow_.goal_pose.x, follow_.goal_pose.y, return_.finalHeight, follow_.goal_pose.w;
+	goal_boatFLU << return_.goal.x, return_.goal.y, return_.goal.z, return_.goal.w;
 	Eigen::Vector4d offset = boat_to_drone(goal_boatFLU); // Vector pointing from the UAV to the follow setpoint
 
 	if (ros::Time::now().toSec() - lastSpotted <= return_.tagTime and state.drone_p.z <= return_.finalHeight + return_.heightThresh)
@@ -132,7 +132,7 @@ void Behaviors::returnBehavior()
 			vBoat = bsc_common::util::rotation_matrix(-state.drone_q.z) * vBoat; // Boat velocity in drone frame
 
 			Eigen::Matrix<double, 12, 1> set;
-			set << offset(0), offset(1), return_.finalHeight - state.drone_p.z, // Position setpoint (xyz)
+			set << offset(0), offset(1), offset(2), // Position setpoint (xyz)
 				vBoat(0), vBoat(1), 0,											// Velocity setpoint (xyz)
 				0, 0, offset(3),												// Angle setpoint (rpy)
 				0, 0, 0;														// Angular velocity setpoint (rpy)
@@ -346,12 +346,13 @@ void Behaviors::hoverBehavior()
 	cmd.axes.push_back(0);
 	cmd.axes.push_back(JETYAK_UAV_UTILS::WORLD_RATE);
 	cmdPub_.publish(cmd);
-
-	// Move gimbal in the estimated jetyak position
-	Eigen::Vector2d cmds = gimbal_angle_cmd();
-	geometry_msgs::Vector3 msg;
-	msg.x = 0;
-	msg.y = cmds(0);
-	msg.z = cmds(1);
-	gimbalCmdPub_.publish(msg);
+	if(ros::Time::now().toSec() - lastSpotted > 1) {
+		// Move gimbal in the estimated jetyak position
+		Eigen::Vector2d cmds = gimbal_angle_cmd();
+		geometry_msgs::Vector3 msg;
+		msg.x = 0;
+		msg.y = cmds(0);
+		msg.z = cmds(1);
+		gimbalCmdPub_.publish(msg);
+	}
 };

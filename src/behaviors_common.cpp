@@ -103,6 +103,10 @@ void Behaviors::downloadParams(std::string ns_param)
 	getP(ns, "return_tagLossThresh", return_.tagLossThresh);
 	getP(ns, "return_heightThresh", return_.heightThresh);
 	return_.settleRadiusSquared = settleRadius * settleRadius;
+	getP(ns, "return_settle_x", return_.goal.x);
+	getP(ns, "return_settle_y", return_.goal.y);
+	getP(ns, "return_settle_z", return_.goal.z);
+	getP(ns, "return_settle_w", return_.goal.w);
 }
 
 void Behaviors::assignPublishers()
@@ -178,7 +182,7 @@ Eigen::Vector2d Behaviors::gimbal_angle_cmd()
 	double psi = atan2(dy, dx);
 
 	// The gimbal's frame is NED while the local frame is ENU
-	psi -= M_PI / 2.0;
+	psi += M_PI / 2.0;
 	psi = -psi;
 	
 	if (psi < 0)
