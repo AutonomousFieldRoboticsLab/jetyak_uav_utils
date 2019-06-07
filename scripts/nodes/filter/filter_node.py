@@ -80,6 +80,7 @@ class FilterNode():
 
 		# Covariance Matrix for Tag measurements
 		self.Rtag = np.asmatrix(1.0e-6 * np.eye(4))
+		self.Rtag[3, 3] = 1.0e-1
 
 		# Transition Matrix for Attitude measurements
 		self.Hatt = np.matrix(np.zeros((4, n)))
@@ -279,8 +280,13 @@ class FilterNode():
 			dZ = newTag.getZ().item(2) - self.lastTag.getZ().item(2)
 
 			v = np.sqrt(pow(dX, 2) + pow(dY, 2) + pow(dZ, 2)) / dt
-		
-			if v < 5.0:
+
+			rpyLast = quat2rpy(Quaternion(self.lastTag.getZ().item(3), self.lastTag.getZ().item(4), self.lastTag.getZ().item(5), self.lastTag.getZ().item(6)));
+			rpyNow  = quat2rpy(Quaternion(newTag.getZ().item(3), newTag.getZ().item(4), newTag.getZ().item(5), newTag.getZ().item(6)));
+			dyaw = np.absolute(rpyLast[2] - rpyNow[2]) / dt
+
+			if (v < 5.0 and dyaw < 1.0):
+				#print dyaw
 				return True
 			else:
 				return False

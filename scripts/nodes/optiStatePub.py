@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import numpy as np
 import rospy as rp
 
@@ -14,6 +16,7 @@ class StatePub():
 
 
 		self.optiSub = rp.Subscriber("/vrpn_client_node/Matrice/pose",PoseStamped,self.optiCB)
+		self.boatOptiSub = rp.Subscriber("/vrpn_client_node/MasterTag/pose",PoseStamped,self.boatCB)
 		self.velSub=rp.Subscriber("/dji_sdk/velocity",Vector3Stamped,self.velCB)
 		self.imuSub=rp.Subscriber("/dji_sdk/imu",Imu,self.imuCB)
 		self.statePub=rp.Publisher("/jetyak_uav_vision/state",ObservedState,queue_size=1)
@@ -29,12 +32,24 @@ class StatePub():
 		self.state.drone_qdot.y=msg.angular_velocity.y
 		self.state.drone_qdot.z=msg.angular_velocity.z
 		self.publish()
+
 	def velCB(self,msg):
 		self.state.drone_pdot.x=msg.vector.x
 		self.state.drone_pdot.y=msg.vector.y
 		self.state.drone_pdot.z=msg.vector.z
 		self.publish()
-	
+
+	def boatCB(self,msg):
+		self.state.boat_p.x=msg.pose.position.x
+		self.state.boat_p.y=msg.pose.position.y
+		self.state.boat_p.z=msg.pose.position.z
+
+		(r,p,y) =euler_from_quaternion([msg.pose.orientation.x,msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w])
+		self.state.boat_q.x=r
+		self.state.boat_q.y=p
+		self.state.boat_q.z=y
+		self.publish()
+
 	def optiCB(self,msg):
 		self.state.drone_p.x=msg.pose.position.x
 		self.state.drone_p.y=msg.pose.position.y

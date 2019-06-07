@@ -38,7 +38,7 @@
 /dji_sdk/velocity
 
 /vrpn_client_node/Matrice/pose
-/vrpn_client_node/Pad/pose
+/vrpn_client_node/MasterTag/pose
 "
 	/>
 

@@ -40,6 +40,9 @@
 /dji_sdk/imu 
 /dji_sdk/rc 
 /dji_sdk/velocity
+
+/vrpn_client_node/Matrice/pose
+/vrpn_client_node/MasterTag/pose
 "
 	/>
 
@@ -49,8 +52,4 @@
 Video Feed
 /jetyak_uav_vision/dji_camera/image_raw
 /jetyak_uav_vision/dji_camera/camera_info
-
-Optitrack
-/vrpn_client_node/Matrice/pose
-/vrpn_client_node/Pad/pose
 -->

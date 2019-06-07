@@ -51,7 +51,7 @@ void Behaviors::takeoffBehavior()
 
 void Behaviors::followBehavior()
 {
-	if (ros::Time::now().toSec() - lastSpotted <= 5) // TODO: Add tag loss threshold for follow_
+	if (ros::Time::now().toSec() - lastSpotted <= 5 || true) // TODO: Add tag loss threshold for follow_
 	{
 		// Get the setpoint in the drone FLU
 		Eigen::Vector4d goal_b;
