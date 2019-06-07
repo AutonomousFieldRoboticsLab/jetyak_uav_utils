@@ -55,11 +55,11 @@ class KalmanFilter:
 		self.N = N
 		self.n = np.shape(F)[0]
 
-		diagCf = np.array([1e-1, 1e-1, 1e1,
+		diagCf = np.array([1e-1, 1e-1, 1e-1,
 		 				   1e0, 1e0, 1e0,
 		 				   1e0, 1e0, 1e0, 1e0,
 		 				   1e0, 1e0, 1e0, 1e0,
-		 				   1e0, 1e0, 1e-3,
+		 				   1e-1, 1e-1, 1e-3,
 		 				   1e0, 1e0,
 		 				   1e-3,
 		 				   1e0, 1e0, 1e0,
@@ -71,7 +71,6 @@ class KalmanFilter:
 	
 	def updateF(self, dt):
 		self.F[  0:3,   3:6] = np.matrix(dt * np.eye(3))
-		#self.F[ 6:10, 10:14] = np.matrix(dt * np.eye(4))
 		self.F[14:16, 17:19] = np.matrix(dt * np.eye(2))
 
 	def predict(self):

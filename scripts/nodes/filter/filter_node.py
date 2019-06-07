@@ -127,7 +127,7 @@ class FilterNode():
 		self.RhdgJ = np.matrix(1.0e-12)
 
 		# Process Noise Level
-		N = 5.0e-3
+		N = 5.0e-4
 
 		# Initialize Kalman Filter
 		self.fusionF = FusionEKF(F, P, N, self.rate)
@@ -281,12 +281,11 @@ class FilterNode():
 
 			v = np.sqrt(pow(dX, 2) + pow(dY, 2) + pow(dZ, 2)) / dt
 
-			rpyLast = quat2rpy(Quaternion(self.lastTag.getZ().item(3), self.lastTag.getZ().item(4), self.lastTag.getZ().item(5), self.lastTag.getZ().item(6)));
-			rpyNow  = quat2rpy(Quaternion(newTag.getZ().item(3), newTag.getZ().item(4), newTag.getZ().item(5), newTag.getZ().item(6)));
-			dyaw = np.absolute(rpyLast[2] - rpyNow[2]) / dt
+			rpyLast = quat2rpy(Quaternion(self.lastTag.getZ().item(3), self.lastTag.getZ().item(4), self.lastTag.getZ().item(5), self.lastTag.getZ().item(6)))
+			rpyNow  = quat2rpy(Quaternion(newTag.getZ().item(3), newTag.getZ().item(4), newTag.getZ().item(5), newTag.getZ().item(6)))
+			dYaw = np.absolute(rpyLast[2] - rpyNow[2]) / dt
 
-			if (v < 5.0 and dyaw < 1.0):
-				#print dyaw
+			if (v < 5.0 and dYaw < 1.0):
 				return True
 			else:
 				return False

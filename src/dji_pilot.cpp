@@ -172,7 +172,7 @@ void dji_pilot::rcCallback(const sensor_msgs::Joy::ConstPtr &msg)
 	
 	// Switch autodji_pilot on/off
 	// P mode && Autodji_pilot switch on && Autodji_pilot flag not set
-	if (msg->axes[4] == modeFlag && msg->axes[5] == pilotFlag && !autopilotOn)
+	if (msg->axes[4] == modeFlag && msg->axes[5] == pilotFlag && !autopilotOn && !panicMode)
 	{
 		if (requestControl(1))
 			autopilotOn = true;
