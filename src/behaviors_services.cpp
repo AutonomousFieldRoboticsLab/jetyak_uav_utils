@@ -36,11 +36,19 @@ bool Behaviors::setModeCallback(jetyak_uav_utils::SetString::Request &req, jetya
 	{
 		if (bsc_common::util::insensitiveEqual(req.data, JETYAK_UAV_UTILS::nameFromMode[i]))
 		{
-			currentMode_ = (JETYAK_UAV_UTILS::Mode)i;
-			behaviorChanged_ = true;
-			res.success = true;
-			ROS_WARN("Mode changed to %s", req.data.c_str());
-			return true;
+			std_srvs::SetBool enable;
+			enable.request.data = ((JETYAK_UAV_UTILS::Mode)i == JETYAK_UAV_UTILS::LEAVE);
+				
+			enableGimbalSrv_.call(enable);
+			if(enable.response.success) {
+				currentMode_ = (JETYAK_UAV_UTILS::Mode)i;
+				behaviorChanged_ = true;
+				res.success = true;
+				ROS_WARN("Mode changed to %s", req.data.c_str());
+				return true;
+			} else {
+				ROS_WARN("Failed to %s tracking",enable.request.data?"enable":"disable");
+			}
 		}
 	}
 	ROS_WARN("Invalid mode: %s", req.data.c_str());

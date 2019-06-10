@@ -11,7 +11,7 @@ face_down_btn: 2
 toggle_track_btn: 3
 
 Kp: .004
-Kd: 0.000003
+Kd: 0
 velLimit: .5
 
 # dji_camera config

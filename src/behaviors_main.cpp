@@ -59,6 +59,7 @@ Behaviors::~Behaviors()
 
 void Behaviors::doBehaviorAction()
 {
+
 	switch (currentMode_)
 	{
 	case JETYAK_UAV_UTILS::TAKEOFF:
@@ -110,8 +111,14 @@ void Behaviors::doBehaviorAction()
 		}
 		break;
 	}
+	
 	}
-
+	Eigen::Vector2d cmds = gimbal_angle_cmd();
+	geometry_msgs::Vector3 msg;
+	msg.x = 0;
+	msg.y = cmds(0);
+	msg.z = cmds(1);
+	gimbalCmdPub_.publish(msg);
 	// Publish the current behavior mode
 	std_msgs::UInt8 behaviorMode;
 	behaviorMode.data = currentMode_;
