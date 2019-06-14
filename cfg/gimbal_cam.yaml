@@ -2,6 +2,7 @@
 track_point: true
 camera_info_topic: /jetyak_uav_vision/dji_camera/camera_info
 track_point_topic: /jetyak_uav_vision/ar_pose_v3
+gimbal_cmd_topic: /jetyak_uav_vision/gimbal_cmd
 
 yaw_axis: 2
 pitch_axis: 1
