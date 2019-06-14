@@ -36,19 +36,27 @@ bool Behaviors::setModeCallback(jetyak_uav_utils::SetString::Request &req, jetya
 	{
 		if (bsc_common::util::insensitiveEqual(req.data, JETYAK_UAV_UTILS::nameFromMode[i]))
 		{
-			std_srvs::SetBool enable;
-			enable.request.data = ((JETYAK_UAV_UTILS::Mode)i == JETYAK_UAV_UTILS::LEAVE);
+			bool shouldTrack = not ((JETYAK_UAV_UTILS::Mode)i == JETYAK_UAV_UTILS::LEAVE);
+			if(shouldTrack xor trackEnabled) {
+				std_srvs::SetBool enable;
+				enable.request.data = shouldTrack;
 				
-			enableGimbalSrv_.call(enable);
-			if(enable.response.success) {
-				currentMode_ = (JETYAK_UAV_UTILS::Mode)i;
-				behaviorChanged_ = true;
-				res.success = true;
-				ROS_WARN("Mode changed to %s", req.data.c_str());
-				return true;
-			} else {
-				ROS_WARN("Failed to %s tracking",enable.request.data?"enable":"disable");
+
+				enableGimbalSrv_.call(enable);
+				if(not enable.response.success) {
+					ROS_WARN("Failed to %s tracking",enable.request.data?"enable":"disable");
+					res.success = false;
+					return false;
+				} else {
+					ROS_WARN("%s tracking",enable.request.data?"Enabled":"Disabled");
+					trackEnabled = shouldTrack;
+				}
 			}
+			currentMode_ = (JETYAK_UAV_UTILS::Mode)i;
+			behaviorChanged_ = true;
+			res.success = true;
+			ROS_WARN("Mode changed to %s", req.data.c_str());
+			return true;
 		}
 	}
 	ROS_WARN("Invalid mode: %s", req.data.c_str());

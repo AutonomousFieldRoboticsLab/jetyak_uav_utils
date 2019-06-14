@@ -121,7 +121,7 @@ void Behaviors::assignServiceClients()
 	propSrv_ = nh.serviceClient<std_srvs::SetBool>("prop_enable");
 	takeoffSrv_ = nh.serviceClient<std_srvs::Trigger>("takeoff");
 	landSrv_ = nh.serviceClient<std_srvs::Trigger>("land");
-	enableGimbalSrv_ = nh.serviceClient<std_srvs::SetBool>("setGimbalTracking");
+	enableGimbalSrv_ = nh.serviceClient<std_srvs::SetBool>("/jetyak_uav_vision/setGimbalTracking");
 	lookdownSrv_ = nh.serviceClient<std_srvs::Trigger>("/jetyak_uav_vision/facedown");
 	resetKalmanSrv_ = nh.serviceClient<std_srvs::Trigger>("/jetyak_uav_vision/reset_filter");
 }

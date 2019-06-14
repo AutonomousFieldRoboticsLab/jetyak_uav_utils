@@ -91,7 +91,7 @@ void gimbal_tag::publishTagPose()
 		tagPoseBody.pose.position.x = positonTagBody[0];
 		tagPoseBody.pose.position.y = positonTagBody[1];
 		tagPoseBody.pose.position.z = positonTagBody[2];
-		tf::quaternionTFToMsg(qTagBody, tagPoseBody.pose.orientation);
+		tf::quaternionTFToMsg(qTagBody.normalized(), tagPoseBody.pose.orientation);
 
 		tagBodyPosePub.publish(tagPoseBody);
 	}

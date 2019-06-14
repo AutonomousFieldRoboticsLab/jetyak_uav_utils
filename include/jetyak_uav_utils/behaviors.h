@@ -91,6 +91,7 @@ private:
 	bool behaviorChanged_ = false;
 	JETYAK_UAV_UTILS::Mode currentMode_;
 	bool propellorsRunning = false;
+	bool trackEnabled = false;
 	double resetFilterTimeThresh;
 
 	/************************************
@@ -110,7 +111,7 @@ private:
 		double threshold;
 	} takeoff_;
 
-	// Land specific constants
+	// Land specific constantsRC_Interpreter.joyCallback
 	struct
 	{
 		bsc_common::pose4d_t goal_pose; // landing goal
