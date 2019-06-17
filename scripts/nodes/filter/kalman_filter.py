@@ -61,7 +61,7 @@ class KalmanFilter:
 		 				   1e0, 1e0, 1e0, 1e0,
 		 				   1e0, 1e0, 1e-3,
 		 				   1e0, 1e0,
-		 				   1e-3,
+		 				   1e0,
 		 				   1e0, 1e0, 1e0,
 		 				   1e-3])
 		self.Cf = np.diag(diagCf)

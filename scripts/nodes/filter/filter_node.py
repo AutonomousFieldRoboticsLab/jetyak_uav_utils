@@ -80,7 +80,7 @@ class FilterNode():
 
 		# Covariance Matrix for Tag measurements
 		self.Rtag = np.asmatrix(1.0e-6 * np.eye(4))
-		self.Rtag[3, 3] = 1.0e-1
+		self.Rtag[3, 3] = 1.0e0
 
 		# Transition Matrix for Attitude measurements
 		self.Hatt = np.matrix(np.zeros((4, n)))
