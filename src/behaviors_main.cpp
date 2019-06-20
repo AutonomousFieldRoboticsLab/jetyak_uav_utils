@@ -111,8 +111,7 @@ void Behaviors::doBehaviorAction()
 		}
 		break;
 	}
-	
-	}
+		}
 	Eigen::Vector2d cmds = gimbal_angle_cmd();
 	geometry_msgs::Vector3 msg;
 	msg.x = 0;

@@ -30,9 +30,11 @@ land_z: 0 # this should be .1-.2m over the tag to allow the uav to maneuver
 land_w: 0
 
 land_velMag: .075
-land_xThresh: .075
-land_yThresh: .075
-land_zThresh: .1
+land_xTopThresh: .1
+land_yTopThresh: .1
+land_xBottomThresh: .2
+land_yBottomThresh: .2
+land_top: .2
 land_angleThresh: .25
 
 #
