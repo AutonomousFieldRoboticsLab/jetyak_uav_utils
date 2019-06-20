@@ -30,6 +30,30 @@ SOFTWARE.
 
 #include "jetyak_uav_utils/behaviors.h"
 
+void Behaviors::createPID(bsc_common::pose4d_t &kp, bsc_common::pose4d_t &ki, bsc_common::pose4d_t &kd)
+{
+	xpid_ = new bsc_common::PID(follow_.kp.x, follow_.ki.x, follow_.kd.x, integral_size);
+	ypid_ = new bsc_common::PID(follow_.kp.y, follow_.ki.y, follow_.kd.y, integral_size);
+	zpid_ = new bsc_common::PID(follow_.kp.z, follow_.ki.z, follow_.kd.z, integral_size);
+	wpid_ = new bsc_common::PID(follow_.kp.w, follow_.ki.w, follow_.kd.w, integral_size);
+}
+
+void Behaviors::resetPID()
+{
+	xpid_->reset();
+	ypid_->reset();
+	zpid_->reset();
+	wpid_->reset();
+}
+
+void Behaviors::setPID(bsc_common::pose4d_t &kp, bsc_common::pose4d_t &ki, bsc_common::pose4d_t &kd)
+{
+	xpid_->updateParams(kp.x, ki.x, kd.x);
+	ypid_->updateParams(kp.y, ki.y, kd.y);
+	zpid_->updateParams(kp.z, ki.z, kd.z);
+	wpid_->updateParams(kp.w, ki.w, kd.w);
+}
+
 void Behaviors::downloadParams(std::string ns_param)
 {
 	/** getP
@@ -53,16 +77,26 @@ void Behaviors::downloadParams(std::string ns_param)
 	if (!ros::param::get(ns + "integral_size", integral_size))
 		ROS_WARN("FAILED: %s", "integral_size");
 
-	if (!ros::param::get(ns + "generalK", generalK))
-		ROS_WARN("FAILED: %s", "generalK");
-	if (!ros::param::get(ns + "landK", landK))
-		ROS_WARN("FAILED: %s", "landK");
-
 	getP(ns, "reset_kalman_threshold", resetFilterTimeThresh);
 
 	/**********************
 	 * LANDING PARAMETERS *
 	 *********************/
+	getP(ns, "land_x_kp", land_.kp.x);
+	getP(ns, "land_y_kp", land_.kp.y);
+	getP(ns, "land_z_kp", land_.kp.z);
+	getP(ns, "land_w_kp", land_.kp.w);
+
+	getP(ns, "land_x_kd", land_.kd.x);
+	getP(ns, "land_y_kd", land_.kd.y);
+	getP(ns, "land_z_kd", land_.kd.z);
+	getP(ns, "land_w_kd", land_.kd.w);
+
+	getP(ns, "land_x_ki", land_.ki.x);
+	getP(ns, "land_y_ki", land_.ki.y);
+	getP(ns, "land_z_ki", land_.ki.z);
+	getP(ns, "land_w_ki", land_.ki.w);
+
 	getP(ns, "land_x", land_.goal_pose.x);
 	getP(ns, "land_y", land_.goal_pose.y);
 	getP(ns, "land_z", land_.goal_pose.z);
@@ -87,6 +121,21 @@ void Behaviors::downloadParams(std::string ns_param)
 	/*********************
 	 * FOLLOW PARAMETERS *
 	 ********************/
+	getP(ns, "follow_x_kp", follow_.kp.x);
+	getP(ns, "follow_y_kp", follow_.kp.y);
+	getP(ns, "follow_z_kp", follow_.kp.z);
+	getP(ns, "follow_w_kp", follow_.kp.w);
+
+	getP(ns, "follow_x_kd", follow_.kd.x);
+	getP(ns, "follow_y_kd", follow_.kd.y);
+	getP(ns, "follow_z_kd", follow_.kd.z);
+	getP(ns, "follow_w_kd", follow_.kd.w);
+
+	getP(ns, "follow_x_ki", follow_.ki.x);
+	getP(ns, "follow_y_ki", follow_.ki.y);
+	getP(ns, "follow_z_ki", follow_.ki.z);
+	getP(ns, "follow_w_ki", follow_.ki.w);
+
 	getP(ns, "follow_x", follow_.goal_pose.x);
 	getP(ns, "follow_y", follow_.goal_pose.y);
 	getP(ns, "follow_z", follow_.goal_pose.z);

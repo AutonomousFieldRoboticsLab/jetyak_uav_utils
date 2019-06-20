@@ -45,6 +45,7 @@ public:
 	PID();
 	PID(double kp, double ki, double kd, int integral_frame = 50);
 	void update(double error, double utime);
+	void update(double error, double utime, double vel);
 	void updateParams(double kp, double ki, double kd);
 	void reset();
 	double get_signal();

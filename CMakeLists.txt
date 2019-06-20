@@ -82,7 +82,7 @@ add_executable(behaviors_node
   src/behaviors_callbacks.cpp
 	src/behaviors_common.cpp
   src/behaviors_main.cpp
-  lib/bsc_common/lqr.cpp
+  lib/bsc_common/pid.cpp
   lib/bsc_common/util.cpp
 )
 

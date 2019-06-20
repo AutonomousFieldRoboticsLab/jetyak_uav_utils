@@ -38,9 +38,10 @@ namespace JETYAK_UAV_UTILS
 // Flag constants. Use these flags internally
 enum Flag : uint8_t
 {
-	WORLD_POS = 0b10,
-	WORLD_RATE = 0b01,
-	LQR = 0b00
+	BODY_RATE,
+	WORLD_POS,
+	WORLD_RATE,
+	LQR
 };
 
 // Enumerate the modes

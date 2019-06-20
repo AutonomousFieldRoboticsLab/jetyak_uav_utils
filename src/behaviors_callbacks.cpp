@@ -50,8 +50,6 @@ void Behaviors::stateCallback(const jetyak_uav_utils::ObservedState::ConstPtr &m
 		state.drone_q.x,state.drone_q.y,0,
 		state.drone_qdot.x,state.drone_qdot.y,state.drone_qdot.z;
 
-	lqr_->updateState(lqrState);
-	land_.lqr->updateState(lqrState);
 }
 
 void Behaviors::tagCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
