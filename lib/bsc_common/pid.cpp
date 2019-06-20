@@ -103,6 +103,57 @@ void PID::update(double error, double utime)
 	last_time_ = utime;
 }
 
+void PID::update(double error, double utime, double vel)
+{
+	// Proportional
+	signal_ = error * kp_;
+	if (utime == 0)
+	{
+		std::cout << "PID NEVER RECEIVED TIMESTAMPED ERROR" << std::endl;
+	}
+	else if (last_time_ != 0) // if not first time
+	{
+		if (last_time_ == utime)
+		{
+			signal_ += integral_ * ki_ + last_d_;
+		}
+		else
+		{
+			double i, d;
+
+			// get change in time
+			double dt = utime - last_time_;
+
+			// integral
+			integral_ += error * dt;
+			i = integral_ * ki_;
+
+			// differential
+			d = kd_ * vel;
+
+			last_d_ = d;
+
+			signal_ += i + d;
+
+			if (use_int_frame_) // allows
+			{
+				// Add current integral contribution to the list
+				past_integral_contributions.push_back(error * dt);
+				// If we have too many elements
+				if (past_integral_contributions.size() > integral_frame_)
+				{
+					// remove the oldest and subtract it's contribution to the rolling sum
+					integral_ -= past_integral_contributions.front();
+					// remove it
+					past_integral_contributions.pop_front();
+				}
+			}
+		}
+	}
+	last_error_ = error;
+	last_time_ = utime;
+}
+
 void PID::updateParams(double kp, double ki, double kd)
 {
 	kp_ = kp;

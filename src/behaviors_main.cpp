@@ -49,8 +49,7 @@ Behaviors::Behaviors(ros::NodeHandle &nh_param)
 	leave_.input.axes.push_back(0);
 	leave_.input.axes.push_back(JETYAK_UAV_UTILS::WORLD_RATE);
 
-	lqr_ = new bsc_common::LQR(generalK);
-	land_.lqr = new bsc_common::LQR(landK);
+	createPID(follow_.kp, follow_.ki, follow_.kd);
 }
 
 Behaviors::~Behaviors()

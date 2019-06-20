@@ -66,7 +66,7 @@ SOFTWARE.
 #include "jetyak_uav_utils/jetyak_uav_utils.h"
 
 // Lib includes
-#include "../lib/bsc_common/include/lqr.h"
+#include "../lib/bsc_common/include/pid.h"
 #include "../lib/bsc_common/include/types.h"
 #include "../lib/bsc_common/include/util.h"
 
@@ -86,8 +86,7 @@ private:
 	 * INSTANCE VARIABLES
 	 **********************/
 	int integral_size = 0;
-	bsc_common::LQR *lqr_; // pid controllers
-	std::string generalK, landK;
+	bsc_common::PID *xpid_, *ypid_, *zpid_, *wpid_; // pid controllers
 	bool behaviorChanged_ = false;
 	JETYAK_UAV_UTILS::Mode currentMode_;
 	bool propellorsRunning = false;
@@ -118,7 +117,7 @@ private:
 		double xTopThresh, yTopThresh, xBottomThresh, yBottomThresh, top;
 		double velThreshSqr;
 		double angleThresh;
-		bsc_common::LQR *lqr;
+		bsc_common::pose4d_t kp, kd, ki;
 	} land_;
 
 	// follow specific constants
@@ -126,6 +125,7 @@ private:
 	{
 		bsc_common::pose4d_t goal_pose; // follow goal
 		double deadzone_radius;
+		bsc_common::pose4d_t kp, kd, ki;
 	} follow_;
 
 	// follow specific constants
@@ -269,12 +269,32 @@ private:
 	 * Uses the observed state of the UAV and Jetyak to find the gimbal angle in order to point the camera to the boat.
 	 * */
 	Eigen::Vector2d gimbal_angle_cmd();
+	/** resetPID
+	 * Reset all PID controllers
+	 */
+	void resetPID();
 
+	/** setPID
+	 * Set constants for the controllers
+	 *
+	 * @param kp bsc_common::pose4d_t containing P constants
+	 * @param ki bsc_common::pose4d_t containing I constants
+	 * @param kd bsc_common::pose4d_t containing D constants
+	 */
+	void setPID(bsc_common::pose4d_t &kp, bsc_common::pose4d_t &ki, bsc_common::pose4d_t &kd);
 	bool inLandThreshold();
 
 	/***********************
 	 * Constructor Methods
 	 **********************/
+	/** createPID
+	 * Initialize and set constants for the controllers
+	 *
+	 * @param kp bsc_common::pose4d_t containing P constants
+	 * @param ki bsc_common::pose4d_t containing I constants
+	 * @param kd bsc_common::pose4d_t containing D constants
+	 */
+	void createPID(bsc_common::pose4d_t &kp, bsc_common::pose4d_t &ki, bsc_common::pose4d_t &kd);
 
 	/** assignPublishers
 	 * Initialize the ROS Publishers

@@ -4,8 +4,40 @@
 integral_size: 200
 reset_kalman_threshold: 3.0
 
-generalK: "/home/ubuntu/git/jetyak_uav_utils/cfg/generalK.txt"
-landK: "/home/ubuntu/git/jetyak_uav_utils/cfg/generalK.txt"
+#
+# Follow K
+#
+follow_x_kp: .45
+follow_x_kd: .3
+follow_x_ki: 0
+
+follow_y_kp: .45
+follow_y_kd: .3
+follow_y_ki: 0
+
+follow_z_kp: .2
+follow_z_kd: 0
+follow_z_ki: 0
+
+follow_w_kp: .4
+follow_w_kd: 0
+follow_w_ki: 0
+
+#
+# Land K
+#
+land_x_kp: .55
+land_x_kd: .3
+land_x_ki: .15
+land_y_kp: .55
+land_y_kd: .3
+land_y_ki: .15
+land_z_kp: .25
+land_z_kd: 0
+land_z_ki: 0
+land_w_kp: .4
+land_w_kd: 0
+land_w_ki: 0
 
 #
 # Takeoff
