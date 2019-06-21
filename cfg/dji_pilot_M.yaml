@@ -11,7 +11,7 @@ hAngleRateCmdMax: 5.0 * pi / 6.0
 hAngleCmdMax: 0.2
 
 
-vVelocityMaxBody: 0.25
+vVelocityMaxBody: 0.5
 vVelocityMaxGround: 0.4
 vPosCmdMax: 30.0
 vPosCmdMin: 0.0

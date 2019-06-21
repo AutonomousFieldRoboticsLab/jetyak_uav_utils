@@ -252,7 +252,7 @@ void Behaviors::landBehavior()
 		Eigen::Vector2d vBoat(state.boat_pdot.x, state.boat_pdot.y);				 // Boat velocity in world frame
 		vBoat = bsc_common::util::rotation_matrix(-state.drone_q.z) * vBoat; // Boat velocity in drone frame
 
-		if (ros::Time::now().toSec() - lastSpotted <= 3)
+		if (ros::Time::now().toSec() - lastSpotted <= 3 or true)
 		{
 
 			if (inLandThreshold())
