@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from LQR import LQR
 from GPS_utils import GPS_utils
 
