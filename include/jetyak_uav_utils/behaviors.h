@@ -115,8 +115,7 @@ private:
 	struct
 	{
 		bsc_common::pose4d_t goal_pose; // landing goal
-		double heightGoal;
-		double xThresh, yThresh, zThresh;
+		double xTopThresh, yTopThresh, xBottomThresh, yBottomThresh, top;
 		double velThreshSqr;
 		double angleThresh;
 		bsc_common::LQR *lqr;
@@ -270,6 +269,8 @@ private:
 	 * Uses the observed state of the UAV and Jetyak to find the gimbal angle in order to point the camera to the boat.
 	 * */
 	Eigen::Vector2d gimbal_angle_cmd();
+
+	bool inLandThreshold();
 
 	/***********************
 	 * Constructor Methods

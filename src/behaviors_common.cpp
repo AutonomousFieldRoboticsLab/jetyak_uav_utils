@@ -71,9 +71,11 @@ void Behaviors::downloadParams(std::string ns_param)
 	double velMag;
 	getP(ns, "land_velMag", velMag);
 	land_.velThreshSqr = velMag * velMag;
-	getP(ns, "land_xThresh", land_.xThresh);
-	getP(ns, "land_yThresh", land_.yThresh);
-	getP(ns, "land_zThresh", land_.zThresh);
+	getP(ns, "land_xTopThresh", land_.xTopThresh);
+	getP(ns, "land_yTopThresh", land_.yTopThresh);
+	getP(ns, "land_xBottomThresh", land_.xBottomThresh);
+	getP(ns, "land_yBottomThresh", land_.yBottomThresh);
+	getP(ns, "land_top", land_.top);
 	getP(ns, "land_angleThresh", land_.angleThresh);
 
 	/**********************
@@ -144,7 +146,7 @@ void Behaviors::assignSubscribers()
 Eigen::Vector4d Behaviors::boat_to_drone(Eigen::Vector4d pos)
 {
 	// Vertical setpoint
-	double vDiff = pos(2) + state.boat_p.z - state.drone_p.z;   // Distance from UAV to point (- if below UAV)
+	double vDiff = pos(2) + state.boat_p.z - state.drone_p.z; // Distance from UAV to point (- if below UAV)
 	double wDiff = pos(3) + state.heading - state.drone_q.z;	// Angular distance between headings (- if CW of UAV)
 
 	// Ensure angular dist [-pi, pi)
@@ -154,15 +156,15 @@ Eigen::Vector4d Behaviors::boat_to_drone(Eigen::Vector4d pos)
 		wDiff += 2 * M_PI;
 
 	// Get setpoint in world frame
-	Eigen::Vector2d goal_boat_body(pos(0), pos(1));														 // Setpoint relative to boat frame
+	Eigen::Vector2d goal_boat_body(pos(0), pos(1));																											 // Setpoint relative to boat frame
 	Eigen::Vector2d goal_boat_world = bsc_common::util::rotation_matrix(state.heading) * goal_boat_body; // Relative to boat in world frame
-	Eigen::Vector2d boat_world(state.boat_p.x, state.boat_p.y);											 // Boat position in world
-	Eigen::Vector2d goal_world = boat_world + goal_boat_world;											 // Setpoint in world frame
+	Eigen::Vector2d boat_world(state.boat_p.x, state.boat_p.y);																					 // Boat position in world
+	Eigen::Vector2d goal_world = boat_world + goal_boat_world;																					 // Setpoint in world frame
 
 	// Transform to drone frame
-	Eigen::Vector2d drone_world(state.drone_p.x, state.drone_p.y);												// Drone position in world
-	Eigen::Vector2d goal_drone_world = goal_world - drone_world;												// World frame vector from drone to setpoint
-	Eigen::Vector2d goal_drone_body = bsc_common::util::rotation_matrix(-state.drone_q.z) * goal_drone_world;   // Transform into the drone frame
+	Eigen::Vector2d drone_world(state.drone_p.x, state.drone_p.y);																						// Drone position in world
+	Eigen::Vector2d goal_drone_world = goal_world - drone_world;																							// World frame vector from drone to setpoint
+	Eigen::Vector2d goal_drone_body = bsc_common::util::rotation_matrix(-state.drone_q.z) * goal_drone_world; // Transform into the drone frame
 
 	Eigen::Vector4d dronePos;
 	dronePos << goal_drone_body(0), goal_drone_body(1), vDiff, wDiff;
@@ -172,11 +174,11 @@ Eigen::Vector4d Behaviors::boat_to_drone(Eigen::Vector4d pos)
 
 Eigen::Vector2d Behaviors::gimbal_angle_cmd()
 {
-	double dx = state.boat_p.x-state.drone_p.x;
-	double dy = state.boat_p.y-state.drone_p.y;
-	double dz = state.boat_p.z-state.drone_p.z;
+	double dx = state.boat_p.x - state.drone_p.x;
+	double dy = state.boat_p.y - state.drone_p.y;
+	double dz = state.boat_p.z - state.drone_p.z;
 
-	double dxy = sqrt(dx*dx + dy*dy);
+	double dxy = sqrt(dx * dx + dy * dy);
 
 	double theta = atan2(dz, dxy);
 	double psi = atan2(dy, dx);
@@ -184,12 +186,44 @@ Eigen::Vector2d Behaviors::gimbal_angle_cmd()
 	// The gimbal's frame is NED while the local frame is ENU
 	psi -= M_PI / 2.0;
 	psi = -psi;
-	
+
 	if (psi < 0)
 		psi += 2 * M_PI;
-		
+
 	Eigen::Vector2d gimbalAngle;
 	gimbalAngle << theta, psi;
 
 	return gimbalAngle;
+}
+bool Behaviors::inLandThreshold()
+{
+	double x = state.drone_p.x;
+	double y = state.drone_p.y;
+	double z = state.drone_p.z;
+	double w = state.drone_q.z;
+
+	double xo = land_.goal_pose.x;
+	double xb = land_.xBottomThresh;
+	double xt = land_.xTopThresh;
+
+	double yo = land_.goal_pose.y;
+	double yb = land_.yBottomThresh;
+	double yt = land_.yTopThresh;
+
+	double zo = land_.goal_pose.z;
+	double zb = 0; // bottom of trapezoid for finding x,y boundaries
+	double zt = land_.top;
+
+	double xl = (z - zb - zo) * (xb - xt) / (zt - zb) - xb + xo;
+	double xh = (z - zb - zo) * (xt - xb) / (zt - zb) + xb + xo;
+	double yl = (z - zb - zo) * (yb - yt) / (zt - zb) - yb + yo;
+	double yh = (z - zb - zo) * (yt - yb) / (zt - zb) + yb + yo;
+
+	bool inX = xl < x and x < xh;
+	bool inY = yl < y and y < yh;
+	bool inZ = z < zt + zo; //under the roof of the trap (maybe add in the bottom)
+	bool inW = fabs(w) < land_.goal_pose.w;
+	bool inVel = pow(state.drone_p.x, 2) + pow(state.drone_p.y, 2) < pow(land_.velThreshSqr, 2);
+
+	return inX and inY and inZ and inW and inVel;
 }
