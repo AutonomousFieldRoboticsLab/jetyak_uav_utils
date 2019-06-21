@@ -229,7 +229,7 @@ void Behaviors::landBehavior()
 		Eigen::Vector4d goal_d = boat_to_drone(goal_b);																				// Goal in drone FLU
 
 		
-		if (ros::Time::now().toSec() - lastSpotted <= 3)
+		if (ros::Time::now().toSec() - lastSpotted <= 3 or true)
 		{
 
 			if (inLandThreshold())
