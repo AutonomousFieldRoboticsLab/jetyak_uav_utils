@@ -223,7 +223,7 @@ bool Behaviors::inLandThreshold()
 	bool inY = yl < y and y < yh;
 	bool inZ = z < zt + zo; //under the roof of the trap (maybe add in the bottom)
 	bool inW = fabs(w) < land_.goal_pose.w + land_.angleThresh;
-	bool inVel = pow(state.drone_p.x, 2) + pow(state.drone_p.y, 2) < pow(land_.velThreshSqr, 2);
-
+	bool inVel = (pow(state.drone_p.x, 2) + pow(state.drone_p.y, 2)) < land_.velThreshSqr;
+	ROS_WARN("%1.8f,%1.8f",(pow(state.drone_p.x, 2) + pow(state.drone_p.y, 2)),land_.velThreshSqr);
 	return inX and inY and inZ and inW and inVel;
 }

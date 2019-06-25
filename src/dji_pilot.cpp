@@ -417,7 +417,7 @@ bool dji_pilot::checkRCconnection()
 	}
 	else if (!rcReceived)
 		return false;
-	else if (ros::Time::now().toSec() - lastRCmsg.toSec() > 0.5)
+	else if (ros::Time::now().toSec() - lastRCmsg.toSec() > 1.1)
 	{
 		// PANIC mode ON
 		panicMode = true;
