@@ -258,6 +258,7 @@ void Behaviors::landBehavior()
 			if (inLandThreshold())
 			{
 				ROS_WARN("CALLING LAND SERVICE");
+				ROS_WARN("Drone offset: %1.2f,%1.2f,%1.2f",goal_d(0), goal_d(1), goal_d(2));
 				std_srvs::Trigger srv;
 				landSrv_.call(srv);
 				if (srv.response.success)

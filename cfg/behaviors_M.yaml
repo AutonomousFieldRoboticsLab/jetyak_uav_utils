@@ -24,7 +24,7 @@ follow_w: 0
 #
 # Land Parameters
 #
-land_x: 0
+land_x: -.9
 land_y: 0
 land_z: .2 # this should be .1-.2m over the tag to allow the uav to maneuver
 land_w: 0

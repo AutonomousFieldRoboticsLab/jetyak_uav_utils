@@ -12,7 +12,7 @@
 		</node>
 
 		<node name="rc_interpreter" pkg="jetyak_uav_utils" type="rc_interpreter.py" output="screen"/>
-
+		<node name="wp_follower" pkg="jetyak_uav_utils" type="waypoint_follow.py" output="screen"/>
 	</group>
 
 	<!-- Start flight data log-->

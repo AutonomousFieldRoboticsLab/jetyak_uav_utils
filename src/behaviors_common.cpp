@@ -197,10 +197,14 @@ Eigen::Vector2d Behaviors::gimbal_angle_cmd()
 }
 bool Behaviors::inLandThreshold()
 {
-	double x = state.drone_p.x;
-	double y = state.drone_p.y;
-	double z = state.drone_p.z;
-	double w = state.drone_q.z;
+	Eigen::Vector4d goal_boatFLU;
+	goal_boatFLU << land_.goal_pose.x, land_.goal_pose.y, land_.goal_pose.z, land_.goal_pose.w;
+	Eigen::Vector4d offset = boat_to_drone(goal_boatFLU);
+
+	double x = offset(0);
+	double y = offset(1);
+	double z = offset(2);
+	double w = offset(3);
 
 	double xo = land_.goal_pose.x;
 	double xb = land_.xBottomThresh;
@@ -222,8 +226,10 @@ bool Behaviors::inLandThreshold()
 	bool inX = xl < x and x < xh;
 	bool inY = yl < y and y < yh;
 	bool inZ = z < zt + zo; //under the roof of the trap (maybe add in the bottom)
-	bool inW = fabs(w) < land_.goal_pose.w + land_.angleThresh;
-	bool inVel = (pow(state.drone_p.x, 2) + pow(state.drone_p.y, 2)) < land_.velThreshSqr;
-	ROS_WARN("%1.8f,%1.8f",(pow(state.drone_p.x, 2) + pow(state.drone_p.y, 2)),land_.velThreshSqr);
+	bool inW = fabs(w - land_.goal_pose.w) < land_.angleThresh;
+	bool inVel = (pow(state.drone_pdot.x-state.boat_pdot.x, 2) + pow(state.drone_pdot.y-state.boat_pdot.y, 2)) < land_.velThreshSqr;
+	// ROS_WARN("%1.8f,%1.8f",(pow(state.drone_pdot.x, 2) + pow(state.drone_pdot.y, 2)),land_.velThreshSqr);
+	ROS_WARN("%s,%s,%s,%s,%s",inX?" true":"false",inY?" true":"false",inZ?" true":"false",inW?" true":"false",inVel?" true":"false");
+	ROS_WARN("%1.2f<%1.2f<%1.2f",yl,y,yh);
 	return inX and inY and inZ and inW and inVel;
 }

@@ -33,7 +33,7 @@ import rospy
 from LQR import LQR
 from jetyak_uav_utils.msg import Waypoint, WaypointArray, ObservedState
 from jetyak_uav_utils.srv import SetWaypoints,SetWaypointsResponse,Int,IntResponse
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, UInt16
 from tf.transformations import euler_from_quaternion
 from std_srvs.srv import Trigger,TriggerResponse
 from sensor_msgs.msg import Joy
@@ -86,6 +86,7 @@ class WaypointFollow():
 
 		rospy.init_node("waypoint_follower")
 		self.cmd_pub = rospy.Publisher("/jetyak_uav_utils/extCommand", Joy, queue_size=1)
+		self.wp_count_pub = rospy.Publisher("/jetyak_uav_utils/wp_remaining", UInt16, queue_size=1)
 		self.stat_sub= rospy.Subscriber("/jetyak_uav_vision/state", ObservedState, self.state_callback)
 		self.wps_service = rospy.Service("set_waypoints", SetWaypoints, self.wps_callback)
 		self.spiral_srv = rospy.Service("create_spiral", Trigger, self.spiral_callback)
@@ -183,7 +184,7 @@ class WaypointFollow():
 		self.wps = []
 
 		d_desired = .5
-		wp_radius = 5
+		wp_radius = 2
 		turns = 4
 
 		initial_r = wp_radius
@@ -209,7 +210,7 @@ class WaypointFollow():
 		for i in range(len(x)):
 			print((x[i],y[i]))
 			wp = Waypoint()
-			wp.alt = self.pose[2]
+			wp.alt = 10
 			wp.lat = self.pose[1] + y[i]
 			wp.lon = self.pose[0] + x[i]
 
@@ -223,6 +224,10 @@ class WaypointFollow():
 		print("thread started")
 		while(self.running):
 			sleep(1/25.0)
+			wp_left = len(self.wps)
+			wp_count_msg = UInt16()
+			wp_count_msg.data=wp_left
+			self.wp_count_pub.publish(wp_count_msg)
 			if len(self.wps) != 0:
 				if not self.in_waypoint:
 					self.in_waypoint = self.check_if_in_wp()
