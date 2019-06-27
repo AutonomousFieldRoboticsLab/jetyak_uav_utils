@@ -63,10 +63,10 @@ void Behaviors::followBehavior()
 		goal_b << follow_.goal_pose.x, follow_.goal_pose.y, follow_.goal_pose.z, follow_.goal_pose.w; // Goal in boat FLU
 		Eigen::Vector4d goal_d = boat_to_drone(goal_b);																								// Goal in drone FLU
 
-		xpid_->update(goal_d(0), this->state.header.stamp.toSec());
-		ypid_->update(goal_d(1), this->state.header.stamp.toSec());
-		zpid_->update(goal_d(2), this->state.header.stamp.toSec());
-		wpid_->update(goal_d(3), this->state.header.stamp.toSec());
+		xpid_->update(goal_d(0), this->state.header.stamp.toSec(),state.drone_pdot.x);
+		ypid_->update(goal_d(1), this->state.header.stamp.toSec(),state.drone_pdot.y);
+		zpid_->update(goal_d(2), this->state.header.stamp.toSec(),state.drone_pdot.z);
+		wpid_->update(goal_d(3), this->state.header.stamp.toSec(), state.drone_qdot.z);
 
 		sensor_msgs::Joy cmd;
 		cmd.axes.push_back(xpid_->get_signal());
@@ -118,10 +118,10 @@ void Behaviors::returnBehavior()
 		{
 			ROS_WARN("Settling: %1.2fm over", -offset(2));
 
-			xpid_->update(offset(0), this->state.header.stamp.toSec());
-			ypid_->update(offset(1), this->state.header.stamp.toSec());
-			zpid_->update(offset(2), this->state.header.stamp.toSec());
-			wpid_->update(offset(3), this->state.header.stamp.toSec());
+			xpid_->update(offset(0), this->state.header.stamp.toSec(),state.drone_pdot.x);
+			ypid_->update(offset(1), this->state.header.stamp.toSec(), state.drone_pdot.y);
+			zpid_->update(offset(2), this->state.header.stamp.toSec(), state.drone_pdot.z);
+			wpid_->update(offset(3), this->state.header.stamp.toSec(), state.drone_qdot.z);
 
 			sensor_msgs::Joy cmd;
 			cmd.axes.push_back(xpid_->get_signal());
@@ -175,10 +175,10 @@ void Behaviors::returnBehavior()
 		{
 			double u_c = return_.gotoHeight - state.drone_p.z;
 
-			xpid_->update(offset(0), this->state.header.stamp.toSec());
-			ypid_->update(offset(1), this->state.header.stamp.toSec());
-			zpid_->update(u_c, this->state.header.stamp.toSec());
-			wpid_->update(offset(3), this->state.header.stamp.toSec());
+			xpid_->update(offset(0), this->state.header.stamp.toSec(), state.drone_pdot.x);
+			ypid_->update(offset(1), this->state.header.stamp.toSec(), state.drone_pdot.y);
+			zpid_->update(u_c, this->state.header.stamp.toSec(),state.drone_pdot.z);
+			wpid_->update(offset(3), this->state.header.stamp.toSec(), state.drone_qdot.z);
 
 			sensor_msgs::Joy cmd;
 			cmd.axes.push_back(xpid_->get_signal());
@@ -193,10 +193,10 @@ void Behaviors::returnBehavior()
 	{
 		double u_c = return_.finalHeight - state.drone_p.z;
 
-		xpid_->update(offset(0), this->state.header.stamp.toSec());
-		ypid_->update(offset(1), this->state.header.stamp.toSec());
-		zpid_->update(u_c, this->state.header.stamp.toSec());
-		wpid_->update(offset(3), this->state.header.stamp.toSec());
+		xpid_->update(offset(0), this->state.header.stamp.toSec(), state.drone_pdot.x);
+		ypid_->update(offset(1), this->state.header.stamp.toSec(), state.drone_pdot.y);
+		zpid_->update(u_c, this->state.header.stamp.toSec(), state.drone_pdot.z);
+		wpid_->update(offset(3), this->state.header.stamp.toSec(), state.drone_qdot.z);
 
 		sensor_msgs::Joy cmd;
 		cmd.axes.push_back(xpid_->get_signal());
@@ -229,13 +229,12 @@ void Behaviors::landBehavior()
 		Eigen::Vector4d goal_d = boat_to_drone(goal_b);																				// Goal in drone FLU
 
 		
-		if (ros::Time::now().toSec() - lastSpotted <= 3 or true)
+		if (ros::Time::now().toSec() - lastSpotted <= 3)
 		{
 
 			if (inLandThreshold())
 			{
 				ROS_WARN("CALLING LAND SERVICE");
-				ROS_WARN("Drone offset: %1.2f,%1.2f,%1.2f",goal_d(0), goal_d(1), goal_d(2));
 				std_srvs::Trigger srv;
 				landSrv_.call(srv);
 				if (srv.response.success)
@@ -246,10 +245,10 @@ void Behaviors::landBehavior()
 			else
 			{
 
-				xpid_->update(goal_d(0), this->state.header.stamp.toSec());
-				ypid_->update(goal_d(1), this->state.header.stamp.toSec());
-				zpid_->update(goal_d(2), this->state.header.stamp.toSec());
-				wpid_->update(goal_d(3), this->state.header.stamp.toSec());
+				xpid_->update(goal_d(0), this->state.header.stamp.toSec(),state.drone_pdot.x);
+				ypid_->update(goal_d(1), this->state.header.stamp.toSec(),state.drone_pdot.y);
+				zpid_->update(goal_d(2), this->state.header.stamp.toSec(),state.drone_pdot.z);
+				wpid_->update(goal_d(3), this->state.header.stamp.toSec(), state.drone_qdot.z);
 
 				sensor_msgs::Joy cmd;
 				cmd.axes.push_back(xpid_->get_signal());

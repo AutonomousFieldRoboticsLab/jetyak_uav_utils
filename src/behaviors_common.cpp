@@ -109,6 +109,7 @@ void Behaviors::downloadParams(std::string ns_param)
 	getP(ns, "land_yTopThresh", land_.yTopThresh);
 	getP(ns, "land_xBottomThresh", land_.xBottomThresh);
 	getP(ns, "land_yBottomThresh", land_.yBottomThresh);
+	getP(ns, "land_bottom",land_.bottom);
 	getP(ns, "land_top", land_.top);
 	getP(ns, "land_angleThresh", land_.angleThresh);
 
@@ -246,33 +247,47 @@ Eigen::Vector2d Behaviors::gimbal_angle_cmd()
 }
 bool Behaviors::inLandThreshold()
 {
-	double x = state.drone_p.x;
-	double y = state.drone_p.y;
-	double z = state.drone_p.z;
-	double w = state.drone_q.z;
 
-	double xo = land_.goal_pose.x;
+	double x = state.drone_p.x-state.boat_p.x;
+	double y = state.drone_p.y-state.boat_p.y;
+	
+	Eigen::Vector2d world_off(x,y);	
+	Eigen::Vector2d boat_off = bsc_common::util::rotation_matrix(-state.heading) * world_off;
+
+	x=boat_off(0)-land_.goal_pose.x;
+	y=boat_off(1)-land_.goal_pose.y;
+
+	double z = state.drone_p.z-state.boat_p.z-land_.goal_pose.z;
+
+	double w = state.drone_q.z-state.heading-land_.goal_pose.w;
+
+	if (w >= M_PI)
+		w -= 2 * M_PI;
+	else if (w < -M_PI)
+		w += 2 * M_PI;
+
 	double xb = land_.xBottomThresh;
 	double xt = land_.xTopThresh;
 
-	double yo = land_.goal_pose.y;
 	double yb = land_.yBottomThresh;
 	double yt = land_.yTopThresh;
 
-	double zo = land_.goal_pose.z;
-	double zb = 0; // bottom of trapezoid for finding x,y boundaries
+	double zb = land_.bottom; // bottom of trapezoid for finding x,y boundaries
 	double zt = land_.top;
 
-	double xl = (z - zb - zo) * (xb - xt) / (zt - zb) - xb + xo;
-	double xh = (z - zb - zo) * (xt - xb) / (zt - zb) + xb + xo;
-	double yl = (z - zb - zo) * (yb - yt) / (zt - zb) - yb + yo;
-	double yh = (z - zb - zo) * (yt - yb) / (zt - zb) + yb + yo;
+	double xl = (z - zb) * (xb - xt) / (zt - zb) - xb;
+	double xh = (z - zb) * (xt - xb) / (zt - zb) + xb;
+	double yl = (z - zb) * (yb - yt) / (zt - zb) - yb;
+	double yh = (z - zb) * (yt - yb) / (zt - zb) + yb;
 
 	bool inX = xl < x and x < xh;
 	bool inY = yl < y and y < yh;
-	bool inZ = z < zt + zo; //under the roof of the trap (maybe add in the bottom)
-	bool inW = fabs(w) < land_.goal_pose.w + land_.angleThresh;
-	bool inVel = (pow(state.drone_p.x, 2) + pow(state.drone_p.y, 2)) < land_.velThreshSqr;
-	ROS_WARN("%1.8f,%1.8f",(pow(state.drone_p.x, 2) + pow(state.drone_p.y, 2)),land_.velThreshSqr);
+	bool inZ = zb < z and z < zt;
+	bool inW = fabs(w) < land_.angleThresh;
+	bool inVel = (pow(state.drone_pdot.x-state.boat_pdot.x, 2) + pow(state.drone_pdot.y-state.boat_pdot.y, 2)) < land_.velThreshSqr;
+	// ROS_WARN("%1.8f,%1.8f",(pow(state.drone_pdot.x, 2) + pow(state.drone_pdot.y, 2)),land_.velThreshSqr);
+	ROS_WARN("%s,%s,%s,%s,%s",inX?" true":"false",inY?" true":"false",inZ?" true":"false",inW?" true":"false",inVel?" true":"false");
+	ROS_WARN("X %1.2f<%1.2f<%1.2f",xl,x,xh);
+	ROS_WARN("Y %1.2f<%1.2f<%1.2f",yl,y,yh);
 	return inX and inY and inZ and inW and inVel;
 }
