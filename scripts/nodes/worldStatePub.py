@@ -55,7 +55,9 @@ def getJetyakPose(t):
 
 class StatePub():
 	def __init__(self,):
-		self.doJetyak=True
+		self.doJetyak=False
+		self.jev = 2
+		self.jnv = 0
 		self.firstAtt=True
 		self.firstGPS=True
 		self.GPSU = GPS_utils()
@@ -71,13 +73,17 @@ class StatePub():
 		rp.spin()
 	def publish(self,):
 		self.state.header.stamp = rp.Time.now()
-		x,y,xd,yd,w = getJetyakPose(rp.Time.now().to_sec()-self.startTime)
+
 		if(self.doJetyak):
+			x,y,xd,yd,w = getJetyakPose(rp.Time.now().to_sec()-self.startTime)
 			self.state.boat_p.x=x
 			self.state.boat_p.y=y
 			self.state.boat_pdot.x=xd
 			self.state.boat_pdot.y=yd
 			self.state.heading=w
+		else:
+			self.state.boat_pdot.x=self.jev
+			self.state.boat_pdot.y=self.jnv
 		self.statePub.publish(self.state)
 	def attCB(self,msg):
 		if(self.firstAtt):
@@ -97,10 +103,9 @@ class StatePub():
 
 	def velCB(self,msg):
 		if(not self.firstAtt):
-			x=msg.vector.x
-			y=msg.vector.y
-			self.state.drone_pdot.x=msg.vector.x
-			self.state.drone_pdot.y=msg.vector.y
+			if(not self.doJetyak):
+				self.state.drone_pdot.x=msg.vector.x+self.jev
+				self.state.drone_pdot.y=msg.vector.y+self.jnv
 			self.state.drone_pdot.z=msg.vector.z
 			self.publish()
 	
