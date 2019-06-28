@@ -56,7 +56,7 @@ void Behaviors::followBehavior()
 		setPID(follow_.kp, follow_.ki, follow_.kd);
 		behaviorChanged_ = false;
 	}
-	if (ros::Time::now().toSec() - lastSpotted <= 5 || true) // TODO: Add tag loss threshold for follow_
+	if (ros::Time::now().toSec() - lastSpotted <= 5)
 	{
 		// Get the setpoint in the drone FLU
 		Eigen::Vector4d goal_b;
@@ -229,7 +229,7 @@ void Behaviors::landBehavior()
 		Eigen::Vector4d goal_d = boat_to_drone(goal_b);																				// Goal in drone FLU
 
 		
-		if (ros::Time::now().toSec() - lastSpotted <= 3 or true)
+		if (ros::Time::now().toSec() - lastSpotted <= 3)
 		{
 
 			if (inLandThreshold())
