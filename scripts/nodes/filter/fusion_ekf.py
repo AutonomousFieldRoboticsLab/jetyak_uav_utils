@@ -26,7 +26,7 @@ Author: Michail Kalaitzakis
 """
 import numpy as np
 from kalman_filter import KalmanFilter
-from data_point import DataPoint
+from sensor import Sensor
 
 from quaternion import Quaternion
 from quaternion import quatMultiply
@@ -117,10 +117,14 @@ class FusionEKF:
 
 				print 'Colocalization filter initialized'
 
-	def process(self, dataPoint, H, R):
+	def process(self, dataPoint):
 		if not self.isInit:
 			self.initialize(dataPoint)
+
+			return None, None
 		else:
+			r = None
+			P = None
 			# KF Correction Step
 			if dataPoint.getID() == 'tag':
 				q = Quaternion(self.X.item(6),
@@ -153,7 +157,7 @@ class FusionEKF:
 								  [posWq.z],
 								  [byaw]])
 
-				self.kalmanF.correct(posW, H, R)
+				r, P =  self.kalmanF.correct(posW, dataPoint.getH(), dataPoint.getR(), dataPoint.getChi())
 			elif dataPoint.getID() == 'imu':
 				q = Quaternion(self.X.item(6),
 							   self.X.item(7),
@@ -172,11 +176,13 @@ class FusionEKF:
 								 [0.5 * dq.z],
 								 [0.5 * dq.w]])
 					
-				self.kalmanF.correct(dqm, H, R)
+				r, P = self.kalmanF.correct(dqm, dataPoint.getH(), dataPoint.getR(), dataPoint.getChi())
 			else:
-				self.kalmanF.correct(dataPoint.getZ(), H, R)
+				r, P = self.kalmanF.correct(dataPoint.getZ(), dataPoint.getH(), dataPoint.getR(), dataPoint.getChi())
 			
 			self.X = self.kalmanF.getState()
+
+			return r, P
 
 	def getState(self):
 		if self.isInit:
