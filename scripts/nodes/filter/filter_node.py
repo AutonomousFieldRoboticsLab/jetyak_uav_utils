@@ -37,7 +37,6 @@ from geometry_msgs.msg import PoseStamped, Vector3Stamped, QuaternionStamped
 from jetyak_uav_utils.msg import ObservedState
 
 from sensor import Sensor
-from data_point import DataPoint
 from fusion_ekf import FusionEKF
 from gps_utils import GPS_utils
 from quaternion import Quaternion
@@ -57,15 +56,11 @@ class FilterNode():
 		self.myENU = GPS_utils()
 		self.originSet = False
 
-		# Critical chi-squared values for P = 0.001 and different degrees of freedom
-		self.chiSquared_1 = 10.828
-		self.chiSquared_3 = 16.266
-
 		# Set rate of publisher
 		self.rate = 50.0
 
 		# Number of states
-		n = 24
+		n = 15
 
 		# Initial State Transition Matrix
 		F = np.asmatrix(np.eye(n))
@@ -74,10 +69,16 @@ class FilterNode():
 		P = np.asmatrix(1.0e3 * np.eye(n))
 
 		# Process Noise Level
-		N = 5.0e-3
+		N = 1e-3
 
 		# Setup Sensors
-		self.tagS, self.attiS, self.imuS, self.velDS, self.gpsDS, self.gpsJS, self.hdgJS = setupSensors(n)
+		self.updateSensorR = False
+		self.tagS, self.velDS, self.gpsDS, self.gpsJS = setupSensors(n)
+
+		# Attitude handles
+		self.droneAtti     = None
+		self.droneARates   = None
+		self.jetyakHeading = None
 
 		# Initialize Kalman Filter
 		self.fusionF = FusionEKF(F, P, N, self.rate)
@@ -98,69 +99,96 @@ class FilterNode():
 		t = threading.Thread(target=self.statePublisher)
 		t.start()
 
-		rp.spin()			
+		rp.spin()
+	
+	def checkAngle(self, q):
+		while q < -np.pi:
+			q += 2 * np.pi
+
+		while q >= np.pi:
+			q -= 2 * np.pi
+		
+		return q
 
 	def dGPS_callback(self, msg):
 		if self.originSet:
 			enu = self.myENU.geo2enu(msg.latitude, msg.longitude, msg.altitude)
 
 			self.gpsDS.setZ(np.matrix([[enu.item(0)],[enu.item(1)],[enu.item(2)]]))
+			
 			r, P = self.fusionF.process(self.gpsDS)
-			self.gpsDS.updateR(r, P)
+			
+			if self.updateSensorR:
+				self.gpsDS.updateR(r, P)
 		else:
 			self.myENU.setENUorigin(msg.latitude, msg.longitude, msg.altitude)
 			self.originSet = True
-
-	def dAtti_callback(self, msg):
-		self.attiS.setZ(np.matrix([[msg.quaternion.x],
-								   [msg.quaternion.y],
-								   [msg.quaternion.z],
-								   [msg.quaternion.w]]))
-		r, P = self.fusionF.process(self.attiS)
-		self.attiS.updateR(r, P)
-
-	def dIMU_callback(self, msg):
-		self.imuS.setZ(np.matrix([[msg.angular_velocity.x],
-								  [msg.angular_velocity.y],
-								  [msg.angular_velocity.z]]))
-		r, P = self.fusionF.process(self.imuS)
-		self.imuS.updateR(r, P)
 	
 	def dVel_callback(self, msg):
 		self.velDS.setZ(np.matrix([[msg.vector.x],
 								  [msg.vector.y],
 								  [msg.vector.z]]))
+		
 		r, P = self.fusionF.process(self.velDS)
-		self.velDS.updateR(r, P)
+		
+		if self.updateSensorR:
+			self.velDS.updateR(r, P)
 
 	def jGPS_callback(self, msg):
 		if self.originSet:
 			enu = self.myENU.geo2enu(msg.latitude, msg.longitude, msg.altitude)
 
 			self.gpsJS.setZ(np.matrix([[enu.item(0)],[enu.item(1)],[enu.item(2)]]))
+			
 			r, P = self.fusionF.process(self.gpsJS)
-			self.gpsJS.updateR(r, P)
+			
+			if self.updateSensorR:
+				self.gpsJS.updateR(r, P)
+
+	def tag_callback(self, msg):
+		if (self.droneAtti is not None) and (self.jetyakHeading is not None):
+			tagPos = Quaternion(msg.pose.position.x,
+								msg.pose.position.y,
+								msg.pose.position.z,
+								0)
+			
+			qTag = Quaternion(msg.pose.orientation.x,
+							  msg.pose.orientation.y,
+							  msg.pose.orientation.z,
+							  msg.pose.orientation.w)
+			
+			posWq = quatMultiply(quatMultiply(self.droneAtti, tagPos), quatInverse(self.droneAtti))				
+			rpyT = quat2rpy(qTag)
+			rpyD = quat2rpy(self.droneAtti)
+
+			offq = self.checkAngle(self.jetyakHeading - rpyT[2] - rpyD[2])
+					
+			self.tagS.setZ(np.matrix([[posWq.x],
+									  [posWq.y],
+									  [posWq.z],
+									  [offq]]))
+			
+			r, P = self.fusionF.process(self.tagS)
+			
+			if self.updateSensorR:
+					self.tagS.updateR(r, P)
+	
+	def dAtti_callback(self, msg):
+		self.droneAtti = Quaternion(msg.quaternion.x,
+									msg.quaternion.y,
+									msg.quaternion.z,
+									msg.quaternion.w)
+
+	def dIMU_callback(self, msg):
+		self.droneARates = np.matrix([[msg.angular_velocity.x],
+								  	  [msg.angular_velocity.y],
+								  	  [msg.angular_velocity.z]])
 
 	def jCompass_callback(self, msg):
 		if msg.data < 270:
-			self.hdgJS.setZ(np.matrix([np.deg2rad(90 - msg.data)]))
+			self.jetyakHeading = np.matrix([np.deg2rad(90 - msg.data)])
 		else:
-			self.hdgJS.setZ(np.matrix([np.deg2rad(450 - msg.data)]))
-		
-		r, P = self.fusionF.process(self.hdgJS)
-		self.hdgJS.updateR(r, P)
-
-	def tag_callback(self, msg):
-		self.tagS.setZ(np.matrix([[msg.pose.position.x],
-								 [msg.pose.position.y],
-								 [msg.pose.position.z],
-								 [msg.pose.orientation.x],
-								 [msg.pose.orientation.y],
-								 [msg.pose.orientation.z],
-								 [msg.pose.orientation.w]]))
-		
-		r, P = self.fusionF.process(self.tagS)
-		self.tagS.updateR(r, P)
+			self.jetyakHeading = np.matrix([np.deg2rad(450 - msg.data)])
 	
 	def statePublisher(self):
 		r = rp.Rate(self.rate)
@@ -168,11 +196,7 @@ class FilterNode():
 			X = self.fusionF.getState()
 
 			if not (X is None):
-				q = Quaternion(X.item(6), X.item(7), X.item(8), X.item(9))
-				dq = Quaternion(X.item(10), X.item(11), X.item(12), X.item(13))
-
-				omega = quatMultiply(quatInverse(q), dq)
-				rpy = quat2rpy(q)
+				rpy = quat2rpy(self.droneAtti)
 
 				stateMsg = ObservedState()
 				stateMsg.header.stamp = rp.Time.now()
@@ -190,19 +214,25 @@ class FilterNode():
 				stateMsg.drone_q.y = rpy[1]
 				stateMsg.drone_q.z = rpy[2]
 
-				stateMsg.drone_qdot.x = 2 * omega.x
-				stateMsg.drone_qdot.y = 2 * omega.y
-				stateMsg.drone_qdot.z = 2 * omega.z
+				stateMsg.drone_qdot.x = self.droneARates[0]
+				stateMsg.drone_qdot.y = self.droneARates[1]
+				stateMsg.drone_qdot.z = self.droneARates[2]
 
-				stateMsg.boat_p.x = X.item(14) - X.item(20)
-				stateMsg.boat_p.y = X.item(15) - X.item(21)
-				stateMsg.boat_p.z = X.item(16) - X.item(22)
+				stateMsg.boat_p.x = X.item(6) - X.item(11)
+				stateMsg.boat_p.y = X.item(7) - X.item(12)
+				stateMsg.boat_p.z = X.item(8) - X.item(13)
 
-				stateMsg.boat_pdot.x = X.item(17)
-				stateMsg.boat_pdot.y = X.item(18)
+				stateMsg.boat_pdot.x = X.item(9)
+				stateMsg.boat_pdot.y = X.item(10)
 				stateMsg.boat_pdot.z = 0
 
-				stateMsg.heading = X.item(19) - X.item(23)
+				stateMsg.heading = self.checkAngle(self.jetyakHeading - X.item(14))
+
+				stateMsg.gps_offset.x = X.item(11)
+				stateMsg.gps_offset.y = X.item(12)
+				stateMsg.gps_offset.z = X.item(13)
+
+				stateMsg.heading_offset = X.item(14)
 
 				stateMsg.origin.x = self.myENU.latZero
 				stateMsg.origin.y = self.myENU.lonZero

@@ -55,27 +55,23 @@ class KalmanFilter:
 		self.N = N
 		self.n = np.shape(F)[0]
 
-		diagCf = np.array([1e-1, 1e-1, 1e1,
+		diagCf = np.array([1e-1, 1e-1, 1e-1,
 		 				   1e0, 1e0, 1e0,
-		 				   1e0, 1e0, 1e0, 1e0,
-		 				   1e0, 1e0, 1e0, 1e0,
-		 				   1e0, 1e0, 1e-3,
+		 				   1e-1, 1e-1, 1e-3,
 		 				   1e0, 1e0,
-		 				   1e0,
 		 				   1e0, 1e0, 1e0,
-		 				   1e-3])
+		 				   1e-1])
 		self.Cf = np.diag(diagCf)
 
 	def updateQ(self):
 		self.Q = self.F * self.Cf * self.F.T * self.N
 	
 	def updateF(self, dt):
-		self.F[  0:3,   3:6] = np.matrix(dt * np.eye(3))
-		self.F[14:16, 17:19] = np.matrix(dt * np.eye(2))
+		self.F[0:3,  3:6] = np.matrix(dt * np.eye(3))
+		self.F[6:8, 9:11] = np.matrix(dt * np.eye(2))
 
 	def predict(self):
 		self.X = self.F * self.X
-		self.checkQuaternion()
 		self.P = self.F * self.P * self.F.T + self.Q
 		self.P = (self.P + self.P.T) / 2
 
@@ -91,7 +87,6 @@ class KalmanFilter:
 
 		if chi2 < chiCritical:
 			self.X = self.X + K * (z - H * self.X)
-			self.checkQuaternion()
 			self.P = (I - K * H) * self.P
 			self.P = (self.P + self.P.T) / 2
 
@@ -100,20 +95,6 @@ class KalmanFilter:
 			return r, Pz
 		else:
 			return None, None
-	
-	def checkQuaternion(self):
-		qx = self.X.item(6)
-		qy = self.X.item(7)
-		qz = self.X.item(8)
-		qw = self.X.item(9)
-
-		mag = pow(pow(qx,2) + pow(qy,2) + pow(qz,2) + pow(qw,2), 0.5)
-
-		if mag > 0:
-			self.X.item(6) / mag
-			self.X.item(7) / mag
-			self.X.item(8) / mag
-			self.X.item(9) / mag
 
 	def getState(self):
 		return self.X

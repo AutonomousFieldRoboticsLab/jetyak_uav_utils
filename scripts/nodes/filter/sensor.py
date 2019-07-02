@@ -8,9 +8,9 @@ class Sensor:
 		Updates R matrix using the residuals
 	"""
 
-	def __init__(self, ID, R, H, N, Rnom, chiCritical):
+	def __init__(self, ID, Rnom, H, N, chiCritical):
 		self.ID   = ID
-		self.R    = R
+		self.R    = Rnom
 		self.H    = H
 		self.N    = N
 		self.Rnom = Rnom
@@ -38,7 +38,7 @@ class Sensor:
 		return self.H
 	
 	def updateR(self, r, P):
-		if (not (r is None)) and (not (P is None)):
+		if (r is not None) and (P is not None):
 			if self.residuals is None:
 				self.residuals = np.transpose(r)
 			elif self.residuals.shape[0] < self.N:
