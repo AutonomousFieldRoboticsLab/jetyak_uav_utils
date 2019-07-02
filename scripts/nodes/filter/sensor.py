@@ -54,4 +54,9 @@ class Sensor:
 					if hatRdiag[i] < self.Rnom[i,i]:
 						hatRdiag[i] = self.Rnom[i,i]
 				
+				# if self.ID == 'jgps':
+				# 	print "Residuals: ", r
+				# 	print "P: ", P
+				# 	print "New R: ", np.diag(hatRdiag)
+
 				self.R = np.diag(hatRdiag)

@@ -35,7 +35,7 @@ def setupSensors(n):
 	HgpsJ[0:3, 6:9] = np.matrix(np.eye(3))
 
 	# Covariance Matrix for Jetyak GPS measurements
-	RgpsJ = np.asmatrix(1.0e0 * np.eye(3))
+	RgpsJ = np.asmatrix(5.0e0 * np.eye(3))
 
 	# Setup sensors
 	tagS  = Sensor('tag',  Rtag,  Htag,   39.0, chiSquared_3)

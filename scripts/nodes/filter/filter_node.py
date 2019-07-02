@@ -72,7 +72,7 @@ class FilterNode():
 		N = 1e-3
 
 		# Setup Sensors
-		self.updateSensorR = False
+		self.updateSensorR = True
 		self.tagS, self.velDS, self.gpsDS, self.gpsJS = setupSensors(n)
 
 		# Attitude handles
