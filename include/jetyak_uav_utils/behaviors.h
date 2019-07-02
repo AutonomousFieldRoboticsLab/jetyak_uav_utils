@@ -26,7 +26,7 @@ SOFTWARE.
  * Base behavioral controller for the uav
  * Manages the high level methods of the system.
  * Sends commands to the UAV
- * implements a joystick ovveride
+ * implements a joystick override
  * implements a safety controller for if the drone is too close to an object
  * Listens to topic to determine when to switch modes
  * 

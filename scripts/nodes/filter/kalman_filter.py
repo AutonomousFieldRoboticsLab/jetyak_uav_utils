@@ -79,16 +79,27 @@ class KalmanFilter:
 		self.P = self.F * self.P * self.F.T + self.Q
 		self.P = (self.P + self.P.T) / 2
 
-	def correct(self, z, H, R):
+	def correct(self, z, H, R, chiCritical):
 		hatP = self.P * H.T
 		S    = H * hatP + R
 		K    = hatP * S.I
 		I    = np.asmatrix(np.eye(self.n))
 
-		self.X = self.X + K * (z - H * self.X)
-		self.checkQuaternion()
-		self.P = (I - K * H) * self.P
-		self.P = (self.P + self.P.T) / 2
+		# Check residual and apply chi-squared outlier rejection
+		r = np.asmatrix((z - H * self.X))
+		chi2 = r.T * S.I * r
+
+		if chi2 < chiCritical:
+			self.X = self.X + K * (z - H * self.X)
+			self.checkQuaternion()
+			self.P = (I - K * H) * self.P
+			self.P = (self.P + self.P.T) / 2
+
+			Pz = H * self.P * H.T
+
+			return r, Pz
+		else:
+			return None, None
 	
 	def checkQuaternion(self):
 		qx = self.X.item(6)
@@ -106,3 +117,6 @@ class KalmanFilter:
 
 	def getState(self):
 		return self.X
+	
+	def getP(self):
+		return self.P.diagonal()
