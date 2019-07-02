@@ -115,7 +115,7 @@ private:
 	struct
 	{
 		bsc_common::pose4d_t goal_pose; // landing goal
-		double xTopThresh, yTopThresh, xBottomThresh, yBottomThresh, top;
+		double xTopThresh, yTopThresh, xBottomThresh, yBottomThresh,bottom, top;
 		double velThreshSqr;
 		double angleThresh;
 		bsc_common::LQR *lqr;

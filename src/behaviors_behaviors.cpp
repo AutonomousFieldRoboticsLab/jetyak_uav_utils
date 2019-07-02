@@ -51,7 +51,7 @@ void Behaviors::takeoffBehavior()
 
 void Behaviors::followBehavior()
 {
-	if (ros::Time::now().toSec() - lastSpotted <= 5 || true) // TODO: Add tag loss threshold for follow_
+	if (ros::Time::now().toSec() - lastSpotted <= 5) // TODO: Add tag loss threshold for follow_
 	{
 		// Get the setpoint in the drone FLU
 		Eigen::Vector4d goal_b;
@@ -252,7 +252,7 @@ void Behaviors::landBehavior()
 		Eigen::Vector2d vBoat(state.boat_pdot.x, state.boat_pdot.y);				 // Boat velocity in world frame
 		vBoat = bsc_common::util::rotation_matrix(-state.drone_q.z) * vBoat; // Boat velocity in drone frame
 
-		if (ros::Time::now().toSec() - lastSpotted <= 3 or true)
+		if (ros::Time::now().toSec() - lastSpotted <= 3)
 		{
 
 			if (inLandThreshold())
