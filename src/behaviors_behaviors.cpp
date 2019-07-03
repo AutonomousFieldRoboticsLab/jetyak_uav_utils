@@ -29,6 +29,11 @@ SOFTWARE.
  */
 
 #include "jetyak_uav_utils/behaviors.h"
+
+float clip(float x, float low, float high) {
+	return x>high ? high : (x<low?low:x);
+}
+
 void Behaviors::takeoffBehavior()
 {
 	if (!propellorsRunning)
@@ -87,6 +92,8 @@ void Behaviors::followBehavior()
 
 void Behaviors::leaveBehavior()
 {
+	leave_.input.axes[0]=clip(leave_.input.axes[0],-.1,.1);
+	leave_.input.axes[1]=clip(leave_.input.axes[1],-.1,.1);
 	cmdPub_.publish(leave_.input);
 }
 
@@ -130,7 +137,7 @@ void Behaviors::returnBehavior()
 		}
 	}
 	else if (return_.stage == return_.SETTLE and ros::Time::now().toSec() - state.header.stamp.toSec() > return_.tagLossThresh)
-	{
+	{	
 		ROS_WARN("Tag lost for %1.2f seconds, going back up", ros::Time::now().toSec() - state.header.stamp.toSec());
 		return_.stage = return_.UP;
 	}
@@ -167,8 +174,8 @@ void Behaviors::returnBehavior()
 
 			Eigen::Vector4d cmdM = lqr_->getCommand(set);
 			sensor_msgs::Joy cmd;
-			cmd.axes.push_back(cmdM(0));
-			cmd.axes.push_back(cmdM(1));
+			cmd.axes.push_back(clip(cmdM(0),-.1,.1));
+			cmd.axes.push_back(clip(cmdM(1),-.1,.1));
 			cmd.axes.push_back(cmdM(2));
 			cmd.axes.push_back(cmdM(3));
 			cmd.axes.push_back(JETYAK_UAV_UTILS::LQR);
@@ -222,10 +229,10 @@ void Behaviors::returnBehavior()
 
 		Eigen::Vector4d cmdM = lqr_->getCommand(set);
 		sensor_msgs::Joy cmd;
-		cmd.axes.push_back(cmdM(0));
-		cmd.axes.push_back(cmdM(1));
-		cmd.axes.push_back(cmdM(2));
-		cmd.axes.push_back(cmdM(3));
+			cmd.axes.push_back(clip(cmdM(0),-.1,.1));
+			cmd.axes.push_back(clip(cmdM(1),-.1,.1));
+			cmd.axes.push_back(cmdM(2));
+			cmd.axes.push_back(cmdM(3));
 		cmd.axes.push_back(JETYAK_UAV_UTILS::LQR);
 		cmdPub_.publish(cmd);
 	}
@@ -268,10 +275,10 @@ void Behaviors::landBehavior()
 			}
 			else
 			{
-
+				double vMult = clip(1-fabs(goal_d(0))/fabs(follow_.goal_pose.x-land_.goal_pose.x),0,1);
 				Eigen::Matrix<double, 12, 1> set;
 				set << goal_d(0), goal_d(1), goal_d(2), // Position setpoint (xyz)
-						vBoat(0, 0), vBoat(1, 0), 0,				// Velocity setpoint (xyz)
+						vBoat(0)*vMult,0, 0,				// Velocity setpoint (xyz)
 						0, 0, goal_d(3),										// Angle setpoint (rpy)
 						0, 0, 0;														// Angular velocity setpoint (rpy)
 
@@ -322,4 +329,4 @@ void Behaviors::hoverBehavior()
 	cmd.axes.push_back(0);
 	cmd.axes.push_back(JETYAK_UAV_UTILS::WORLD_RATE);
 	cmdPub_.publish(cmd);
-};
+}
