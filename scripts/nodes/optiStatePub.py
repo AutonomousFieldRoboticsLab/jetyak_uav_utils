@@ -15,10 +15,10 @@ class StatePub():
 		rp.init_node("lqr_test")
 
 
-		self.optiSub = rp.Subscriber("vrpn_client_node/Matrice/pose",PoseStamped,self.optiCB)
-		self.boatOptiSub = rp.Subscriber("vrpn_client_node/MasterTag/pose",PoseStamped,self.boatCB)
-		self.velSub=rp.Subscriber("/dji_sdk/velocity",Vector3Stamped,self.velCB)
-		self.imuSub=rp.Subscriber("/dji_sdk/imu",Imu,self.imuCB)
+		self.optiSub = rp.Subscriber("vrpn_client_node/Matrice/pose",PoseStamped,self.optiCB,queue_size=1)
+		self.boatOptiSub = rp.Subscriber("vrpn_client_node/MasterTag/pose",PoseStamped,self.boatCB,queue_size=1)
+		self.velSub=rp.Subscriber("/dji_sdk/velocity",Vector3Stamped,self.velCB,queue_size=1)
+		self.imuSub=rp.Subscriber("/dji_sdk/imu",Imu,self.imuCB,queue_size=1)
 		self.statePub=rp.Publisher("state",ObservedState,queue_size=1)
 		self.state = ObservedState()
 		rp.spin()

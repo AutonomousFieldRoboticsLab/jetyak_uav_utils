@@ -56,13 +56,13 @@ void Behaviors::followBehavior()
 		setPID(follow_.kp, follow_.ki, follow_.kd);
 		behaviorChanged_ = false;
 	}
-	if (ros::Time::now().toSec() - lastSpotted <= 5)
+	if (ros::Time::now().toSec() - lastSpotted <= 5 or true)
 	{
 		// Get the setpoint in the drone FLU
 		Eigen::Vector4d goal_b;
 		goal_b << follow_.goal_pose.x, follow_.goal_pose.y, follow_.goal_pose.z, follow_.goal_pose.w; // Goal in boat FLU
 		Eigen::Vector4d goal_d = boat_to_drone(goal_b);																								// Goal in drone FLU
-
+		ROS_WARN("%1.2f,%1.2f,%1.2f,%1.2f",goal_d(0),goal_d(1),goal_d(2),goal_d(3));
 		xpid_->update(goal_d(0), this->state.header.stamp.toSec());
 		ypid_->update(goal_d(1), this->state.header.stamp.toSec());
 		zpid_->update(goal_d(2), this->state.header.stamp.toSec());
@@ -229,7 +229,7 @@ void Behaviors::landBehavior()
 		Eigen::Vector4d goal_d = boat_to_drone(goal_b);																				// Goal in drone FLU
 
 		
-		if (ros::Time::now().toSec() - lastSpotted <= 3)
+		if (ros::Time::now().toSec() - lastSpotted <= 3 or true)
 		{
 
 			if (inLandThreshold())

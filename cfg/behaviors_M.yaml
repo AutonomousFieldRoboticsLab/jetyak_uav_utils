@@ -27,16 +27,16 @@ follow_w_ki: 0
 # Land K
 #
 land_x_kp: .55
-land_x_kd: .3
-land_x_ki: .15
+land_x_kd: .35
+land_x_ki: 0
 land_y_kp: .55
-land_y_kd: .3
-land_y_ki: .15
+land_y_kd: .35
+land_y_ki: 0
 land_z_kp: .25
 land_z_kd: 0
 land_z_ki: 0
 land_w_kp: .4
-land_w_kd: 0
+land_w_kd: .2
 land_w_ki: 0
 
 #
@@ -56,17 +56,17 @@ follow_w: 0
 #
 # Land Parameters
 #
-land_x: -0.9
-land_y: -0.09
-land_z: 0 # this should be .1-.2m over the tag to allow the uav to maneuver
+land_x: 0
+land_y: 0
+land_z: .20 # this should be .1-.2m over the tag to allow the uav to maneuver
 land_w: 0
 
 land_velMag: .1
 land_xTopThresh: .05
 land_yTopThresh: .05
-land_xBottomThresh: .075
-land_yBottomThresh: .075
-land_bottom: -0.2
+land_xBottomThresh: .09
+land_yBottomThresh: .09
+land_bottom: -0.15
 land_top: .1
 land_angleThresh: .25
 

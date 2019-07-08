@@ -247,7 +247,6 @@ Eigen::Vector2d Behaviors::gimbal_angle_cmd()
 }
 bool Behaviors::inLandThreshold()
 {
-
 	double x = state.drone_p.x-state.boat_p.x;
 	double y = state.drone_p.y-state.boat_p.y;
 	
@@ -277,6 +276,7 @@ bool Behaviors::inLandThreshold()
 
 	double xl = (z - zb) * (xb - xt) / (zt - zb) - xb;
 	double xh = (z - zb) * (xt - xb) / (zt - zb) + xb;
+
 	double yl = (z - zb) * (yb - yt) / (zt - zb) - yb;
 	double yh = (z - zb) * (yt - yb) / (zt - zb) + yb;
 
@@ -284,10 +284,15 @@ bool Behaviors::inLandThreshold()
 	bool inY = yl < y and y < yh;
 	bool inZ = zb < z and z < zt;
 	bool inW = fabs(w) < land_.angleThresh;
-	bool inVel = (pow(state.drone_pdot.x-state.boat_pdot.x, 2) + pow(state.drone_pdot.y-state.boat_pdot.y, 2)) < land_.velThreshSqr;
+
+	double velSqr = pow(state.drone_pdot.x-state.boat_pdot.x, 2) + pow(state.drone_pdot.y-state.boat_pdot.y, 2);
+	bool inVel = velSqr < land_.velThreshSqr;
 	// ROS_WARN("%1.8f,%1.8f",(pow(state.drone_pdot.x, 2) + pow(state.drone_pdot.y, 2)),land_.velThreshSqr);
 	ROS_WARN("%s,%s,%s,%s,%s",inX?" true":"false",inY?" true":"false",inZ?" true":"false",inW?" true":"false",inVel?" true":"false");
 	ROS_WARN("X %1.2f<%1.2f<%1.2f",xl,x,xh);
 	ROS_WARN("Y %1.2f<%1.2f<%1.2f",yl,y,yh);
+	ROS_WARN("Z %1.2f<%1.2f<%1.2f",zb,z,zt);
+	ROS_WARN("W %1.2f<%1.2f<%1.2f",-land_.angleThresh,w,land_.angleThresh);
+	ROS_WARN("V %1.2f<%1.2f",sqrt(velSqr),sqrt(land_.velThreshSqr));
 	return inX and inY and inZ and inW and inVel;
 }

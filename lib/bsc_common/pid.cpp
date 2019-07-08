@@ -29,6 +29,7 @@ SOFTWARE.
  */
 
 #include "include/pid.h"
+#include <iostream>
 namespace bsc_common
 {
 PID::PID() : PID(0.0, 0.0, 0.0){};
@@ -163,6 +164,7 @@ void PID::updateParams(double kp, double ki, double kd)
 
 void PID::reset()
 {
+	std::cout << "Resetting" << std::endl;
 	last_error_ = 0;
 	last_time_ = 0;
 	integral_ = 0;
