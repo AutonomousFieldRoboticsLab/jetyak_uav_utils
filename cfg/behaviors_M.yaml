@@ -24,16 +24,16 @@ follow_w: 0
 #
 # Land Parameters
 #
-land_x: 0
-land_y: 0
-land_z: .20 # this should be .1-.2m over the tag to allow the uav to maneuver
+land_x: -0.87
+land_y: -0.05
+land_z: -0.05 # this should be .1-.2m over the tag to allow the uav to maneuver
 land_w: 0
 
 land_velMag: .1
-land_xTopThresh: .05
+land_xTopThresh: .07
 land_yTopThresh: .05
-land_xBottomThresh: .09
-land_yBottomThresh: .09
+land_xBottomThresh: .12
+land_yBottomThresh: .12
 land_bottom: -0.15
 land_top: .1
 land_angleThresh: .25
@@ -51,5 +51,5 @@ return_finalHeight: 4
 return_downRadius: 1
 return_settleRadius: .5
 return_tagTime: 1
-return_tagLossThresh: 1
+return_tagLossThresh: 3
 return_maxVel: 3.0

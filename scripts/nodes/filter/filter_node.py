@@ -92,6 +92,9 @@ class FilterNode():
 		self.jCompass_sub = rp.Subscriber("/jetyak2/global_position/compass_hdg", Float64, self.jCompass_callback, queue_size = 1)
 		self.tag_sub = rp.Subscriber("/jetyak_uav_vision/tag_pose", PoseStamped, self.tag_callback, queue_size = 1)
 
+		# Set up Services
+		self.resetFilter_srv = rp.Service("/jetyak_uav_vision/resetFilter", Trigger, self.resetFilter)
+
 		# Set up Publisher
 		self.state_pub = rp.Publisher("/jetyak_uav_vision/state", ObservedState, queue_size = 1)
 
@@ -100,7 +103,12 @@ class FilterNode():
 		t.start()
 
 		rp.spin()
-	
+
+	def resetFilter(self, srv):
+		self.fusionF.resetFilter()
+
+		return TriggerResponse(True, "Filter reset")
+
 	def checkAngle(self, q):
 		while q < -np.pi:
 			q += 2 * np.pi

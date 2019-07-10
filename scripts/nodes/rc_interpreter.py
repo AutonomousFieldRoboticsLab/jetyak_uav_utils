@@ -31,6 +31,7 @@ Author: Brennan Cain
 import rospy as rp
 from mavros_msgs.msg import RCIn
 from jetyak_uav_utils.srv import SetString
+from std_srvs.srv import Trigger
 
 
 class RC_Interpreter():
@@ -53,6 +54,8 @@ class RC_Interpreter():
 		self.joySub = rp.Subscriber("/jetyak2/rc/in", RCIn, self.joyCallback)
 		rp.wait_for_service("/jetyak_uav_utils/setMode")
 		self.modeClient=rp.ServiceProxy("/jetyak_uav_utils/setMode", SetString)
+		rp.wait_for_service("/jetyak_uav_utils/create_spiral")
+		self.spiralClient=rp.ServiceProxy("/jetyak_uav_utils/create_spiral", Trigger)
 		rp.spin()
 
 	def joyCallback(self, msg):
@@ -66,6 +69,9 @@ class RC_Interpreter():
 			#print("Mode: %s, \tpart: %i" % (self.modeTable[part],part))
 			while(not self.modeClient(self.modeTable[part])):
 				print("Trying to change to %s"%self.modeTable[part])
+		if part==5:
+			self.spiralClient()
+			print("spiralGen")
 
 if __name__ == "__main__":
 	rc=RC_Interpreter(900, 2000, 9) # min, max, sections

@@ -115,3 +115,11 @@ class FusionEKF:
 			return self.X
 		else:
 			return None
+
+	def resetFilter(self):
+		self.isInit    = False
+
+		self.X         = np.matrix(np.zeros((self.n, 1)))
+		self.X[0:3]    = np.nan  # Drone's position
+		self.X[14:17]  = np.nan  # Jetyak's position
+		self.X[19:24]  = np.nan  # Jetyak's GPS and heading offset

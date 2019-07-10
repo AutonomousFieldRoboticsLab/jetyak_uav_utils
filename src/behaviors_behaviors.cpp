@@ -56,7 +56,7 @@ void Behaviors::takeoffBehavior()
 
 void Behaviors::followBehavior()
 {
-	if (ros::Time::now().toSec() - lastSpotted <= 5 or true) // TODO: Add tag loss threshold for follow_
+	if (ros::Time::now().toSec() - lastSpotted <= 10) // TODO: Add tag loss threshold for follow_
 	{
 		// Get the setpoint in the drone FLU
 		Eigen::Vector4d goal_b;
@@ -136,7 +136,7 @@ void Behaviors::returnBehavior()
 			cmdPub_.publish(cmd);
 		}
 	}
-	else if (return_.stage == return_.SETTLE and ros::Time::now().toSec() - state.header.stamp.toSec() > return_.tagLossThresh)
+	else if (return_.stage == return_.SETTLE and ros::Time::now().toSec() - lastSpotted > return_.tagLossThresh)
 	{	
 		ROS_WARN("Tag lost for %1.2f seconds, going back up", ros::Time::now().toSec() - state.header.stamp.toSec());
 		return_.stage = return_.UP;
@@ -259,7 +259,7 @@ void Behaviors::landBehavior()
 		Eigen::Vector2d vBoat(state.boat_pdot.x, state.boat_pdot.y);				 // Boat velocity in world frame
 		vBoat = bsc_common::util::rotation_matrix(-state.drone_q.z) * vBoat; // Boat velocity in drone frame
 
-		if (ros::Time::now().toSec() - lastSpotted <= 3 or true)
+		if (ros::Time::now().toSec() - lastSpotted <= 3)
 		{
 
 			if (inLandThreshold())
@@ -278,7 +278,7 @@ void Behaviors::landBehavior()
 				double vMult = clip(1-fabs(goal_d(0))/fabs(follow_.goal_pose.x-land_.goal_pose.x),0,1);
 				Eigen::Matrix<double, 12, 1> set;
 				set << goal_d(0), goal_d(1), goal_d(2), // Position setpoint (xyz)
-						0,0,0,//vBoat(0)*vMult,0, 0,				// Velocity setpoint (xyz)
+						vBoat(0)*vMult,0, 0,				// Velocity setpoint (xyz)
 						0, 0, goal_d(3),										// Angle setpoint (rpy)
 						0, 0, 0;														// Angular velocity setpoint (rpy)
 

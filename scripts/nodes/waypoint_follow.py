@@ -184,7 +184,7 @@ class WaypointFollow():
 		self.wps = []
 
 		d_desired = .5
-		wp_radius = 2
+		wp_radius = 3
 		turns = 4
 
 		initial_r = wp_radius
@@ -210,7 +210,7 @@ class WaypointFollow():
 		for i in range(len(x)):
 			print((x[i],y[i]))
 			wp = Waypoint()
-			wp.alt = 10
+			wp.alt = 15
 			wp.lat = self.pose[1] + y[i]
 			wp.lon = self.pose[0] + x[i]
 
