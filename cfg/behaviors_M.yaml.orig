@@ -17,7 +17,11 @@ takeoff_threshold: .25
 # Follow Parameters
 #
 follow_x: -2
+<<<<<<< HEAD
+follow_y: -0.10
+=======
 follow_y: 0
+>>>>>>> ecd3d91829b38682b5e80ed36277bc49cf052d84
 follow_z: 1.5
 follow_w: 0
 
@@ -26,23 +30,25 @@ follow_w: 0
 #
 land_x: 0
 land_y: 0
-land_z: .2 # this should be .1-.2m over the tag to allow the uav to maneuver
+land_z: .20 # this should be .1-.2m over the tag to allow the uav to maneuver
 land_w: 0
 
+land_velMag: .1
+land_xTopThresh: .05
+land_yTopThresh: .05
 <<<<<<< HEAD
-=======
-land_velMag: .075
->>>>>>> c437df86f456be4ff65095715f409a03d4bfb41e
-land_xTopThresh: .1
-land_yTopThresh: .1
-land_xBottomThresh: .2
-land_yBottomThresh: .2
-<<<<<<< HEAD
+land_xBottomThresh: .9
+land_yBottomThresh: .9
+land_bottom: -0.12
 land_top: .1
+land_angleThresh: .15
 =======
-land_top: .2
->>>>>>> c437df86f456be4ff65095715f409a03d4bfb41e
+land_xBottomThresh: .09
+land_yBottomThresh: .09
+land_bottom: -0.15
+land_top: .1
 land_angleThresh: .25
+>>>>>>> ecd3d91829b38682b5e80ed36277bc49cf052d84
 
 #
 # Return Parameters
@@ -55,7 +61,7 @@ return_gotoHeight: 10
 return_heightThresh: 1
 return_finalHeight: 4
 return_downRadius: 1
-return_settleRadius: .2
+return_settleRadius: .5
 return_tagTime: 1
 return_tagLossThresh: 1
 return_maxVel: 3.0
