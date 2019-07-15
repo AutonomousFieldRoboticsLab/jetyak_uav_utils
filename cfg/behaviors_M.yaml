@@ -17,7 +17,7 @@ takeoff_threshold: .25
 # Follow Parameters
 #
 follow_x: -2
-follow_y: -0.05
+follow_y: -0.10
 follow_z: 1.5
 follow_w: 0
 
@@ -35,7 +35,7 @@ land_yTopThresh: .05
 land_xBottomThresh: .9
 land_yBottomThresh: .9
 land_bottom: -0.12
-land_top: .05
+land_top: .1
 land_angleThresh: .15
 
 #

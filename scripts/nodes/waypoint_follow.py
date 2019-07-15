@@ -31,6 +31,7 @@ Author: Brennan Cain
 """
 import rospy
 from LQR import LQR
+from GPS_utils import GPS_utils
 from jetyak_uav_utils.msg import Waypoint, WaypointArray, ObservedState
 from jetyak_uav_utils.srv import SetWaypoints,SetWaypointsResponse,Int,IntResponse
 from std_msgs.msg import Float32, UInt16
@@ -89,11 +90,12 @@ class WaypointFollow():
 		self.wp_count_pub = rospy.Publisher("/jetyak_uav_utils/wp_remaining", UInt16, queue_size=1)
 		self.stat_sub= rospy.Subscriber("/jetyak_uav_vision/state", ObservedState, self.state_callback)
 		self.wps_service = rospy.Service("set_waypoints", SetWaypoints, self.wps_callback)
+		self.set_corner_service = rospy.Service("set_corners", SetWaypoints, self.set_corners_callback)
 		self.spiral_srv = rospy.Service("create_spiral", Trigger, self.spiral_callback)
 		self.mark_corner_srv = rospy.Service("mark_corner", Int, self.mark_corner_callback)
 		self.spiral_srv = rospy.Service("create_rect", Int, self.rectangle_callback)
 		rospy.on_shutdown(self.die)
-
+		self.GPSTool = GPS_utils()
 		self.running=True
 		t=threading.Thread(target=self.do_control)
 		t.start()
@@ -122,6 +124,8 @@ class WaypointFollow():
 						msg.drone_q.x,msg.drone_q.y,0,\
 						msg.drone_qdot.x,msg.drone_qdot.y,msg.drone_qdot.z]
 		self.lqr.setState(state)
+
+		self.GPSTool.setENUOrigin(state.origin.x,state.origin.y,state.origin.z)
 
 		
 	def rectangle_callback(self, req):
@@ -180,6 +184,19 @@ class WaypointFollow():
 			self.wps.append(i)
 		return SetWaypointsResponse(True)
 
+	def set_corners_callback(self, req):
+		if(len(req.waypoints.waypoints)==3):
+			for i in range(3):
+				lat = req.waypoints.waypoints[i].lat
+				lon = req.waypoints.waypoints[i].lon
+				alt = req.waypoints.waypoints[i].alt
+				yaw = req.waypoints.waypoints[i].heading
+				x,y,z=self.GPSTool.geo2enu(lat,lon,alt)
+				self.corners[i+1]=[x,y,z,yaw]
+				print(self.corners[i+1])
+			return SetWaypointsResponse(True)
+		else:
+			return SetWaypointsResponse(True)
 	def spiral_callback(self, srv):
 		self.wps = []
 
