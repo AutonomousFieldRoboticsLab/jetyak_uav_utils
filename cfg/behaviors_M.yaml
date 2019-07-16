@@ -27,11 +27,11 @@ follow_w_ki: 0
 # Land K
 #
 land_x_kp: .55
-land_x_kd: .35
-land_x_ki: 0
+land_x_kd: .3
+land_x_ki: .15
 land_y_kp: .55
-land_y_kd: .35
-land_y_ki: 0
+land_y_kd: .3
+land_y_ki: .15
 land_z_kp: .25
 land_z_kd: 0
 land_z_ki: 0
@@ -49,26 +49,29 @@ takeoff_threshold: .25
 # Follow Parameters
 #
 follow_x: -2
-follow_y: 0
+follow_y: -0.05
 follow_z: 1.5
 follow_w: 0
+follow_tagLossThresh: 10
 
 #
 # Land Parameters
 #
-land_x: 0
-land_y: 0
-land_z: .20 # this should be .1-.2m over the tag to allow the uav to maneuver
+land_x: -0.92
+land_y: -0.05
+land_z: 0.1 # this should be .1-.2m over the tag to allow the uav to maneuver
 land_w: 0
 
-land_velMag: .1
-land_xTopThresh: .05
-land_yTopThresh: .05
-land_xBottomThresh: .09
-land_yBottomThresh: .09
+land_velMag: .15
+land_xTopThresh: .09
+land_yTopThresh: .09
+land_xBottomThresh: .15
+land_yBottomThresh: .15
 land_bottom: -0.15
 land_top: .1
 land_angleThresh: .25
+land_tagLossThresh: 3
+
 
 #
 # Return Parameters
