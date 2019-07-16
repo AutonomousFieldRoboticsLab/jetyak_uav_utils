@@ -14,7 +14,7 @@ toggle_track_btn: 3
 Kp: .003
 Kd: 0
 velLimitY: .4
-velLimitP: .75
+velLimitP: .5
 
 # dji_camera config
 camera_info_url: package://dji_gimbal_cam/cfg/zenmuse_z3.yaml

@@ -119,6 +119,7 @@ private:
 		double velThreshSqr;
 		double angleThresh;
 		bsc_common::LQR *lqr;
+		double tagLossThresh;
 	} land_;
 
 	// follow specific constants
@@ -126,6 +127,7 @@ private:
 	{
 		bsc_common::pose4d_t goal_pose; // follow goal
 		double deadzone_radius;
+		double tagLossThresh;
 	} follow_;
 
 	// follow specific constants

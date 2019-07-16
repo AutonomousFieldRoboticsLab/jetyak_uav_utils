@@ -31,6 +31,7 @@ Author: Brennan Cain
 """
 import rospy
 from LQR import LQR
+from GPS_utils import GPS_utils
 from jetyak_uav_utils.msg import Waypoint, WaypointArray, ObservedState
 from jetyak_uav_utils.srv import SetWaypoints,SetWaypointsResponse,Int,IntResponse
 from std_msgs.msg import Float32, UInt16
@@ -89,11 +90,12 @@ class WaypointFollow():
 		self.wp_count_pub = rospy.Publisher("/jetyak_uav_utils/wp_remaining", UInt16, queue_size=1)
 		self.stat_sub= rospy.Subscriber("/jetyak_uav_vision/state", ObservedState, self.state_callback)
 		self.wps_service = rospy.Service("set_waypoints", SetWaypoints, self.wps_callback)
+		self.set_corner_service = rospy.Service("set_corners", SetWaypoints, self.set_corners_callback)
 		self.spiral_srv = rospy.Service("create_spiral", Trigger, self.spiral_callback)
 		self.mark_corner_srv = rospy.Service("mark_corner", Int, self.mark_corner_callback)
 		self.spiral_srv = rospy.Service("create_rect", Int, self.rectangle_callback)
 		rospy.on_shutdown(self.die)
-
+		self.GPSTool = GPS_utils()
 		self.running=True
 		t=threading.Thread(target=self.do_control)
 		t.start()
@@ -123,6 +125,8 @@ class WaypointFollow():
 						msg.drone_qdot.x,msg.drone_qdot.y,msg.drone_qdot.z]
 		self.lqr.setState(state)
 
+		self.GPSTool.setENUorigin(msg.origin.x,msg.origin.y,msg.origin.z)
+
 		
 	def rectangle_callback(self, req):
 		n=req.data
@@ -140,7 +144,7 @@ class WaypointFollow():
 			return ov
 		def scale(v, l): return [v[i]*l for i in range(len(v))]
 			
-
+		f = open("/home/ubuntu/rect_dump.csv","w+")
 		v12 = diff(self.corners[1],self.corners[2])
 		
 		v23 = diff(self.corners[2],self.corners[3])
@@ -161,6 +165,7 @@ class WaypointFollow():
 				path.append(left.pop(0))
 
 		for p in path:
+			f.write("%f,%f,%f,%f\n"%(p[0],p[1],p[2],p[3]))
 			print(p)
 			wp = Waypoint()
 			wp.lon = p[0]
@@ -169,10 +174,10 @@ class WaypointFollow():
 			wp.heading=p[3]
 
 
-			wp.radius = 1
+			wp.radius = 5
 			wp.loiter_time = 0
 			self.wps.append(wp)
-			
+		f.close()
 	def wps_callback(self, req):
 		del self.wps[:]
 		for i in req.waypoints.waypoints:
@@ -180,6 +185,19 @@ class WaypointFollow():
 			self.wps.append(i)
 		return SetWaypointsResponse(True)
 
+	def set_corners_callback(self, req):
+		if(len(req.waypoints.waypoints)==3):
+			for i in range(3):
+				lat = req.waypoints.waypoints[i].lat
+				lon = req.waypoints.waypoints[i].lon
+				alt = req.waypoints.waypoints[i].alt
+				yaw = req.waypoints.waypoints[i].heading
+				x,y,z=self.GPSTool.geo2enu(lat,lon,alt)
+				self.corners[i+1]=[x,y,z,yaw]
+				print(self.corners[i+1])
+			return SetWaypointsResponse(True)
+		else:
+			return SetWaypointsResponse(True)
 	def spiral_callback(self, srv):
 		self.wps = []
 
@@ -221,7 +239,7 @@ class WaypointFollow():
 		return TriggerResponse(True,"Spiral created")
 
 	def do_control(self,):
-		print("thread started")
+		#print("thread started")
 		while(self.running):
 			sleep(1/25.0)
 			wp_left = len(self.wps)
@@ -237,7 +255,7 @@ class WaypointFollow():
 					#If this is our first time noticing we are in a waypoint
 					if self.time_entered_wp == 0:
 						self.time_entered_wp = rospy.Time.now().to_sec()
-						print("Entered waypoint")
+						rospy.logwarn("Entered waypoint")
 					elif rospy.Time.now().to_sec() - self.time_entered_wp > self.wps[0].loiter_time:
 						self.wps.pop(0)
 						self.time_entered_wp = 0
@@ -249,9 +267,9 @@ class WaypointFollow():
 							print("Mission Complete")
 							continue
 						else:
-							print("Moving to next objective: %i left"%len(self.wps))
-				print("Begin")				
-				print((self.wps[0].lon,self.wps[0].lat))
+							rospy.logwarn("Moving to next objective: %i left"%len(self.wps))
+				#print("Begin")				
+				#print((self.wps[0].lon,self.wps[0].lat))
 				goal=np.array([[0.0] for i in range(12)])
 				x = self.wps[0].lon - self.pose[0]
 				y = self.wps[0].lat - self.pose[1]
@@ -262,12 +280,19 @@ class WaypointFollow():
 				goal[1] = -x*np.sin(self.pose[3])+y*np.cos(self.pose[3])
 				goal[2] = z
 				goal[8] = w
-				print((float(goal[0]),float(goal[1])))
+				#print((float(goal[0]),float(goal[1])))
 				cmd = self.lqr.getCmd(goal)
 		
 				cmdM = Joy()
-				r = float(cmd[0])#clip(float(cmd[0]),-.1,.1)
-				p = float(cmd[1])#clip(float(cmd[1]),-.1,.1)
+
+				limit=.2
+				r=float(cmd[0])
+				p=float(cmd[1])
+				mag = sqrt(r**2+p**2)
+				if(mag > limit):
+					r=r*limit/mag
+					p=p*limit/mag
+
 				cmdM.axes = [r,p,float(cmd[2]),float(cmd[3]), self.flag]
 
 
@@ -278,7 +303,7 @@ class WaypointFollow():
 
 	def check_if_in_wp(self,):
 		dist = sqrt((self.pose[0]-self.wps[0].lon)**2+(self.pose[1]-self.wps[0].lat)**2+(self.pose[2]-self.wps[0].alt)**2)
-		print(dist)
+		#print(dist)
 		return dist < self.wps[0].radius
 
 

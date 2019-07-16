@@ -78,6 +78,7 @@ void Behaviors::downloadParams(std::string ns_param)
 	getP(ns, "land_bottom",land_.bottom);
 	getP(ns, "land_top", land_.top);
 	getP(ns, "land_angleThresh", land_.angleThresh);
+	getP(ns, "land_tagLossThresh", land_.tagLossThresh);
 
 	/**********************
 	 * TAKEOFF PARAMETERS *
@@ -92,6 +93,7 @@ void Behaviors::downloadParams(std::string ns_param)
 	getP(ns, "follow_y", follow_.goal_pose.y);
 	getP(ns, "follow_z", follow_.goal_pose.z);
 	getP(ns, "follow_w", follow_.goal_pose.w);
+	getP(ns, "follow_tagLossThresh", follow_.tagLossThresh);
 
 	/*********************
 	 * RETURN PARAMETERS *
