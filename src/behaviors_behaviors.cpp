@@ -278,7 +278,7 @@ void Behaviors::landBehavior()
 				double vMult = clip(1-fabs(goal_d(0))/fabs(follow_.goal_pose.x-land_.goal_pose.x),0,1);
 				Eigen::Matrix<double, 12, 1> set;
 				set << goal_d(0), goal_d(1), goal_d(2), // Position setpoint (xyz)
-						vBoat(0)*vMult,0, 0,				// Velocity setpoint (xyz)
+						vBoat(0) * vMult, 0, 0,				// Velocity setpoint (xyz)
 						0, 0, goal_d(3),										// Angle setpoint (rpy)
 						0, 0, 0;														// Angular velocity setpoint (rpy)
 

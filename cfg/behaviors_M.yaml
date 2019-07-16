@@ -25,12 +25,12 @@ follow_tagLossThresh: 10
 #
 # Land Parameters
 #
-land_x: -0.87
+land_x: -0.92
 land_y: -0.05
-land_z: -0.05 # this should be .1-.2m over the tag to allow the uav to maneuver
+land_z: 0.1 # this should be .1-.2m over the tag to allow the uav to maneuver
 land_w: 0
 
-land_velMag: .20
+land_velMag: .15
 land_xTopThresh: .09
 land_yTopThresh: .09
 land_xBottomThresh: .15
