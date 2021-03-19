@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<multimarker markers="4">
+    <marker index="0" status="1">
+        <corner x="-6.45" y="-6.45" z="0" />
+        <corner x="6.45" y="-6.45" z="0" />
+        <corner x="6.45" y="6.45" z="0" />
+        <corner x="-6.45" y="6.45" z="0" />
+    </marker>
+
+    <marker index="1" status="1">
+        <corner x="7.05" y="-6.45" z="0" />
+        <corner x="19.95" y="-6.45" z="0" />
+        <corner x="19.95" y="6.45" z="0" />
+        <corner x="7.05" y="6.45" z="0" />
+    </marker>
+
+    <marker index="3" status="1">
+        <corner x="-47" y="-52" z="87.5" />
+        <corner x="-1.5" y="-52" z="87.5" />
+        <corner x="-1.5" y="-52" z="42" />
+        <corner x="-47" y="-52" z="42" />
+    </marker>
+
+    <marker index="4" status="1">
+
+        <corner x="1.5" y="-52" z="87.5" />
+        <corner x="47" y="-52" z="87.5" />
+        <corner x="47" y="-52" z="42" />
+        <corner x="1.5" y="-52" z="42" />
+    </marker>
+</multimarker>
+
+<!-- 
+big markers - 45.5cm, gap - 2.95 
+small markers - 
+-->
+USRLHexH20

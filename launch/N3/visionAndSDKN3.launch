@@ -4,7 +4,7 @@
 
 	<group ns="jetyak_uav_vision">
 		<!-- Start the camera and gimbal controller -->
-		<include file="$(find dji_camera)/launch/bundle2TrackAndPoseN3.launch"/>
+		<include file="$(find dji_gimbal_cam)/launch/bundle2TrackAndPoseN3.launch"/>
 
 		<!-- Start the tag positioning -->
 		<node pkg="jetyak_uav_utils" type="gimbal_tag_node" name="gimbal_tag_node" output="screen" >

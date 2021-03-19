@@ -1,0 +1,57 @@
+#
+# MISC
+#
+integral_size: 200
+reset_kalman_threshold: 3.0
+
+generalK: "/home/ubuntu/git/jetyak_uav_utils/cfg/generalK.txt"
+landK: "/home/ubuntu/git/jetyak_uav_utils/cfg/generalK.txt"
+
+#
+# Takeoff
+#
+takeoff_height: 0
+takeoff_threshold: .25
+
+#
+# Follow Parameters
+#
+follow_x: -2
+follow_y: -0.05
+follow_z: 1.5
+follow_w: 0
+follow_tagLossThresh: 10
+
+#
+# Land Parameters
+#
+land_x: -0.92
+land_y: -0.05
+land_z: 0.1 # this should be .1-.2m over the tag to allow the uav to maneuver
+land_w: 0
+
+land_velMag: .15
+land_xTopThresh: .09
+land_yTopThresh: .09
+land_xBottomThresh: .15
+land_yBottomThresh: .15
+land_bottom: -0.15
+land_top: .1
+land_angleThresh: .25
+land_tagLossThresh: 3
+
+#
+# Return Parameters
+#
+return_settle_x: -3
+return_settle_y: 0
+return_settle_z: 3
+return_settle_w: 0
+return_gotoHeight: 10
+return_heightThresh: 1
+return_finalHeight: 4
+return_downRadius: 1
+return_settleRadius: .5
+return_tagTime: 1
+return_tagLossThresh: 3
+return_maxVel: 3.0
