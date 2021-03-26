@@ -1,0 +1,21 @@
+<launch>
+	<!-- Start the DJI SDK -->
+	<include file="$(find dji_sdk)/launch/sdkN3.launch"/>
+
+	<group ns="jetyak_uav_vision">
+		<!-- Load vision and gimbal parameters -->
+		<rosparam command="load" file="$(find jetyak_uav_utils)/cfg/gimbal_cam_Z3.yaml"/>
+
+		<!-- Start the camera and gimbal controller -->
+		<include file="$(find dji_gimbal_cam)/launch/default.launch"/>
+		<node name="gimbal_tag" pkg="jetyak_uav_utils" type="gimbal_tag_node" output="screen" >
+			<param name="isM100" value="false" type="bool" />
+		</node>
+
+		<!-- Start tag tracking -->
+		<include file="$(find jetyak_uav_utils)/launch/ar_track.launch"/>
+
+		<!-- Start colocalization filter -->
+		<node name="filter" pkg="jetyak_uav_utils" type="filter_node.py" output="screen"/>
+	</group>
+</launch>
