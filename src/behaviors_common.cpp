@@ -78,6 +78,8 @@ void Behaviors::downloadParams(std::string ns_param)
 		ROS_WARN("FAILED: %s", "integral_size");
 
 	getP(ns, "reset_kalman_threshold", resetFilterTimeThresh);
+	if (!ros::param::get(ns + "ignore_loss_detection", ignore_loss_detection))
+				ROS_WARN("FAILED: %s", "ignore_loss_detection");
 
 	/**********************
 	 * LANDING PARAMETERS *

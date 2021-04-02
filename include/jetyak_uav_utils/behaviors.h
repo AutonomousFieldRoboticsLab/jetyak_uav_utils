@@ -92,6 +92,7 @@ private:
 	bool propellorsRunning = false;
 	bool trackEnabled = false;
 	double resetFilterTimeThresh;
+	bool ignore_loss_detection;
 
 	/************************************
 	 * STATE VARIABLES

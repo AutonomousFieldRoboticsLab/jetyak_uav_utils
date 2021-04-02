@@ -55,14 +55,14 @@ def getJetyakPose(t):
 
 class StatePub():
 	def __init__(self,):
-		self.doJetyak=False
+		self.doJetyak=True
 		self.jev = 2
 		self.jnv = 0
 		self.firstAtt=True
 		self.firstGPS=True
 		self.GPSU = GPS_utils()
 
-		rp.init_node("lqr_test")
+		rp.init_node("sim_test")
 		self.gpsSub=rp.Subscriber("/dji_sdk/gps_position",NavSatFix,self.gpsCB)
 		self.attSub=rp.Subscriber("/dji_sdk/attitude",QuaternionStamped,self.attCB)
 		self.velSub=rp.Subscriber("/dji_sdk/velocity",Vector3Stamped,self.velCB)
@@ -78,6 +78,7 @@ class StatePub():
 			x,y,xd,yd,w = getJetyakPose(rp.Time.now().to_sec()-self.startTime)
 			self.state.boat_p.x=x
 			self.state.boat_p.y=y
+			self.state.boat_p.z=100
 			self.state.boat_pdot.x=xd
 			self.state.boat_pdot.y=yd
 			self.state.heading=w
