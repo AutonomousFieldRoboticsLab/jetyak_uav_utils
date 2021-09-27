@@ -9,6 +9,7 @@ from time import sleep
 
 import rospy as rp
 
+from std_msgs.msg import Empty
 from tf.transformations import *
 from sensor_msgs.msg import NavSatFix,Joy,Imu
 from geometry_msgs.msg import QuaternionStamped,Vector3Stamped
@@ -55,9 +56,10 @@ def getJetyakPose(t):
 
 class StatePub():
 	def __init__(self,):
-		self.doJetyak=True
-		self.jev = 2
+		self.doJetyak=False
+		self.jev = 0
 		self.jnv = 0
+		self.jalt = 0
 		self.firstAtt=True
 		self.firstGPS=True
 		self.GPSU = GPS_utils()
@@ -67,25 +69,33 @@ class StatePub():
 		self.attSub=rp.Subscriber("/dji_sdk/attitude",QuaternionStamped,self.attCB)
 		self.velSub=rp.Subscriber("/dji_sdk/velocity",Vector3Stamped,self.velCB)
 		self.imuSub=rp.Subscriber("/dji_sdk/imu",Imu,self.imuCB)
+		self.setOriginSub = rp.Subscriber("/jetyak_uav_vision/reset_filter",Empty,self.setOrigin)
 		self.statePub=rp.Publisher("/jetyak_uav_vision/state",ObservedState,queue_size=1)
 		self.state = ObservedState()
 		self.startTime=rp.Time.now().to_sec()
 		rp.spin()
+
+	def setOrigin(self,msg):
+		self.firstGPS = True
+
 	def publish(self,):
+		if(self.firstGPS or self.firstAtt):
+			return
 		self.state.header.stamp = rp.Time.now()
 
 		if(self.doJetyak):
 			x,y,xd,yd,w = getJetyakPose(rp.Time.now().to_sec()-self.startTime)
 			self.state.boat_p.x=x
 			self.state.boat_p.y=y
-			self.state.boat_p.z=100
 			self.state.boat_pdot.x=xd
 			self.state.boat_pdot.y=yd
 			self.state.heading=w
 		else:
 			self.state.boat_pdot.x=self.jev
 			self.state.boat_pdot.y=self.jnv
+		self.state.boat_p.z=self.jalt
 		self.statePub.publish(self.state)
+
 	def attCB(self,msg):
 		if(self.firstAtt):
 			self.firstAtt=False
@@ -112,7 +122,8 @@ class StatePub():
 	
 	def gpsCB(self,msg):
 		if(self.firstGPS):
-			self.GPSU.setENUorigin(0,0,0)
+			print("Setting origin")
+			self.GPSU.setENUorigin(msg.latitude,msg.longitude,msg.altitude)
 		p=self.GPSU.geo2enu(msg.latitude,msg.longitude,msg.altitude)
 		self.state.drone_p.x=p[0]
 		self.state.drone_p.y=p[1]

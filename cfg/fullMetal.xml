@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <multimarker markers="5">
 	<marker index="0" status="1">
-		<corner x="-6.45" y="-6.45" z="0" />
-		<corner x="6.45" y="-6.45" z="0" />
-		<corner x="6.45" y="6.45" z="0" />
-		<corner x="-6.45" y="6.45" z="0" />
+		<corner x="-12.8" y="-6" z="0" />
+		<corner x="-.9" y="-6" z="0" />
+		<corner x="-.9" y="6" z="0" />
+		<corner x="-12.8" y="6" z="0" />
 	</marker>
 
 	<marker index="1" status="1">
-		<corner x="7.05" y="-6.45" z="0" />
-		<corner x="19.95" y="-6.45" z="0" />
-		<corner x="19.95" y="6.45" z="0" />
-		<corner x="7.05" y="6.45" z="0" />
+		<corner x="12.8" y="-6" z="0" />
+		<corner x=".9" y="-6" z="0" />
+		<corner x=".9" y="6" z="0" />
+		<corner x="12.8" y="6" z="0" />
 	</marker>
 	<marker index="3" status="1">
 		<corner x="14.3" y="-22.5" z="99.3" />

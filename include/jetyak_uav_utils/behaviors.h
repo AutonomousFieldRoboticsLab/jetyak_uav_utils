@@ -85,6 +85,7 @@ private:
 	/**********************
 	 * INSTANCE VARIABLES
 	 **********************/
+	bool tagRequired = true;
 	int integral_size = 0;
 	bsc_common::PID *xpid_, *ypid_, *zpid_, *wpid_; // pid controllers
 	bool behaviorChanged_ = false;
