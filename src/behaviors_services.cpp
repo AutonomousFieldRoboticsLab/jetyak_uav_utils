@@ -40,15 +40,14 @@ bool Behaviors::setModeCallback(jetyak_uav_utils::SetString::Request &req, jetya
 			if(shouldTrack xor trackEnabled) {
 				std_srvs::SetBool enable;
 				enable.request.data = shouldTrack;
-				
 
 				enableGimbalSrv_.call(enable);
-				if(not enable.response.success) {
+				if(not enable.response.success and visionRequired) {
 					ROS_WARN("Failed to %s tracking",enable.request.data?"enable":"disable");
 					res.success = false;
 					return false;
 				} else {
-					ROS_WARN("%s tracking",enable.request.data?"Enabled":"Disabled");
+					ROS_WARN("Tracking is %s",enable.request.data?"enabled":"disabled");
 					trackEnabled = shouldTrack;
 				}
 			}

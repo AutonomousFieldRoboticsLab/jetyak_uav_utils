@@ -56,7 +56,7 @@ void Behaviors::followBehavior()
 		setPID(follow_.kp, follow_.ki, follow_.kd);
 		behaviorChanged_ = false;
 	}
-	if (ros::Time::now().toSec() - lastSpotted <= 5 or ignore_loss_detection)
+	if (ros::Time::now().toSec() - lastSpotted <= 5 or ignoreLossDetection)
 	{
 		// Get the setpoint in the drone FLU
 		Eigen::Vector4d goal_b;
@@ -104,7 +104,7 @@ void Behaviors::returnBehavior()
 	goal_boatFLU << return_.goal.x, return_.goal.y, return_.goal.z, return_.goal.w;
 	Eigen::Vector4d offset = boat_to_drone(goal_boatFLU); // Vector pointing from the UAV to the follow setpoint
 
-	if ((ros::Time::now().toSec() - lastSpotted <= return_.tagTime or ignore_loss_detection) and state.drone_p.z <= return_.finalHeight + return_.heightThresh)
+	if ((ros::Time::now().toSec() - lastSpotted <= return_.tagTime or ignoreLossDetection) and state.drone_p.z <= return_.finalHeight + return_.heightThresh)
 	{
 		return_.stage = return_.SETTLE;
 		if ((pow(offset(0), 2) + pow(offset(1), 2)) < return_.settleRadiusSquared)
@@ -229,7 +229,7 @@ void Behaviors::landBehavior()
 		Eigen::Vector4d goal_d = boat_to_drone(goal_b);																				// Goal in drone FLU
 
 		
-		if (ros::Time::now().toSec() - lastSpotted <= 3 or ignore_loss_detection)
+		if (ros::Time::now().toSec() - lastSpotted <= 3 or ignoreLossDetection)
 		{
 
 			if (inLandThreshold())

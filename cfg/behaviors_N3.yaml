@@ -4,6 +4,7 @@
 integral_size: 200
 reset_kalman_threshold: 3.0
 ignore_loss_detection: true
+vision_required: false
 
 #
 # Follow K

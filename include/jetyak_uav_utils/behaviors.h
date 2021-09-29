@@ -85,7 +85,7 @@ private:
 	/**********************
 	 * INSTANCE VARIABLES
 	 **********************/
-	bool tagRequired = true;
+	bool visionRequired = true;
 	int integral_size = 0;
 	bsc_common::PID *xpid_, *ypid_, *zpid_, *wpid_; // pid controllers
 	bool behaviorChanged_ = false;
@@ -93,7 +93,7 @@ private:
 	bool propellorsRunning = false;
 	bool trackEnabled = false;
 	double resetFilterTimeThresh;
-	bool ignore_loss_detection;
+	bool ignoreLossDetection = false;
 
 	/************************************
 	 * STATE VARIABLES
