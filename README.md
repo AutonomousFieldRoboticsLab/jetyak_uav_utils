@@ -42,7 +42,10 @@ repository.
 * Terminal 1 on the Manifold
 	* source the workspace
 	* ```sudo -s```
-	* ```roslaunch jetyak_uav_utils visionAndSDKN3.launch```
+	* Deployment with Filter localization
+		* ```roslaunch jetyak_uav_utils visionAndSDKN3.launch```
+	* Deployment without filter localization
+		* ```roslaunch jetyak_uav_utils gpsSDKN3.launch```
 * Terminal 2 on the Manifold or SSH
 	* source the workspace
 	* ```roslaunch jetyak_uav_utils n3_controller.launch```
@@ -60,6 +63,7 @@ The modes are: takeoff, follow, leave, return, land, ride, and hover. They may b
 	* Follows at a certain pose relative to the tags. This pose may be changed through the `setFollowPosition` service.
 * leave
   * No output from behaviors, expects an external behavior to publish to `extCommand`
+  * The waypoint_follow.py node gives an example of this.
 * return
   * Flys up to a certain altitude above the takeoff altitude.
   * Uses boat GPS to return to the area near the boat.
@@ -72,6 +76,10 @@ The modes are: takeoff, follow, leave, return, land, ride, and hover. They may b
   * Ensure motors are off
 * hover
   * hold position
+
+#### Waypoint following
+
+There is a waypoint follow node available by running ```rosrun jetyak_uav_utils waypoint_follow.py```. You can use the services provided by this node to create spiral, rectangle, or custom waypoint patterns. An example of creating custom waypoints can be found in unit_cube.sh
 
 ## Contributing or Developing
 We want continue the development of this project in a modular and robust way. Our primary way of doing this is by creating an interface between our higher level controls given in the behaviors node or external nodes and the UAV we use. In our case, we use dji_pilot to provide this interface for a DJI Matrice M100 and a HexH20 with a Naza-3. We use gimbal_tag to provide an interface to transform coordinate systems. Finally, we use [dji_gimbal_cam](https://github.com/usrl-uofsc/dji_gimbal_cam) to provide an interface to the gimbal controls and camera. These interfaces can be created for any drone.
